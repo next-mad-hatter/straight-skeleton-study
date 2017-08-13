@@ -1,0 +1,14 @@
+straight_skeleton/build
+straight_skeleton/gradle
+straight_skeleton/.gradle
+straight_skeleton/.gradletasknamecache
+
+straight_skeleton/lib/*.jar
+straight_skeleton/tmp
+
+doc/*.pdf
+
+tags
+*~
+*.swp
+

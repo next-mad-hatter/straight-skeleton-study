@@ -1,0 +1,90 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'io.franzbecker.gradle-lombok' version '1.8'
+}
+
+apply plugin: 'java'
+
+/*
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+version = '2.0'
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'TRec',
+                   'Implementation-Version': version
+    }
+}
+*/
+
+//mainClassName = 'at.tugraz.igi.main.MainScript'
+mainClassName = 'at.tugraz.igi.main.Main'
+
+repositories {
+    jcenter()
+    mavenCentral()
+    // In case someone wants to include local jar files in the project
+    flatDir
+    {
+      dirs 'lib'
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'lib', include: '*.jar')
+    compile group: 'org.projectlombok', name: 'lombok', version: '1.16.10'
+    compile group: 'org.tallison', name: 'jmatio', version: '1.2'
+    compile group: 'org.jfree', name: 'jfreesvg', version: '3.2'
+    //compile group: 'org.orbisgis', name: 'poly2tri', version: '0.1.2', ext: 'pom'
+    //compile group: 'org.orbisgis', name: 'poly2tri-core', version: '0.1.2'
+    //compile group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
+    testCompile 'junit:junit:4.12'
+}
+
+
+/*
+jar {
+    from('src/main/java') {
+*/
+        //include  '**/*.fxml'
+        //include  '**/*.png'
+/*
+    }
+    manifest {
+        attributes(
+                'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+                'Main-Class': 'at.tugraz.trec.gui.GUI'
+        )
+    }
+    // can we do this legally?
+    from {
+      configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+*/
+
+
+import io.franzbecker.gradle.lombok.task.DelombokTask
+
+task delombok(type: DelombokTask, dependsOn: compileJava) {
+    ext.outputDir = file("$buildDir/delombok")
+    outputs.dir(outputDir)
+    sourceSets.main.java.srcDirs.each {
+        inputs.dir(it)
+        args(it, "-d", outputDir)
+    }
+}
+
+task delombokHelp(type: DelombokTask) {
+    args "--help"
+}
+
+javadoc {
+    dependsOn delombok
+    source = delombok.outputDir
+    failOnError = false
+}
+
+
