@@ -51,6 +51,7 @@ public class ConfigurationTable extends JTable {
 			}
 		}
 
+		this.setRowHeight(20);
 	}
 
 	public static JButton getButton(JButton button, String name, JTable table) {
@@ -70,7 +71,6 @@ public class ConfigurationTable extends JTable {
 		button.setBackground(Color.WHITE);
 		button.setBorder(BorderFactory.createEmptyBorder());
 		button.setFocusable(false);
-		table.setRowHeight(20);
 		return button;
 	}
 
@@ -80,7 +80,6 @@ public class ConfigurationTable extends JTable {
 		button.setBackground(Color.WHITE);
 		button.setBorder(BorderFactory.createEmptyBorder());
 		button.setFocusable(false);
-		table.setRowHeight(20);
 		return button;
 	}
 

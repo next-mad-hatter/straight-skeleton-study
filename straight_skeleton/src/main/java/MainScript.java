@@ -120,7 +120,7 @@ public class MainScript {
 					} catch (Exception e) {
 						break;
 					}
-
+                                        // FIXME: wait for worker rather than hogging CPU
 					while (!controller.finished) {
 					}
 
