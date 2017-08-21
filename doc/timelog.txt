@@ -1,0 +1,3 @@
+jul    2:00    theory reading
+aug    3:00    gradle build
+aug    2:30    cpu hog bug hunt
