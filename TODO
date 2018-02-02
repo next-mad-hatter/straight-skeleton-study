@@ -1,0 +1,8 @@
+* library interface
+* count events (flip, split etc, extraordinary = flip not changing angle category?)
+* history: back steps
+* zoom & autozoom
+* large weights -> animation sometimes gets too slow at some point
+* animation speed, animations switchable
+* straight jump to result
+* enable comparison of skeletons when changing weights / moving vertex
