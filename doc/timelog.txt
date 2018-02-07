@@ -1,3 +1,6 @@
-jul    2:00    theory reading
-aug    3:00    gradle build
-aug    2:30    cpu hog bug hunt
+2017.07        2:00    theory read
+2017.08        3:00    bringing sources into buildable configuration
+2017.08        2:30    cpu hog bug hunt & fix
+
+2018.02.07     2:00    source studies
+

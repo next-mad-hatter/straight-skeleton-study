@@ -9,6 +9,14 @@ straight_skeleton/tmp
 doc/*.pdf
 
 tags
+TAGS
+GTAGS
+GRTAGS
+GPATH
+
+.gradle
+.meghanada
+
 *~
 *.swp
 

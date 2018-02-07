@@ -1,7 +1,8 @@
 plugins {
     id 'java'
     id 'application'
-    id 'io.franzbecker.gradle-lombok' version '1.8'
+    // id 'io.franzbecker.gradle-lombok' version '1.8'
+    id 'net.ltgt.apt' version '0.10'
 }
 
 apply plugin: 'java'
@@ -34,7 +35,9 @@ repositories {
 
 dependencies {
     compile fileTree(dir: 'lib', include: '*.jar')
-    compile group: 'org.projectlombok', name: 'lombok', version: '1.16.10'
+    // compile group: 'org.projectlombok', name: 'lombok', version: '1.16.10'
+    compileOnly 'org.projectlombok:lombok:1.16.20'
+    apt "org.projectlombok:lombok:1.16.20"
     compile group: 'org.tallison', name: 'jmatio', version: '1.2'
     compile group: 'org.jfree', name: 'jfreesvg', version: '3.2'
     //compile group: 'org.orbisgis', name: 'poly2tri', version: '0.1.2', ext: 'pom'
@@ -66,6 +69,7 @@ jar {
 */
 
 
+/*
 import io.franzbecker.gradle.lombok.task.DelombokTask
 
 task delombok(type: DelombokTask, dependsOn: compileJava) {
@@ -86,5 +90,9 @@ javadoc {
     source = delombok.outputDir
     failOnError = false
 }
+*/
 
+compileJava {
+  options.compilerArgs << "-Xlint" // << "-Werror" // "-Xlint:unchecked" << "-Xlint:deprecation"
+}
 
