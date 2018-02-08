@@ -3,5 +3,5 @@
 2017.08        2:30    cpu hog bug hunt & fix
 
 2018.02.07     3:00    source studies
-2018.02.08     2:00    source & theory studies, more bugs/todos, libs search
+2018.02.08     5:50    source & theory studies, more bugs/todos, libs search, multievents questions
 

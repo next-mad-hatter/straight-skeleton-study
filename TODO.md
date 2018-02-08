@@ -1,5 +1,7 @@
 * Use issue tracker?
 
+* Bug?: no skeleton is produced for a triangle
+
 * Bug: found one (simple) instance which crashes the program -- is this due to
   a bug or violated instance constraint (e.g. general position or some such)?
 
@@ -20,6 +22,10 @@
   category?)
 
 * Generate large instances & measure performance on those
+
+* Compile a set of correctness tests
+
+* Check possibility of multievents (multiple events at same time/node/triangle)
 
 * Include a random generation alternative?
 
@@ -45,6 +51,8 @@
 * Alternative (fx/fn-fx/re-frame etc) ui if changes extensive?
 
 * Investigate numerical stability
+
+* Investigate rendering artefacts
 
 * Create a useful readme?
 
