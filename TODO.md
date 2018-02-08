@@ -1,3 +1,5 @@
+* Use issue tracker?
+
 * Bug: found one (simple) instance which crashes the program -- is this due to
   a bug or violated instance constraint (e.g. general position or some such)?
 
@@ -12,7 +14,7 @@
 * Add current dir as default path in open/save dialogs, keep track of last path
   used in both (currently only open dialog does this iianm)
 
-* Library interface
+* Split into library & frontend app
 
 * Count events (flip, split etc, extraordinary = flip not changing angle
   category?)
