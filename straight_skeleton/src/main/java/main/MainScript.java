@@ -36,7 +36,7 @@ public class MainScript {
 		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 		Date date = new Date();
 		//String path = String.format("D:\\Uni\\SVN\\PR_Algorithmen\\TestResults\\%s", dateFormat.format(date));
-		String path = String.format(".", dateFormat.format(date));
+		String path = String.format("./test-%s/", dateFormat.format(date));
 		int iteration = 1;
 		int numPoints = 50;
 		Dimension bounds = new Dimension(1264, 689);
@@ -45,8 +45,8 @@ public class MainScript {
 		Graph graph = gui.getGraph();
 		for (int i = 0; i < iteration; i++) {
 			// try {
-			String dirPath = String.format("%s\\%d\\", path, i);
-			String dataPath = String.format("%s\\%s\\", dirPath, "MeasureData");
+			String dirPath = String.format("%s/%d/", path, i);
+			String dataPath = String.format("%s/%s/", dirPath, "MeasureData");
 			new File(dirPath).mkdirs();
 			new File(dataPath).mkdirs();
 			graph.generateRandomPointSet(numPoints, bounds);
@@ -79,7 +79,7 @@ public class MainScript {
 				controller.setView(panel);
 				controller.setTable(new ConfigurationTable(controller));
 				controller.createPolygon(graph);
-				String algoPath = String.format("%s\\%s\\", dirPath, algo);
+				String algoPath = String.format("%s/%s/", dirPath, algo);
 				new File(algoPath).mkdirs();
 				int count_dirs = 0;
 				for (int l = 0; l < 5; l++) {
@@ -118,9 +118,10 @@ public class MainScript {
 					try {
 						controller.runAlgorithmNoSwingWorker();
 					} catch (Exception e) {
-						break;
+            e.printStackTrace();
+            break;
 					}
-                                        // FIXME: wait for worker rather than hogging CPU
+          // FIXME: wait for worker rather than hogging CPU
 					while (!controller.finished) {
 					}
 
@@ -139,7 +140,7 @@ public class MainScript {
 						weighting = "OneWeightedMean";
 						break;
 					case (4):
-						weighting = "RandomwWeights";
+						weighting = "RandomWeights";
 						break;
 					}
 					String varName = algo + weighting;
@@ -156,7 +157,7 @@ public class MainScript {
 					FileHandler.saveSVG(controller.view, false);
 
 					try {
-						BufferedWriter out = new BufferedWriter(new FileWriter(new File(String.format("%s\\%s%s",
+						BufferedWriter out = new BufferedWriter(new FileWriter(new File(String.format("%s/%s-%s",
 								dataPath, algo, weighting))));
 						out.write(controller.polyMeasureData.print().toString());
 						out.close();
@@ -171,9 +172,11 @@ public class MainScript {
 					count_dirs++;
 				}
 				new MatFileWriter(String.format("%s%s.mat", dataPath, algo), matMapping);
+        /*
 				if (count_dirs != 5) {
 					new File(dirPath).delete();
 				}
+        */
 
 			}
 			// } catch (Exception e) {
