@@ -94,10 +94,10 @@ public class SimpleAlgorithmNoSwingWorker {
 
 		ArrayList<Point> copyPoints = new ArrayList<Point>(points);
 		if (convex) {
-			triangles = Util.triangulate2((ArrayList<Point>) copyPoints.clone(), lines);
+      triangles = Util.triangulate2(new ArrayList<Point>(copyPoints), lines);
 		} else {
 
-			ArrayList<Point> pts = (ArrayList<Point>) copyPoints.clone();
+      ArrayList<Point> pts = new ArrayList<Point>(copyPoints);
 			if (!Controller.isCounterClockwise) {
 				Collections.reverse(pts);
 			}

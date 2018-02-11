@@ -10,6 +10,8 @@ import java.util.Set;
 
 import poly2Tri.Triangulation;
 
+//import org.apache.commons.lang3.builder.ToStringBuilder;
+
 public class Util {
 
 	public static List<Triangle> triangulate(final ArrayList<Point> points, List<List<Line>> lines) {
@@ -39,6 +41,7 @@ public class Util {
 		 */
 		ArrayList triangles = Triangulation.triangulate(numContours, contours, vertices);
 		for (int i = 0; i < triangles.size(); ++i) {
+      //System.out.println(ToStringBuilder.reflectionToString(triangles.get(i)));
 			ArrayList t = (ArrayList) triangles.get(i);
 			Point p1 = numberToPoint.get(t.get(0));
 			Point p2 = numberToPoint.get(t.get(1));

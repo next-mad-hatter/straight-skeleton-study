@@ -74,19 +74,24 @@ public class FileHandler {
   public static String parent = (new File(System.getProperty("user.dir"))).getPath();
 
 	// displays open file dialog and reads selected file using FileOpenService
-	public static void open(GraphicPanel panel, Controller controller) {
+    public static void open(GraphicPanel panel, Controller controller) {
 		JFileChooser fc = new JFileChooser(parent);
 		int retVal = fc.showOpenDialog(panel);
 		if (retVal == 0) {
 			file = fc.getSelectedFile();
 			parent = file.getParent();
-			try {
-				readFromFile(file, panel, controller);
-			} catch (NumberFormatException | IOException e) {
-				openPoly(file, panel, controller);
-			}
+      open(panel, controller, file);
 		}
 	}
+
+    public static void open(GraphicPanel panel, Controller controller, File newfile) {
+        file = newfile;
+        try {
+            readFromFile(file, panel, controller);
+        } catch (NumberFormatException | IOException e) {
+            openPoly(file, panel, controller);
+        }
+    }
 
 	public static void createPoly(GraphicPanel panel, Controller controller, Graph graph) {
 		int max_x = 0, max_y = 0;

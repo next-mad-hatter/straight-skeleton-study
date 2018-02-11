@@ -1,40 +1,29 @@
 * Use issue tracker?
 
-* Bug: NullPointerException(s) encountered on some instances
+* Bug(s): found number of instances which yield incorrect behaviour -> check e.g. behaviour at coinsiding events
+
+* Factor out library part & split off the app and single file runner
+
+* Zoom & autozoom at load
+
+* Count events (flip, split etc, extraordinary = flip not changing angle
+  category?)
+
+* Compile a set of correctness tests
 
 * Bug: ConcurrentModificationException(s) encountered when drawing in GraphicPanel.paintMovedPoints
-
-* Bug?: no skeleton is produced for a triangle
-
-* Bug: found one (simple) instance which crashes the program -- is this due to
-  a bug or violated instance constraint (e.g. general position or some such)?
 
 * Bug: dragging mouse inside a built polygon in the main canvas pane sometimes
   yields a null pointer exception (not sure yet when this triggers -- maybe if
   we start close enough to a vertex?)
 
-* Bug: Polygon generating program writes those as xml files while skeleton part
-  reads/writes plain text.  A workaround right now would be to load the polygon
-  into main app by closing the generating app window.
-
-* Split into library & frontend app
-
-* Count events (flip, split etc, extraordinary = flip not changing angle
-  category?)
-
 * Generate large instances & measure performance on those
-
-* Compile a set of correctness tests
-
-* Check possibility of multievents (multiple events at same time/node/triangle)
-
-* Include a random generation alternative?
-
-* Zoom & autozoom at load
 
 * History: back steps
 
 * Straight jump to result
+
+* Include a random generation alternative?
 
 * Show triangulation as very first step
 
@@ -49,6 +38,10 @@
 * Get confirmation from user before overwriting files
 
 * Bug: sometimes (loading invalid file?) FileHandler.openPoly barfs a "File cannot be null" exception
+
+* Bug: Polygon generating program writes those as xml files while skeleton part
+  reads/writes plain text.  A workaround right now would be to load the polygon
+  into main app by closing the generating app window.
 
 * Get rid of dependencies remaining local (randomPolygon & poly2tri)
   or replace libs in question by something more robust
@@ -65,3 +58,4 @@
 
 * Create a useful readme?
 
+* Check source for appropriate line breaks (shouldn't git have converted those? O_x)

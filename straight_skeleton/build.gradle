@@ -8,7 +8,7 @@ plugins {
 apply plugin: 'java'
 
 mainClassName = 'at.tugraz.igi.main.Main'
-//mainClassName = 'at.tugraz.igi.main.TestScript'
+// mainClassName = 'at.tugraz.igi.main.SingleRun'
 
 repositories {
     jcenter()
@@ -27,6 +27,7 @@ dependencies {
     apt "org.projectlombok:lombok:1.16.20"
     // compile group: 'org.projectlombok', name: 'lombok', version: '1.16.10'
     compileOnly 'org.projectlombok:lombok:1.16.20'
+    //compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.+'
 }
 
 import io.franzbecker.gradle.lombok.task.DelombokTask
@@ -58,4 +59,12 @@ task(runDebug, dependsOn: 'classes', type: JavaExec) {
     main = 'at.tugraz.igi.main.Main'
     classpath = sourceSets.main.runtimeClasspath
     jvmArgs = ["-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"]
+}
+
+// Append app args like this: gradle run -PappArgs="['in.txt', 'out.txt', 'out.png']"
+// (for SingleRun to be usable via gradle)
+run {
+    if (project.hasProperty("appArgs")) {
+        args Eval.me(appArgs)
+    }
 }
