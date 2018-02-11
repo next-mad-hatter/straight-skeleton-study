@@ -4,7 +4,7 @@
 
 * Factor out library part & split off the app and single file runner
 
-* Zoom & autozoom at load
+* Zoom; autozoom & autopan at load
 
 * Count events (flip, split etc, extraordinary = flip not changing angle
   category?)
@@ -47,8 +47,11 @@
   or replace libs in question by something more robust
 
 * Simplicity test (e.g. https://www.webcitation.org/6ahkPQIsN) or
-  alt. triangulation (e.g.  https://github.com/gwlucastrig/Tinfour
-  or https://parasol.tamu.edu/publications/abstract.php?pub_id=185)?
+  alt. triangulation (see e.g.
+      https://github.com/orbisgis/jdelaunay/wiki
+      https://github.com/gwlucastrig/Tinfour
+   or https://parasol.tamu.edu/publications/abstract.php?pub_id=185
+  )?
 
 * Alternative (fx/fn-fx/re-frame etc) ui if changes extensive?
 
