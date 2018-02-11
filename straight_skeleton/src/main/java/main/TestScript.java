@@ -30,7 +30,7 @@ import com.jmatio.types.MLDouble;
 import data.Graph;
 import frontend.MainFrame;
 
-public class MainScript {
+public class TestScript {
 
 	public static void main(String[] args) throws Exception {
 		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
@@ -121,8 +121,9 @@ public class MainScript {
             e.printStackTrace();
             break;
 					}
-          // FIXME: wait for worker rather than hogging CPU
 					while (!controller.finished) {
+              throw new Exception("I am not supposed to happen and probably am an artefact");
+              // Otherwise FIXME: wait for worker rather than hogging CPU?
 					}
 
 					String weighting = null;

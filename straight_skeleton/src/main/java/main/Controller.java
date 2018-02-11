@@ -271,7 +271,7 @@ public class Controller {
 	public void runAlgorithm() {
 		finished = false;
 		isRunning = true;
-		ArrayList<Point> points = (ArrayList<Point>) new ArrayList<Point>(this.points);
+		ArrayList<Point> points = new ArrayList<>(this.points);
 		if (points.size() > 3) {
 
 			Util.closePolygon(points, lines);
@@ -302,7 +302,7 @@ public class Controller {
 	public void runAlgorithmNoSwingWorker() throws Exception {
 		finished = false;
 		isRunning = true;
-		ArrayList<Point> points = (ArrayList<Point>) new ArrayList<Point>(this.points);
+		ArrayList<Point> points = new ArrayList<>(this.points);
 		if (points.size() > 3) {
 
 			Util.closePolygon(points, lines);

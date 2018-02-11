@@ -8,7 +8,7 @@ plugins {
 apply plugin: 'java'
 
 mainClassName = 'at.tugraz.igi.main.Main'
-//mainClassName = 'at.tugraz.igi.main.MainScript'
+//mainClassName = 'at.tugraz.igi.main.TestScript'
 
 repositories {
     jcenter()

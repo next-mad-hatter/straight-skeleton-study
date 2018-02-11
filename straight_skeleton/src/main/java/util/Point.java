@@ -163,7 +163,7 @@ public class Point implements Cloneable {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = (int) (prime * result + number);
+		result = prime * result + number;
 		return result;
 	}
 

@@ -71,7 +71,7 @@ public class FileHandler {
 
 	public static File file = null;
 	public static File svgfile = null;
-	public static String parent = "";
+  public static String parent = (new File(System.getProperty("user.dir"))).getPath();
 
 	// displays open file dialog and reads selected file using FileOpenService
 	public static void open(GraphicPanel panel, Controller controller) {
@@ -92,8 +92,8 @@ public class FileHandler {
 		int max_x = 0, max_y = 0;
 		List<Point> loadedVertices = new ArrayList<Point>();
 		List<Point> screenVertices = new ArrayList<Point>();
-		ArrayList<Line> loadedEdges = new ArrayList();
-		ArrayList<Line> screenEdges = new ArrayList();
+		ArrayList<Line> loadedEdges = new ArrayList<>();
+		ArrayList<Line> screenEdges = new ArrayList<>();
 
 		if (graph.isEmpty()) {
 			return;
@@ -119,19 +119,19 @@ public class FileHandler {
 			int indexV1 = edge.getV1().getIndex();
 			int indexV2 = edge.getV2().getIndex();
 
-			Point p1 = (Point) loadedVertices.get(indexV1 - 1);
-			Point p2 = (Point) loadedVertices.get(indexV2 - 1);
+			Point p1 = loadedVertices.get(indexV1 - 1);
+			Point p2 = loadedVertices.get(indexV2 - 1);
 
 			Line l;
 			Line screenLine;
 			if (p1.adjacentLines.size() == 0 || p1.adjacentLines.get(0).getP1().equals(p1)) {
 				
 				l = new Line(p2, p1, controller.randomWeights?controller.generateWeight():1);
-				screenLine = new Line((Point) screenVertices.get(indexV2 - 1), (Point) screenVertices.get(indexV1 - 1),
+				screenLine = new Line(screenVertices.get(indexV2 - 1), screenVertices.get(indexV1 - 1),
 						l.getWeight());
 			} else {
 				l = new Line(p1, p2, 1);
-				screenLine = new Line((Point) screenVertices.get(indexV1 - 1), (Point) screenVertices.get(indexV2 - 1),
+				screenLine = new Line(screenVertices.get(indexV1 - 1), screenVertices.get(indexV2 - 1),
 						l.getWeight());
 			}
 
@@ -173,10 +173,10 @@ public class FileHandler {
 		controller.reset();
 		panel.revalidate();
 
-		ArrayList<Point> loadedVertices = new ArrayList();
-		ArrayList<Point> screenVertices = new ArrayList();
-		ArrayList<Line> loadedEdges = new ArrayList();
-		ArrayList<Line> screenEdges = new ArrayList();
+		ArrayList<Point> loadedVertices = new ArrayList<>();
+		ArrayList<Point> screenVertices = new ArrayList<>();
+		ArrayList<Line> loadedEdges = new ArrayList<>();
+		ArrayList<Line> screenEdges = new ArrayList<>();
 		try {
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
@@ -208,13 +208,13 @@ public class FileHandler {
 					int indexV1 = Integer.parseInt(eElement.getElementsByTagName("idV1").item(0).getTextContent());
 					int indexV2 = Integer.parseInt(eElement.getElementsByTagName("idV2").item(0).getTextContent());
 
-					Point p1 = (Point) loadedVertices.get(indexV1 - 1);
-					Point p2 = (Point) loadedVertices.get(indexV2 - 1);
+					Point p1 = loadedVertices.get(indexV1 - 1);
+					Point p2 = loadedVertices.get(indexV2 - 1);
 					Line l;
 					Line screenLine;
 					l = new Line(p2, p1, controller.randomWeights?controller.generateWeight():1);
-					screenLine = new Line((Point) screenVertices.get(indexV2 - 1),
-							(Point) screenVertices.get(indexV1 - 1), l.getWeight());
+					screenLine = new Line(screenVertices.get(indexV2 - 1),
+							screenVertices.get(indexV1 - 1), l.getWeight());
 
 					loadedEdges.add(l);
 					screenEdges.add(screenLine);
@@ -287,7 +287,7 @@ public class FileHandler {
 		}
 		// Show save dialog if no name is already given
 		if (file == null || saveAs) {
-			JFileChooser fc = new JFileChooser();
+			JFileChooser fc = new JFileChooser(parent);
 			if (file != null) {
 				fc.setCurrentDirectory(file.getParentFile());
 			}
@@ -385,7 +385,7 @@ public class FileHandler {
 	}
 
 	public static void saveSVG(final GraphicPanel panel, boolean saveAs) {
-		JFileChooser fc = new JFileChooser();
+		JFileChooser fc = new JFileChooser(parent);
 		if (svgfile != null) {
 			fc.setCurrentDirectory(svgfile.getParentFile());
 		}

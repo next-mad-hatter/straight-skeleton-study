@@ -1,5 +1,9 @@
 * Use issue tracker?
 
+* Bug: NullPointerException(s) encountered on some instances
+
+* Bug: ConcurrentModificationException(s) encountered when drawing in GraphicPanel.paintMovedPoints
+
 * Bug?: no skeleton is produced for a triangle
 
 * Bug: found one (simple) instance which crashes the program -- is this due to
@@ -12,9 +16,6 @@
 * Bug: Polygon generating program writes those as xml files while skeleton part
   reads/writes plain text.  A workaround right now would be to load the polygon
   into main app by closing the generating app window.
-
-* Add current dir as default path in open/save dialogs, keep track of last path
-  used in both (currently only open dialog does this iianm)
 
 * Split into library & frontend app
 
@@ -35,11 +36,19 @@
 
 * Straight jump to result
 
+* Show triangulation as very first step
+
+* Pause animation
+
 * Large weights -> animation sometimes gets too slow at some point
 
 * Adjustable animation speed, animations switchable
 
 * Enable comparison of skeletons when changing weights / moving vertex
+
+* Get confirmation from user before overwriting files
+
+* Bug: sometimes (loading invalid file?) FileHandler.openPoly barfs a "File cannot be null" exception
 
 * Get rid of dependencies remaining local (randomPolygon & poly2tri)
   or replace libs in question by something more robust

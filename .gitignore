@@ -19,6 +19,9 @@ GPATH
 .gradle
 .meghanada
 
+.dir-locals.el
+.idea
+
 *~
 *.swp
 
