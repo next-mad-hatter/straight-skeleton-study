@@ -1,6 +1,8 @@
 * Use issue tracker?
 
-* Bug(s): found number of instances which yield incorrect behaviour -> check e.g. behaviour at coinsiding events
+* Implement reading & script batch execution for generated dataset
+
+* Implement reading compressed files
 
 * Factor out library part & split off the app and single file runner
 
@@ -9,33 +11,29 @@
 * Count events (flip, split etc, extraordinary = flip not changing angle
   category?)
 
+* History: back steps
+
+* Straight jump to result
+
+* Show triangulation as very first step
+
+* Adjustable animation speed, animations switchable & pausable
+
+* Enable comparison of skeletons when changing weights / moving vertex
+
+* Large weights can result in animation becoming very slow
+
+* Get confirmation from user before overwriting files
+
 * Compile a set of correctness tests
+
+* Bug(s): found number of instances which yield incorrect behaviour -> check e.g. behaviour at coinsiding events
 
 * Bug: ConcurrentModificationException(s) encountered when drawing in GraphicPanel.paintMovedPoints
 
 * Bug: dragging mouse inside a built polygon in the main canvas pane sometimes
   yields a null pointer exception (not sure yet when this triggers -- maybe if
   we start close enough to a vertex?)
-
-* Generate large instances & measure performance on those
-
-* History: back steps
-
-* Straight jump to result
-
-* Include a random generation alternative?
-
-* Show triangulation as very first step
-
-* Pause animation
-
-* Large weights -> animation sometimes gets too slow at some point
-
-* Adjustable animation speed, animations switchable
-
-* Enable comparison of skeletons when changing weights / moving vertex
-
-* Get confirmation from user before overwriting files
 
 * Bug: sometimes (loading invalid file?) FileHandler.openPoly barfs a "File cannot be null" exception
 
