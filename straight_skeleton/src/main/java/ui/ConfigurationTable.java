@@ -99,6 +99,7 @@ public class ConfigurationTable extends JTable {
 	}
 }
 
+@SuppressWarnings("serial")
 class TableModel extends DefaultTableModel {
 	private String columnNames[] = { "1", "2", "3", "4", "5", "6" };
 	private Controller controller;
@@ -192,12 +193,12 @@ class JButtonEditor extends AbstractCellEditor implements TableCellEditor {
 				} else if (action == "visible") {
 					JButton button = (JButton) e.getSource();
 					boolean visible;
-					if (button.getIcon().equals(controller.visible_icon)) {
-						button.setIcon(controller.not_visible_icon);
+					if (button.getIcon().equals(Controller.visible_icon)) {
+						button.setIcon(Controller.not_visible_icon);
 					} else {
-						button.setIcon(controller.visible_icon);
+						button.setIcon(Controller.visible_icon);
 					}
-					controller.toggleVisibility(row, button.getIcon().equals(controller.visible_icon));
+					controller.toggleVisibility(row, button.getIcon().equals(Controller.visible_icon));
 				}
 			}
 		});

@@ -1,23 +1,17 @@
 package at.tugraz.igi.main;
 
-import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-
-import javax.imageio.ImageIO;
-import javax.swing.JPanel;
+import java.awt.*;
+import java.awt.image.*;
+import java.io.*;
+import java.util.*;
+import javax.imageio.*;
+import javax.swing.*;
+import java.util.List;
 
 import at.tugraz.igi.ui.ConfigurationTable;
 import at.tugraz.igi.ui.GraphicPanel;
-import at.tugraz.igi.util.FileHandler;
-import at.tugraz.igi.util.Line;
+import at.tugraz.igi.util.*;
+import at.tugraz.igi.util.Point;
 
 public class SingleRun {
 
@@ -37,7 +31,7 @@ public class SingleRun {
 
         FileHandler.open(panel, controller, new File(args[0]));
         // FIXME: add autozoom
-        panel.setSize(new Dimension(2000, 2000));
+        // panel.setSize(new Dimension(2000, 2000));
 
         try {
             controller.runAlgorithmNoSwingWorker();

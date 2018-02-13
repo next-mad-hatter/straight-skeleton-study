@@ -31,47 +31,181 @@
 
 package at.tugraz.igi.util;
 
-import java.awt.Dimension;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.awt.*;
+import java.util.*;
+import java.util.function.*;
 import java.util.List;
-import java.util.Random;
-import java.util.Set;
+import java.io.*;
+import org.tukaani.xz.*;
 
-import javax.swing.JFileChooser;
-import javax.swing.SwingUtilities;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
+//import org.jooq.lambda.*;
+//import org.jooq.lambda.tuple.*;
+import com.codepoetics.protonpack.*;
+import static java.lang.Math.toIntExact;
 
-import org.jfree.graphics2d.svg.SVGGraphics2D;
-import org.jfree.graphics2d.svg.SVGUtils;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import at.tugraz.igi.main.Controller;
-import at.tugraz.igi.ui.CustomTextField;
-import at.tugraz.igi.ui.GraphicPanel;
-import data.Edge;
-import data.Graph;
-import data.Vertex;
+import java.util.stream.*;
+import at.tugraz.igi.util.ParseException;
+import java.nio.file.*;
+import javax.swing.*;
+import javax.xml.parsers.*;
+import org.jfree.graphics2d.svg.*;
+import org.w3c.dom.*;
+import at.tugraz.igi.main.*;
+import at.tugraz.igi.ui.*;
+import at.tugraz.igi.ui.*;
+import data.*;
 
 public class FileHandler {
 
 	public static File file = null;
 	public static File svgfile = null;
   public static String parent = (new File(System.getProperty("user.dir"))).getPath();
+
+    /**
+     * Reads contents of a stream into a string.
+     */
+    private static String fetchStreamContents(InputStream in, String encoding) throws IOException {
+        byte[] buffer = new byte[8192];
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int size;
+        while ((size = in.read(buffer)) != -1)
+            out.write(buffer, 0, size);
+        return out.toString(encoding);
+    }
+
+
+    /**
+     * Reads contents of a UTF-8-encoded file into a String object.  Tries to interpret
+     * contents of the file as xz-compressed stream first, and if that fails, as plain text.
+     */
+    private static String fetchFileContents(File file) throws IOException {
+        InputStream in = new FileInputStream(file);
+        String result;
+        try {
+          try {
+              result = fetchStreamContents(new XZInputStream(in), "UTF-8");
+          } catch (XZFormatException e) {
+              result = fetchStreamContents(in, "UTF-8");
+          }
+        } catch (Exception e) {
+            in.close();
+            throw e;
+        }
+        in.close();
+        return result;
+    }
+
+
+    /**
+     * As far as I can see right now, we should be able to read three file formats:
+     *
+     *  - the csv-based weighted segments format as produced by the main app
+     *  - the xml-based graph format as produced by the random generator app found here
+     *  - the simple two-floats-per-line format used by generated polygons dataset
+     *
+     * While iianm #open() below attempts to take care of former two, this read the latter.
+     * We'll also try reading input as xz stream first.
+     *
+     * For now we expect the input to fit in memory easily, so we read it in all at once.
+     *
+     * Maybe contrary to app design, we'd rather separate this logic from the controller.
+     */
+    public static List<Point> readCoordinatesFile(File file) throws IOException {
+        String input = fetchFileContents(file);
+        return parseCoordinates(input);
+    }
+
+
+    /**
+     * Parses whitespace-separated list of float coordinates, returning a list of points
+     * (numbered, as is being expected).
+     */
+    private static List<Point> parseCoordinates(String input) throws ParseException {
+        try {
+            List<Double> nums = Stream.of(input.split("\\s+")).map(Double::valueOf).collect(Collectors.toList());
+            if ((nums.size() % 2) != 0)
+                throw new ParseException("Uneven number of fields in coordinates file");
+            List<Indexed<Double>> zi = StreamUtils.zipWithIndex(nums.stream()).collect(Collectors.toList());
+            Stream<Indexed<Double>> xs = zi.stream().filter(t -> t.getIndex() % 2 == 0);
+            Stream<Indexed<Double>> ys = zi.stream().filter(t -> t.getIndex() % 2 != 0);
+            return StreamUtils.zip(xs, ys, (x, y) ->
+                                   new Point(toIntExact(x.getIndex()), x.getValue(), y.getValue())).
+                collect(Collectors.toList());
+        } catch (NumberFormatException e) {
+            throw new ParseException("Bad float format encountered in coordinates file");
+        }
+    }
+
+
+    /**
+     * This loads a list of vertex coordinates into the controller, akin to readFromFile().
+     */
+    public static void loadPoints(List<Point> pointsList, GraphicPanel panel, Controller controller) throws Exception {
+        controller.reset();
+        panel.revalidate();
+
+        if(pointsList.size() > 1) {
+            Point p1 = pointsList.get(0);
+            Point p2 = pointsList.get(pointsList.size() - 1);
+            if (p1.getOriginalX() == p2.getOriginalX() && p2.getOriginalY() == p2.getOriginalY())
+                pointsList.remove(pointsList.size() - 1);
+        }
+        if(pointsList.size() < 3) {
+            throw new Exception("Too few points given");
+        }
+
+        Set<Point> points = new LinkedHashSet<Point>(pointsList);
+        int max_x = 0;
+        int max_y = 0;
+        List<Line> lines = new ArrayList<Line>();
+        List<Line> screenLines = new ArrayList<Line>();
+
+        if(pointsList.size() > 1) {
+            Point p1 = pointsList.get(pointsList.size() - 1);
+            Point sp1;
+            try {
+                sp1 = p1.clone();
+            } catch (CloneNotSupportedException e) {
+                throw new Exception("Implementation error");
+            }
+
+            for (Point p2: pointsList) {
+                if (p2.getOriginalX() > max_x) max_x = (int) p2.getOriginalX();
+                if (p2.getOriginalY() > max_y) max_y = (int) p2.getOriginalY();
+
+                Point sp2;
+                try {
+                    sp2 = p2.clone();
+                } catch (CloneNotSupportedException e) {
+                    throw new Exception("Implementation error");
+                }
+                Line screenLine = new Line(sp1, sp2, 1);
+                screenLines.add(screenLine);
+
+                Line l = new Line(p1, p2, 1);
+                p1.adjacentLines.add(l);
+                p2.adjacentLines.add(l);
+                lines.add(l);
+
+                CustomTextField field = new CustomTextField(l, screenLine, controller);
+                panel.add(field);
+                panel.repaint();
+                panel.revalidate();
+
+                p1 = p2;
+                sp1 = sp2;
+            }
+        }
+
+        controller.setLoadedData(lines, screenLines, points);
+        panel.setSize(new Dimension(max_x + 20, max_y + 20));
+        panel.setPreferredSize(new Dimension(max_x + 20, max_y + 20));
+        panel.repaint();
+        if (Util.isCounterClockwise(pointsList)) {
+            panel.repositionTextfields();
+        }
+    }
+
 
 	// displays open file dialog and reads selected file using FileOpenService
     public static void open(GraphicPanel panel, Controller controller) {
@@ -80,20 +214,29 @@ public class FileHandler {
 		if (retVal == 0) {
 			file = fc.getSelectedFile();
 			parent = file.getParent();
-      open(panel, controller, file);
+      try {
+          open(panel, controller, file);
+      } catch (Exception e) {
+          e.printStackTrace();
+      }
 		}
 	}
 
-    public static void open(GraphicPanel panel, Controller controller, File newfile) {
+    public static void open(GraphicPanel panel, Controller controller, File newfile) throws Exception {
         file = newfile;
         try {
-            readFromFile(file, panel, controller);
+            try {
+                List<Point> pts = readCoordinatesFile(newfile);
+                loadPoints(pts, panel, controller);
+            } catch (ParseException ee) {
+                readFromFile(file, panel, controller);
+            }
         } catch (NumberFormatException | IOException e) {
             openPoly(file, panel, controller);
         }
     }
 
-	public static void createPoly(GraphicPanel panel, Controller controller, Graph graph) {
+  public static void createPoly(GraphicPanel panel, Controller controller, Graph graph) {
 		int max_x = 0, max_y = 0;
 		List<Point> loadedVertices = new ArrayList<Point>();
 		List<Point> screenVertices = new ArrayList<Point>();
