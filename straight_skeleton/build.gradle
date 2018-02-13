@@ -9,6 +9,7 @@ apply plugin: 'java'
 
 mainClassName = 'at.tugraz.igi.main.Main'
 // mainClassName = 'at.tugraz.igi.main.SingleRun'
+// mainClassName = 'at.tugraz.igi.main.BatchRun'
 
 repositories {
     jcenter()

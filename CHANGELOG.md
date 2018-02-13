@@ -1,3 +1,4 @@
+* Added a batch runner
 * Implemented plaintext/xz-compressed coordinates reading & loading
 * Added autonomous single file runner
 * Added some simple polygons which yield incorrect behaviour

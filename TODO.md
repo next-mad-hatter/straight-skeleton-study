@@ -1,7 +1,5 @@
 * Use issue tracker?
 
-* Implement batch execution for generated dataset
-
 * Factor out library part & split off the app and single file runner
 
 * Zoom; autozoom & autopan at load
