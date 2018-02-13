@@ -1,3 +1,4 @@
+* Implemented plaintext/xz-compressed coordinates reading & loading
 * Added autonomous single file runner
 * Added some simple polygons which yield incorrect behaviour
 * Got rid of some linter warnings (some redundand casts, raw types and unchecked casts eliminated)

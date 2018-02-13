@@ -1,8 +1,6 @@
 * Use issue tracker?
 
-* Implement reading & script batch execution for generated dataset
-
-* Implement reading compressed files
+* Implement batch execution for generated dataset
 
 * Factor out library part & split off the app and single file runner
 
