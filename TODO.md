@@ -1,5 +1,7 @@
 * Use issue tracker?
 
+* Batch runner: ignore empty lines & enable comments
+
 * Factor out library part & split off the app and single file runner
 
 * Zoom; autozoom & autopan at load
