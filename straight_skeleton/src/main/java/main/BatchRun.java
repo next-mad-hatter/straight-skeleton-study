@@ -18,7 +18,6 @@ import java.nio.file.*;
 import java.util.stream.*;
 
 public class BatchRun {
-    
 
     public static void main(String[] args) throws Exception {
         if (args.length != 1) {
@@ -34,14 +33,13 @@ public class BatchRun {
                 if (strs.length < 2 || strs.length > 3) {
                     throw new Exception("Bad input file line: " + line);
                 }
-                Run.run(strs[0], strs[1], strs.length > 2 ? strs[2] : null);
+                try {
+                  Run.run(strs[0], strs[1], strs.length > 2 ? strs[2] : null);
+                } catch (Exception e) {
+                    System.out.println("Error encountered for input file " + strs[0]);
+                    e.printStackTrace();
+                }
             }
         }
-
-        /*
-        try (Stream<String> stream = Files.lines(Paths.get(args[0]))) {
-            stream.forEach((x) -> System.out.println(x));
-        }
-        */
     }
 }

@@ -1,6 +1,6 @@
 * Use issue tracker?
 
-* Batch runner: ignore empty lines & enable comments
+* Batch runner: ignore empty lines & enable comments, add progress indicator
 
 * Factor out library part & split off the app and single file runner
 
