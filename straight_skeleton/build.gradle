@@ -2,14 +2,8 @@ plugins {
     id 'java'
     id 'application'
     id 'net.ltgt.apt' version '0.10'
-    id 'io.franzbecker.gradle-lombok' version '1.8'
+    // id "org.jetbrains.kotlin.jvm" version "1.2.21"
 }
-
-apply plugin: 'java'
-
-mainClassName = 'at.tugraz.igi.main.Main'
-// mainClassName = 'at.tugraz.igi.main.SingleRun'
-// mainClassName = 'at.tugraz.igi.main.BatchRun'
 
 repositories {
     jcenter()
@@ -20,42 +14,30 @@ repositories {
     }
 }
 
+
 dependencies {
     compile fileTree(dir: 'lib', include: '*.jar')
     compile group: 'com.codepoetics', name: 'protonpack', version: '1.+'
     // compile group: 'org.jooq', name: 'jool', version: '0.9.+'
     // compile group: 'io.github.amaembo', name: 'streamex', version: '0.0.7'
     // compile group: 'io.vavr', name: 'vavr', version: '0.9.0'
+    // compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.+'
+    // compileOnly 'org.projectlombok:lombok:1.+'
+    // apt "org.projectlombok:lombok:1.+"
     compile group: 'org.tukaani', name: 'xz', version: '1.+'
+    compile group: 'me.tongfei', name: 'progressbar', version: '0.4.+'
     compile group: 'org.tallison', name: 'jmatio', version: '1.2'
     compile group: 'org.jfree', name: 'jfreesvg', version: '3.2'
     testCompile 'junit:junit:4.+'
-    apt "org.projectlombok:lombok:1.+"
-    // compile group: 'org.projectlombok', name: 'lombok', version: '1.16.10'
-    compileOnly 'org.projectlombok:lombok:1.+'
-    //compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.+'
+    // compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
 
-import io.franzbecker.gradle.lombok.task.DelombokTask
-
-task delombok(type: DelombokTask, dependsOn: compileJava) {
-    ext.outputDir = file("$buildDir/delombok")
-    outputs.dir(outputDir)
-    sourceSets.main.java.srcDirs.each {
-        inputs.dir(it)
-        args(it, "-d", outputDir)
-    }
+/*
+sourceSets {
+    main.java.srcDirs += 'src/main/java'
+    main.kotlin.srcDirs += 'src/main/kotlin'
 }
-
-task delombokHelp(type: DelombokTask) {
-    args "--help"
-}
-
-javadoc {
-    dependsOn delombok
-    source = delombok.outputDir
-    failOnError = false
-}
+*/
 
 compileJava {
   options.compilerArgs << "-Xlint" // << "-Werror" // "-Xlint:unchecked" << "-Xlint:deprecation"
@@ -74,3 +56,30 @@ run {
         args Eval.me(appArgs)
     }
 }
+
+jar {
+  manifest {
+    if (!configurations.compile.isEmpty()) {
+      attributes(
+          'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+          'Main-Class': 'at.tugraz.igi.main.Main'
+          )
+    }
+  }
+  // This creates a fat/uber-jar:
+  from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+
+  /*
+  from('lib') { include '*.jar' }
+  jar {
+    into('lib') {
+      from 'lib'
+    }
+  }
+  */
+}
+
+mainClassName = 'at.tugraz.igi.main.Main'
+// mainClassName = 'at.tugraz.igi.main.SingleRun'
+// mainClassName = 'at.tugraz.igi.main.BatchRun'
+

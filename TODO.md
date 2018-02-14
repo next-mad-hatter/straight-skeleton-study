@@ -1,10 +1,8 @@
 * Use issue tracker?
 
-* Batch runner: ignore empty lines & enable comments, add progress indicator
+* Batch runner: add progress indicator
 
 * Factor out library part & split off the app and single file runner
-
-* Zoom; autozoom & autopan at load
 
 * Count events (flip, split etc, extraordinary = flip not changing angle
   category?)
@@ -12,6 +10,10 @@
 * History: back steps
 
 * Straight jump to result
+
+* Zoom; autozoom & autopan at load
+
+* Separate points coordinates and drawn points' coordinates, automatically compute good mappings
 
 * Show triangulation as very first step
 

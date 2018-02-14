@@ -122,6 +122,7 @@ public class FileHandler {
      */
     private static List<Point> parseCoordinates(String input) throws ParseException {
         try {
+            input = input.replaceAll("#.*(\n|$)", "").trim();
             List<Double> nums = Stream.of(input.split("\\s+")).map(Double::valueOf).collect(Collectors.toList());
             if ((nums.size() % 2) != 0)
                 throw new ParseException("Uneven number of fields in coordinates file");
