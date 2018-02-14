@@ -1,8 +1,6 @@
 * Use issue tracker?
 
-* Batch runner: add progress indicator
-
-* Factor out library part & split off the app and single file runner
+* Separate algorithm form the applet
 
 * Count events (flip, split etc, extraordinary = flip not changing angle
   category?)
@@ -23,11 +21,17 @@
 
 * Large weights can result in animation becoming very slow
 
+* Area not originally shown in canvas doesn't get background painted when canvas is scrolled
+
 * Get confirmation from user before overwriting files
 
-* Compile a set of correctness tests
+* Extend the set of correctness tests
 
 * Bug(s): found number of instances which yield incorrect behaviour -> check e.g. behaviour at coinsiding events
+
+* Bug: on one specific instance (simple-07 as of now) correct skeleton is
+  computed when run via noswingworker (single/batch) variant while the applet
+  version produces bad result
 
 * Bug: ConcurrentModificationException(s) encountered when drawing in GraphicPanel.paintMovedPoints
 
@@ -41,6 +45,12 @@
   reads/writes plain text.  A workaround right now would be to load the polygon
   into main app by closing the generating app window.
 
+* Batch runner: read multiple batch files & add output prefix option -> shell batch runner
+
+* Add loaded file name to window title
+
+* Get rid of bad/hardcoded resource paths
+
 * Get rid of dependencies remaining local (randomPolygon & poly2tri)
   or replace libs in question by something more robust
 
@@ -51,7 +61,7 @@
    or https://parasol.tamu.edu/publications/abstract.php?pub_id=185
   )?
 
-* Alternative (fx/fn-fx/re-frame etc) ui if changes extensive?
+* Alternative (fx/tornado/fn-fx/re-frame etc) ui if changes extensive?
 
 * Investigate numerical stability
 

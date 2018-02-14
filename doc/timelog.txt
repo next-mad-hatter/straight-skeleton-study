@@ -7,3 +7,5 @@
 2018.02.10     3:10    source studies, first bug enquiries
 2018.02.11     8:00    some code cleaning, simple test instances added, single instance runner
 2018.02.13     8:20    batch runner, plaintext/compressed coordinates reading & controller loading (+ controller study)
+2018.02.14     2:50    batch runner improvements, packaging build
+2018.02.15     3:00    computation bugs hunting, more test data

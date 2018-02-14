@@ -28,7 +28,12 @@ public class SingleRun {
             System.exit(1);
         }
 
-        Run.run(args[0], args[1], args.length > 2 ? args[2] : null);
+        try {
+          Run.run(args[0], args[1], args.length > 2 ? args[2] : null);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
 }

@@ -14,7 +14,7 @@ Right now, there are three ways to run it:
 
   * BatchRun expects a file where each (non-empty) line contains a list of
     arguments SingleRun would expect, and runs the algorithm for every
-    such line.
+    such line (see `bin/batch_example.sh` and `data/batches/simple-batch.txt`).
 
 From `straight_skeleton` directory, those can be invoked via `gradle run`
 (see `build.gradle` file for details), or (after a successful `gradle

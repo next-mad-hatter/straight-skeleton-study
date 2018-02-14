@@ -24,33 +24,24 @@ public class Run {
 
         FileHandler.open(panel, controller, new File(in_file));
         // FIXME: add autozoom
-        // panel.setSize(new Dimension(2000, 2000));
+        panel.setSize(new Dimension(2000, 2000));
 
-        try {
-            controller.runAlgorithmNoSwingWorker();
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-        while (!controller.finished) {
-            System.out.println("Implementation error");
-            System.exit(1);
+        controller.runAlgorithmNoSwingWorker();
+        if (!controller.finished) {
+            throw new Exception("Algorithm didn't finish");
         }
 
         // FIXME: get event counts
 
         FileHandler.file = new File(out_file);
+        if (FileHandler.file.getParentFile() != null) FileHandler.file.getParentFile().mkdirs();
         FileHandler.save(controller.polyLines, false);
-
         if (img_file != null) {
             File outputfile = new File(img_file);
-            try {
-                ImageIO.write(createImage(controller.view), "png", outputfile);
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.exit(1);
-            }
+            if (outputfile.getParentFile() != null) outputfile.getParentFile().mkdirs();
+            ImageIO.write(createImage(controller.view), "png", outputfile);
         }
+
     }
 
     public static BufferedImage createImage(JPanel panel) {

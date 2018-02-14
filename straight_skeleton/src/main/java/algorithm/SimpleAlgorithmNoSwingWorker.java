@@ -343,7 +343,7 @@ public class SimpleAlgorithmNoSwingWorker {
 
 				}
 			} catch (Exception e) {
-
+          throw e;
 			}
 		}
 

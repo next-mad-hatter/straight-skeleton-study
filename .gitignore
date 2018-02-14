@@ -1,5 +1,5 @@
-data/**/*
-test-201*/
+data
+tmp
 
 straight_skeleton/build
 straight_skeleton/gradle
@@ -10,6 +10,7 @@ straight_skeleton/lib/*.jar
 straight_skeleton/tmp
 
 doc/*.pdf
+test-201*/
 
 tags
 TAGS

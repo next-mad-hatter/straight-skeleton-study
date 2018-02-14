@@ -33,6 +33,12 @@ import frontend.MainFrame;
 public class TestScript {
 
 	public static void main(String[] args) throws Exception {
+
+          /*
+          kotlindemo.AdderKt.split("Three");
+          kotlindemo.AdderKt.add(3, 5);
+          */
+
 		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 		Date date = new Date();
 		//String path = String.format("D:\\Uni\\SVN\\PR_Algorithmen\\TestResults\\%s", dateFormat.format(date));
