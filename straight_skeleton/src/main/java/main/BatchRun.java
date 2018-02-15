@@ -71,9 +71,14 @@ public class BatchRun {
                 failed += 1;
             }
             pb.step();
-            pb.setExtraMessage("Done: " +  succeeded.toString() + ", failed: " + failed.toString() + ".");
+            pb.setExtraMessage("Done: " + String.valueOf(succeeded + failed) +
+                               "; finished: " + succeeded.toString() +
+                               ", failed: " + failed.toString() + ".");
         }
         pb.stop();
+        System.out.println("Done: " + String.valueOf(succeeded + failed) +
+                           "; finished: " + succeeded.toString() +
+                           ", failed: " + failed.toString() + ".");
     }
 
 }

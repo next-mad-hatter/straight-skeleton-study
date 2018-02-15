@@ -1,26 +1,31 @@
 # Input example for BatchRun
 
-simple/simple.01 /dev/null                       # crashes reliably
+simple/simple.01 /dev/null                       # crashes
 simple/simple.02 /dev/null                       # good
-simple/simple.03 /dev/null                       # crashes reliably
+simple/simple.03 /dev/null                       # crashes
 simple/simple.04 /dev/null                       # good
 simple/simple.05 /dev/null                       # good
 simple/simple.06 /dev/null ../tmp/simple-06.png  # bad skeleton
 simple/simple.07 /dev/null ../tmp/simple-07.png  # bad skeleton when run via applet, seems good when run as noswingworker version
-simple/simple.08 /dev/null                       # crashes reliably
+simple/simple.08 /dev/null                       # crashes
 simple/simple.09 /dev/null ../tmp/simple-09.png  # bad skeleton
 simple/simple.10 /dev/null ../tmp/simple-10.png  # bad skeleton
 simple/simple.11 /dev/null ../tmp/simple-11.png  # bad skeleton
 simple/simple.12 /dev/null ../tmp/simple-12.png  # bad skeleton
-simple/simple.13 /dev/null                       # crashes reliably
+simple/simple.13 /dev/null                       # crashes
+simple/simple.14 /dev/null                       # crashes
+simple/simple.15 /dev/null ../tmp/simple-15.png  # bad skeleton
+simple/simple.16 /dev/null                       # crashes
+simple/simple.17 /dev/null                       # crashes
+simple/simple.18 /dev/null                       # good
 
 misc/crashes.1 /dev/null ../tmp/misc-01.png      # bad skeleton
-misc/crashes.2.min /dev/null                     # crashes reliably
+misc/crashes.2.min /dev/null                     # crashes
 misc/crashes.2.working /dev/null                 # good
-misc/crashes.3 /dev/null                         # crashes reliably
+misc/crashes.3 /dev/null                         # crashes
 misc/crashes.4 /dev/null ../tmp/misc-04.png      # bad skeleton
-misc/crashes.5 /dev/null                         # crashes reliably
-misc/crashes.6 /dev/null                         # crashes reliably
+misc/crashes.5 /dev/null                         # crashes
+misc/crashes.6 /dev/null                         # crashes
 
 misc/weird.1 /dev/null ../tmp/weird-01.png       # yields concurrent update exception when run via applet
 
