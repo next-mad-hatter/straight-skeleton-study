@@ -1,9 +1,9 @@
 * Use issue tracker?
 
-* Separate algorithm form the applet
-
 * Count events (flip, split etc, extraordinary = flip not changing angle
   category?)
+
+* Show triangulation as very first step
 
 * History: back steps
 
@@ -12,8 +12,6 @@
 * Zoom; autozoom & autopan at load
 
 * Separate points coordinates and drawn points' coordinates, automatically compute good mappings
-
-* Show triangulation as very first step
 
 * Adjustable animation speed, animations switchable & pausable
 
@@ -24,6 +22,8 @@
 * Area not originally shown in canvas doesn't get background painted when canvas is scrolled
 
 * Get confirmation from user before overwriting files
+
+* Separate algorithm form the applet
 
 * Extend the set of correctness tests
 
