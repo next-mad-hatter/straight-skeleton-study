@@ -2,9 +2,9 @@
 
 simple/simple.01 /dev/null                       # crashes
 simple/simple.02 /dev/null                       # good
-simple/simple.03 /dev/null                       # good
+simple/simple.03 /dev/null                       # crashes when run via noswingworkder
 simple/simple.04 /dev/null                       # good
-simple/simple.05 /dev/null                       # crashes
+simple/simple.05 /dev/null ../tmp/simple-05.png  # bad skeleton
 simple/simple.06 /dev/null ../tmp/simple-06.png  # bad skeleton
 simple/simple.07 /dev/null ../tmp/simple-07.png  # bad skeleton when run via applet, seems good when run as noswingworker version
 simple/simple.08 /dev/null                       # crashes
