@@ -9,3 +9,4 @@
 2018.02.13     8:20    batch runner, plaintext/compressed coordinates reading & controller loading (+ controller study)
 2018.02.14     2:50    batch runner improvements, packaging build
 2018.02.15     4:00    computation bugs hunting, more test data
+2018.02.17     3:30    counting input parser/vertex counter fix attempt
