@@ -503,12 +503,11 @@ public class FileHandler {
             p1 = new Point(points.size()+1, x, y);
             points.add(p1);
             pointIDs.add(id);
-            System.out.println(String.valueOf(points.size()) + " -> " + id.toString());
             // pointIDsLU.put(id, points.size());
             if (x > max_x) max_x = (int) x;
             if (y > max_y) max_y = (int) y;
             // screenP1 = new Point(points.size(), x, y);
-            screenP1 = new Point(id, x, y);
+            screenP1 = new Point(id.intValue(), x, y);
 				} else {
             if (pointIDs.get(pointIDs.size()-1).intValue() != id.intValue()) {
                 throw new ParseException("Not yet supported input feature.");
@@ -524,20 +523,17 @@ public class FileHandler {
 				p2 = new Point(points.size()+1, x, y);
 				points.add(p2);
         pointIDs.add(id);
-        System.out.println(String.valueOf(points.size()) + " -> " + id.toString());
         // pointIDsLU.put(id, points.size());
 				if (x > max_x) max_x = (int) x;
 				if (y > max_y) max_y = (int) y;
 				// screenP2 = new Point(points.size(), x, y);
-				screenP2 = new Point(id, x, y);
+				screenP2 = new Point(id.intValue(), x, y);
 
-        // FIXME: can we not expect the input to be closed explicitly?
-        /*
-				if (lines.size() > 0 && p2.equals(lines.get(0).getP1())) {
-					p2 = lines.get(0).getP1();
-					screenP2 = screenLines.get(0).getP1();
+				if (lines.size() > 0 && pointIDs.get(0).intValue() == pointIDs.get(pointIDs.size()-1).intValue()) {
+            p2 = points.get(0);
+            if (x != p2.getOriginalX() || y != p2.getOriginalY()) throw new ParseException("Inconsistent input");
+            screenP2 = screenLines.get(0).getP1();
 				}
-        */
 
 				Line l = new Line(p1, p2, Integer.parseInt(pts[2]));
 				p1.adjacentLines.add(l);
@@ -562,16 +558,14 @@ public class FileHandler {
           return;
       }
       if (pointIDs.get(pointIDs.size()-1).intValue() != pointIDs.get(0).intValue()) {
-          System.out.println(pointIDs.get(0).toString());
-          System.out.println(pointIDs.get(pointIDs.size()-1).toString());
-          throw new ParseException("Polygon not closed explicitly");
+          throw new ParseException("Polygon not closed explicitly by last edge");
       }
       pointIDs.remove(pointIDs.size()-1);
-      if(pointIDs.stream().distinct().count() != pointIDs.size()) throw new ParseException("Bad polygon");
+      if(pointIDs.stream().map((x) -> x.intValue()).distinct().count() != pointIDs.size()) throw new ParseException("Bad polygon");
       points.get(points.size()-1).setNumber(1);
 
       // controller.reset();
-      // FIXME: do we want to enforce uniqueness of points?
+      // FIXME: do we want to otherwise enforce uniqueness of points?
 			controller.setLoadedData(lines, screenLines, new LinkedHashSet<Point>(points));
 			panel.setPreferredSize(new Dimension(max_x + 20, max_y + 20));
 			panel.repaint();
