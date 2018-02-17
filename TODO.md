@@ -2,6 +2,9 @@
 
 * Set up consistant indenting & os-appropriate line breaks (wtf spacemacs?!)
 
+* Apply counting vertices fix to loading polygon from random generation app,
+  check if graph loading takes this into account
+
 * Count events (flip, split etc, extraordinary = flip not changing angle
   category?)
 
