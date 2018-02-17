@@ -1,5 +1,7 @@
 * Use issue tracker?
 
+* Set up consistant indenting
+
 * Count events (flip, split etc, extraordinary = flip not changing angle
   category?)
 
@@ -67,6 +69,5 @@
 
 * Investigate rendering artefacts
 
-* Create a useful readme?
-
 * Check source for appropriate line breaks (shouldn't git have converted those? O_x)
+

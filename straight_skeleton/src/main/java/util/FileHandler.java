@@ -103,7 +103,7 @@ public class FileHandler {
      *  - the xml-based graph format as produced by the random generator app found here
      *  - the simple two-floats-per-line format used by generated polygons dataset
      *
-     * While iianm #open() below attempts to take care of former two, this read the latter.
+     * While #open() below attempts to take care of former two, this reads the latter.
      * We'll also try reading input as xz stream first.
      *
      * For now we expect the input to fit in memory easily, so we read it in all at once.
@@ -232,6 +232,8 @@ public class FileHandler {
             } catch (ParseException ee) {
                 readFromFile(file, panel, controller);
             }
+        } catch (ParseException e) {
+            throw e;
         } catch (NumberFormatException | IOException e) {
             openPoly(file, panel, controller);
         }
@@ -306,6 +308,9 @@ public class FileHandler {
 			controller.setLoadedData(loadedEdges, reorder(screenEdges), points);
 			panel.setPreferredSize(new Dimension(max_x + 20, max_y + 20));
 			panel.repaint();
+      // FIXME: this seems to rely on points being ordered as polygon order,
+      //        but does conversion from the set as constructed
+      //        above guarantee any such thing?
 			if (Util.isCounterClockwise(new ArrayList<Point>(loadedVertices))) {
 				panel.repositionTextfields();
 			}
@@ -470,38 +475,69 @@ public class FileHandler {
 			BufferedReader br = new BufferedReader(new InputStreamReader(in));
 			String line = br.readLine();
 
-			List<Line> lines = new ArrayList<Line>();
-			List<Line> screenLines = new ArrayList<Line>();
-			Set<Point> points = new LinkedHashSet<Point>();
+			List<Line> lines = new ArrayList<>();
+			List<Line> screenLines = new ArrayList<>();
+			ArrayList<Point> points = new ArrayList<>();
 			Point p1 = null;
 			Point screenP1 = null;
+			Point p2 = null;
+			Point screenP2 = null;
+
+      // FIXME: given implementation seems to rely on points' "numbers" being
+      //        consequtive ordinals starting at 1 (grep for usage of
+      //        vertex_counter or clonePoint).  We'll try and ignore
+      //        given numbers here (not for screen lines though -- if it works).
+
+      ArrayList<Integer> pointIDs = new ArrayList<>();
+      // backward lookup map -- in case we wanted to implement non-consecutive lines input:
+      // HashMap<Integer, Integer> pointIDsLU = new HashMap<>();
+
 			while (line != null) {
 				String[] pts = line.split("-");
 
 				String[] p_data1 = pts[0].split(";");
-				if (p1 == null) {
-					p1 = new Point(Integer.parseInt(p_data1[0]), Double.parseDouble(p_data1[1]),
-							Double.parseDouble(p_data1[2]));
-					points.add(p1);
-					screenP1 = new Point(p1.getNumber(), p1.getOriginalX(), p1.getOriginalY());
+        Integer id = new Integer(Integer.parseInt(p_data1[0]));
+        double x = Double.parseDouble(p_data1[1]);
+        double y = Double.parseDouble(p_data1[2]);
+        if (p1 == null) {
+            p1 = new Point(points.size()+1, x, y);
+            points.add(p1);
+            pointIDs.add(id);
+            System.out.println(String.valueOf(points.size()) + " -> " + id.toString());
+            // pointIDsLU.put(id, points.size());
+            if (x > max_x) max_x = (int) x;
+            if (y > max_y) max_y = (int) y;
+            // screenP1 = new Point(points.size(), x, y);
+            screenP1 = new Point(id, x, y);
+				} else {
+            if (pointIDs.get(pointIDs.size()-1).intValue() != id.intValue()) {
+                throw new ParseException("Not yet supported input feature.");
+            }
+            if (p2.getOriginalX() != x || p2.getOriginalY() != y ) throw new ParseException("Inconsistent input.");
+        }
 
-				}
 				String[] p_data2 = pts[1].split(";");
-				Point p2 = new Point(Integer.parseInt(p_data2[0]), Double.parseDouble(p_data2[1]),
-						Double.parseDouble(p_data2[2]));
-				if (p2.getOriginalX() > max_x) {
-					max_x = (int) p2.getOriginalX();
-				}
-				if (p2.getOriginalY() > max_y) {
-					max_y = (int) p2.getOriginalY();
-				}
-				Point screenP2 = new Point(p2.getNumber(), p2.getOriginalX(), p2.getOriginalY());
+        id = new Integer(Integer.parseInt(p_data2[0]));
+        x = Double.parseDouble(p_data2[1]);
+        y = Double.parseDouble(p_data2[2]);
+
+				p2 = new Point(points.size()+1, x, y);
+				points.add(p2);
+        pointIDs.add(id);
+        System.out.println(String.valueOf(points.size()) + " -> " + id.toString());
+        // pointIDsLU.put(id, points.size());
+				if (x > max_x) max_x = (int) x;
+				if (y > max_y) max_y = (int) y;
+				// screenP2 = new Point(points.size(), x, y);
+				screenP2 = new Point(id, x, y);
+
+        // FIXME: can we not expect the input to be closed explicitly?
+        /*
 				if (lines.size() > 0 && p2.equals(lines.get(0).getP1())) {
 					p2 = lines.get(0).getP1();
 					screenP2 = screenLines.get(0).getP1();
 				}
-
-				points.add(p2);
+        */
 
 				Line l = new Line(p1, p2, Integer.parseInt(pts[2]));
 				p1.adjacentLines.add(l);
@@ -522,8 +558,21 @@ public class FileHandler {
 			}
 			br.close();
 
-			// controller.reset();
-			controller.setLoadedData(lines, screenLines, points);
+      if(points.size() == 0) {
+          return;
+      }
+      if (pointIDs.get(pointIDs.size()-1).intValue() != pointIDs.get(0).intValue()) {
+          System.out.println(pointIDs.get(0).toString());
+          System.out.println(pointIDs.get(pointIDs.size()-1).toString());
+          throw new ParseException("Polygon not closed explicitly");
+      }
+      pointIDs.remove(pointIDs.size()-1);
+      if(pointIDs.stream().distinct().count() != pointIDs.size()) throw new ParseException("Bad polygon");
+      points.get(points.size()-1).setNumber(1);
+
+      // controller.reset();
+      // FIXME: do we want to enforce uniqueness of points?
+			controller.setLoadedData(lines, screenLines, new LinkedHashSet<Point>(points));
 			panel.setPreferredSize(new Dimension(max_x + 20, max_y + 20));
 			panel.repaint();
 			if (Util.isCounterClockwise(new ArrayList<Point>(points))) {

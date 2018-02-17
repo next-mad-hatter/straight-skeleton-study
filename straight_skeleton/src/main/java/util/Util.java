@@ -241,6 +241,7 @@ public class Util {
 	}
 
 	public static Point clonePoint(Point p, int vertex_counter) {
+      // FIXME: this is *****
 		Point copy = new Point(vertex_counter, p.getOriginalX(), p.getOriginalY());
 		EventCalculation.vertex_counter++;
 		return copy;

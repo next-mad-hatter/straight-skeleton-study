@@ -19,14 +19,15 @@ simple/simple.16 /dev/null                       # crashes
 simple/simple.17 /dev/null                       # crashes
 simple/simple.18 /dev/null                       # good
 
-misc/crashes.1 /dev/null ../tmp/misc-01.png      # bad skeleton
-misc/crashes.2.min /dev/null                     # crashes
-misc/crashes.2.working /dev/null                 # good
-misc/crashes.3 /dev/null                         # crashes
-misc/crashes.4 /dev/null ../tmp/misc-04.png      # bad skeleton
-misc/crashes.5 /dev/null                         # crashes
-misc/crashes.6 /dev/null                         # crashes
+misc/crashes.1           /dev/null ../tmp/misc-01.png   # bad skeleton
+misc/crashes.2.min       /dev/null                      # crashes
+misc/crashes.2.working   /dev/null                      # good
+misc/crashes.3           /dev/null                      # crashes
+misc/crashes.4           /dev/null ../tmp/misc-04.png   # bad skeleton
+misc/crashes.5           /dev/null                      # crashes
+misc/crashes.6           /dev/null                      # crashes
 
-misc/weird.1 /dev/null ../tmp/weird-01.png       # yields concurrent update exception when run via applet
+misc/weird.1             /dev/null ../tmp/weird-01.png  # yields concurrent update exception when run via applet
 
 # polygons_raw_by_size/10/dubay-20_10.dat.xz ../tmp/dubai.skel
+
