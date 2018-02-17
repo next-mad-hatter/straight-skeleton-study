@@ -82,8 +82,8 @@ public class SimpleAlgorithmNoSwingWorker {
 		long time = System.currentTimeMillis();
 		Map<Line, Event> simultaneousEvents = new HashMap<Line, Event>();
     // FIXME: Is this what we want?!
-		// EventCalculation.vertex_counter = points.get(points.size() - 1).getNumber() + 1;
-		EventCalculation.vertex_counter = points.size();
+		EventCalculation.vertex_counter = points.get(points.size() - 1).getNumber() + 1;
+		// EventCalculation.vertex_counter = points.size();
 		boolean convex = true;
 		controller.addPolygon(new HashSet<Point>(points));
 		for (Point p : points) {
