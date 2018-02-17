@@ -2,9 +2,9 @@
 
 simple/simple.01 /dev/null                       # crashes
 simple/simple.02 /dev/null                       # good
-simple/simple.03 /dev/null                       # crashes
+simple/simple.03 /dev/null                       # good
 simple/simple.04 /dev/null                       # good
-simple/simple.05 /dev/null                       # good
+simple/simple.05 /dev/null                       # crashes
 simple/simple.06 /dev/null ../tmp/simple-06.png  # bad skeleton
 simple/simple.07 /dev/null ../tmp/simple-07.png  # bad skeleton when run via applet, seems good when run as noswingworker version
 simple/simple.08 /dev/null                       # crashes
@@ -19,15 +19,14 @@ simple/simple.16 /dev/null                       # crashes
 simple/simple.17 /dev/null                       # crashes
 simple/simple.18 /dev/null                       # good
 
-misc/crashes.1           /dev/null ../tmp/misc-01.png   # bad skeleton
-misc/crashes.2.min       /dev/null                      # crashes
+misc/crashes.1           /dev/null ../tmp/misc-01.png   # fixed by counting parser?
+misc/crashes.2.min       /dev/null                      # fixed by counting parser?
 misc/crashes.2.working   /dev/null                      # good
-misc/crashes.3           /dev/null                      # crashes
-misc/crashes.4           /dev/null ../tmp/misc-04.png   # bad skeleton
-misc/crashes.5           /dev/null                      # crashes
-misc/crashes.6           /dev/null                      # crashes
-
-misc/weird.1             /dev/null ../tmp/weird-01.png  # yields concurrent update exception when run via applet
+misc/crashes.3           /dev/null                      # fixed by counting parser?
+misc/crashes.4           /dev/null ../tmp/misc-04.png   # fixed by counting parser?
+misc/crashes.5           /dev/null                      # fixed by counting parser?
+misc/crashes.6           /dev/null                      # fixed by counting parser?
+misc/weird.1             /dev/null ../tmp/weird-01.png  # fixed by counting parser?
 
 # polygons_raw_by_size/10/dubay-20_10.dat.xz ../tmp/dubai.skel
 
