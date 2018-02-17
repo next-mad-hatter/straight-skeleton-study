@@ -512,7 +512,8 @@ public class FileHandler {
             if (pointIDs.get(pointIDs.size()-1).intValue() != id.intValue()) {
                 throw new ParseException("Not yet supported input feature.");
             }
-            if (p2.getOriginalX() != x || p2.getOriginalY() != y ) throw new ParseException("Inconsistent input.");
+            if (p2.getOriginalX() != x || p2.getOriginalY() != y )
+                throw new ParseException("Inconsistent input");
         }
 
 				String[] p_data2 = pts[1].split(";");
@@ -531,7 +532,8 @@ public class FileHandler {
 
 				if (lines.size() > 0 && pointIDs.get(0).intValue() == pointIDs.get(pointIDs.size()-1).intValue()) {
             p2 = points.get(0);
-            if (x != p2.getOriginalX() || y != p2.getOriginalY()) throw new ParseException("Inconsistent input");
+            if (x != p2.getOriginalX() || y != p2.getOriginalY())
+                throw new ParseException("Inconsistent input for point " + String.valueOf(p2.getNumber()));
             screenP2 = screenLines.get(0).getP1();
 				}
 

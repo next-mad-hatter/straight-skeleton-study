@@ -1,6 +1,6 @@
 * Use issue tracker?
 
-* Set up consistant indenting
+* Set up consistant indenting & os-appropriate line breaks (wtf spacemacs?!)
 
 * Count events (flip, split etc, extraordinary = flip not changing angle
   category?)
