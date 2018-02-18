@@ -302,15 +302,14 @@ public class FileHandler {
 		Set<Point> points = new LinkedHashSet<Point>();
 		for (Line l : loadedEdges) {
 			points.add(l.getP1());
+      // FIXME: we'll try and keep points' numbers in order for now
+      l.getP1().setNumber(points.size());
 		}
 
 		if (panel != null) {
 			controller.setLoadedData(loadedEdges, reorder(screenEdges), points);
 			panel.setPreferredSize(new Dimension(max_x + 20, max_y + 20));
 			panel.repaint();
-      // FIXME: this seems to rely on points being ordered as polygon order,
-      //        but does conversion from the set as constructed
-      //        above guarantee any such thing?
 			if (Util.isCounterClockwise(new ArrayList<Point>(loadedVertices))) {
 				panel.repositionTextfields();
 			}
@@ -385,6 +384,8 @@ public class FileHandler {
 			Set<Point> points = new LinkedHashSet<Point>();
 			for (Line l : loadedEdges) {
 				points.add(l.getP1());
+        // FIXME: we'll try and keep points' numbers in order for now
+        l.getP1().setNumber(points.size());
 			}
 
 			controller.setLoadedData(loadedEdges, reorder(screenEdges), points);
@@ -485,9 +486,13 @@ public class FileHandler {
 
       // FIXME: given implementation seems to rely on points' "numbers" being
       //        consequtive ordinals starting at 1 (grep for usage of
-      //        vertex_counter or clonePoint).  We'll try and ignore
-      //        given numbers here (not for screen lines though -- if it works).
-
+      //        vertex_counter or clonePoint) -- apparently not necessarily in
+      //        order (apart from vertex_counter initialization, which
+      //        definitely looks like a bug) though, if we look at use of
+      //        FileHandler.reorder().
+      //
+      //        We'll try and ignore given numbers here (not for screen lines
+      //        though -- if it works).
       ArrayList<Integer> pointIDs = new ArrayList<>();
       // backward lookup map -- in case we wanted to implement non-consecutive lines input:
       // HashMap<Integer, Integer> pointIDsLU = new HashMap<>();
