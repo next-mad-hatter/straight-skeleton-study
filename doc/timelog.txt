@@ -10,4 +10,4 @@
 2018.02.14     2:50    batch runner improvements, packaging build
 2018.02.15     4:00    computation bugs hunting, more test data
 2018.02.17     3:30    counting input parser/vertex counter fix attempt
-2018.02.18     1:00    try and renumber vertices for generated polygons
+2018.02.18     3:40    try and renumber vertices for generated polygons, skeleton tree check, duplicate arcs filter, more bugs documented

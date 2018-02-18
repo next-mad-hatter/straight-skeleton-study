@@ -7,14 +7,18 @@ import java.util.*;
 import javax.imageio.*;
 import javax.swing.*;
 import java.util.List;
+import java.util.stream.*;
 
-import at.tugraz.igi.ui.ConfigurationTable;
-import at.tugraz.igi.ui.GraphicPanel;
+import at.tugraz.igi.ui.*;
 import at.tugraz.igi.util.*;
 import at.tugraz.igi.util.Point;
 
 public class Run {
 
+    /**
+     * Given a data file name and output file(s)' name(s), computes the straight
+     * skeleton.  img_file can be null.
+     */
     public static void run(String in_file, String out_file, String img_file) throws Exception {
 
         Controller controller = new Controller();
@@ -30,17 +34,28 @@ public class Run {
         if (!controller.finished) {
             throw new Exception("Algorithm didn't finish");
         }
+        // FIXME: currently the algorithm includes some skeleton arcs/edges more than once in the result.
+        //        We'll try and repair those cases here for now.
+        List<Line> skeleton = controller.getStraightSkeleton().getLines()
+            .stream()
+            .map((l) -> l.getP1().getNumber() < l.getP2().getNumber() ? l : new Line(l.getP2(), l.getP1(), l.getWeight()))
+            //.filter((l) -> l.getP1() != l.getP2())
+            .distinct().collect(Collectors.toList());
 
-        // FIXME: get event counts
+        // TODO: get event counts
 
         FileHandler.file = new File(out_file);
         if (FileHandler.file.getParentFile() != null) FileHandler.file.getParentFile().mkdirs();
-        FileHandler.save(controller.polyLines, false);
+        FileHandler.save(skeleton, false);
         if (img_file != null) {
             File outputfile = new File(img_file);
             if (outputfile.getParentFile() != null) outputfile.getParentFile().mkdirs();
             ImageIO.write(createImage(controller.view), "png", outputfile);
         }
+
+        if(!TreeCheck.isTree(new ArrayList<>(controller.getPoints()), skeleton)) {
+            throw new Exception("Bad skeleton");
+        };
 
     }
 

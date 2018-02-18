@@ -118,7 +118,7 @@ public class FileHandler {
 
     /**
      * Parses whitespace-separated list of float coordinates, returning a list of points
-     * (numbered, as is being expected).
+     * (numbered, as is being expected in other application parts).
      */
     private static List<Point> parseCoordinates(String input) throws ParseException {
         try {
@@ -302,7 +302,9 @@ public class FileHandler {
 		Set<Point> points = new LinkedHashSet<Point>();
 		for (Line l : loadedEdges) {
 			points.add(l.getP1());
-      // FIXME: we'll try and keep points' numbers in order for now
+      // FIXME: we'll try and keep points' numbers in order for now just in case --
+      //        since there seems to be at least some implicit reliance on
+      //        the structure of those numbers.
       l.getP1().setNumber(points.size());
 		}
 
@@ -384,7 +386,9 @@ public class FileHandler {
 			Set<Point> points = new LinkedHashSet<Point>();
 			for (Line l : loadedEdges) {
 				points.add(l.getP1());
-        // FIXME: we'll try and keep points' numbers in order for now
+        // FIXME: we'll try and keep points' numbers in order for now just in case --
+        //        since there seems to be at least some implicit reliance on
+        //        the structure of those numbers.
         l.getP1().setNumber(points.size());
 			}
 

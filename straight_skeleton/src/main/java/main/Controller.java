@@ -1,5 +1,7 @@
 package at.tugraz.igi.main;
 
+import lombok.*;
+
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
@@ -91,7 +93,7 @@ public class Controller {
 	private Map<Point, List<StraightSkeleton>> movedPoints;
 	private List<Line> lines;
 	public List<Line> polyLines;
-	private Set<Point> points;
+	@Getter private Set<Point> points;
 	private List<Set<Point>> polygons;
 
 	public Controller() {

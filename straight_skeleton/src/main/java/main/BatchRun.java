@@ -66,7 +66,8 @@ public class BatchRun {
                 succeeded += 1;
             } catch (Exception e) {
                 System.err.println();
-                System.out.println("Error encountered while processing data file " + strs.get(0));
+                System.out.println("Error encountered while processing data file " +
+                                   strs.get(0) + " : " + e.toString());
                 e.printStackTrace();
                 failed += 1;
             }
