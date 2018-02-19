@@ -25,9 +25,7 @@
 
 * Get confirmation from user before overwriting files
 
-* Separate algorithm form the applet
-
-* Extend the set of correctness tests
+* Separate algorithm from the applet
 
 * Bug(s): numerous instances yield incorrect results and/or crash
 
@@ -57,7 +55,7 @@
 
 * Add loaded file name to window title
 
-* Get rid of bad/hardcoded resource paths
+* Get rid of bad/hardcoded resource paths ('/images/')
 
 * Get rid of dependencies remaining local (randomPolygon & poly2tri)
   or replace libs in question by something more robust
@@ -71,11 +69,14 @@
 
 * Alternative (fx/tornado/fn-fx/re-frame etc) ui if changes extensive?
 
-* Investigate numerical stability
+* Investigate numerical stability (see very short arcs example); further
+  research: can we use e.g. apache commons math library to implement exact
+  computations (if this is algebraically feasible at all)?
+
 
 * Investigate rendering artefacts
 
-* Check source for appropriate line breaks (shouldn't git have converted those? O_x)
+* Extend the set of correctness tests
 
 * Set up consistant indenting & os-appropriate line breaks (wtf spacemacs?!)
 

@@ -148,6 +148,9 @@ public class SkeletonApplet extends JFrame {
 		JButton stepButton = new JButton("Step");
 		stepButton.addActionListener(controller.createActionListener(TYPES.STEP));
 
+		JButton backButton = new JButton("Back");
+		stepButton.addActionListener(controller.createActionListener(TYPES.BACK));
+
 		JButton resetButton = new JButton("Reset");
 		resetButton.addActionListener(controller.createActionListener(TYPES.RESET));
 		
@@ -158,10 +161,11 @@ public class SkeletonApplet extends JFrame {
 		checkPanel.add(randomButton);
 		
 		actionPanel.add(playButton);
+		actionPanel.add(backButton);
 		actionPanel.add(stepButton);
 		actionPanel.add(resetButton);
 
-		playButton.setPreferredSize(new Dimension(75, 20));
+		playButton.setPreferredSize(new Dimension(80, 30));
 		playButton.setIcon(Controller.play_icon);
 		playButton.setBackground(Color.WHITE);
 		playButton.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -171,6 +175,11 @@ public class SkeletonApplet extends JFrame {
 		stepButton.setBackground(Color.WHITE);
 		stepButton.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		stepButton.setFocusable(false);
+		backButton.setPreferredSize(playButton.getPreferredSize());
+		backButton.setIcon(Controller.back_icon);
+		backButton.setBackground(Color.WHITE);
+		backButton.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		backButton.setFocusable(false);
 		resetButton.setPreferredSize(playButton.getPreferredSize());
 		resetButton.setIcon(Controller.reset_icon);
 		resetButton.setBackground(Color.WHITE);

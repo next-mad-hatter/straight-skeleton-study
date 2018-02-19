@@ -1,6 +1,6 @@
 # Input example for BatchRun
 
-simple/simple.01 ../tmp/simple-01.skel                              # crashes
+simple/simple.01 ../tmp/simple-01.skel                              # good
 simple/simple.02 ../tmp/simple-02.skel ../tmp/simple-02.png         # good, but numerical issue (short extra arc)
 simple/simple.03 ../tmp/simple-03.skel                              # crashes when run via noswingworkder
 simple/simple.04 ../tmp/simple-04.skel ../tmp/simple-04.png         # good

@@ -2,6 +2,14 @@ package at.tugraz.igi.main;
 
 import lombok.*;
 
+/*
+import org.apache.batik.util.*;
+import org.apache.batik.dom.svg.SVGDOMImplementation;
+import org.apache.batik.transcoder.*;
+import org.apache.batik.transcoder.image.*;
+import org.apache.batik.transcoder.image.ImageTranscoder;
+*/
+
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
@@ -23,7 +31,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import javax.imageio.ImageIO;
+import javax.imageio.*;
 import javax.swing.ImageIcon;
 import javax.swing.JColorChooser;
 import javax.swing.JLabel;
@@ -34,19 +42,12 @@ import at.tugraz.igi.algorithm.SimpleAlgorithmNoSwingWorker;
 import at.tugraz.igi.ui.ConfigurationTable;
 import at.tugraz.igi.ui.CustomTextField;
 import at.tugraz.igi.ui.GraphicPanel;
-import at.tugraz.igi.util.EventCalculation;
-import at.tugraz.igi.util.FileHandler;
-import at.tugraz.igi.util.Line;
-import at.tugraz.igi.util.Point;
-import at.tugraz.igi.util.PolygonMeasureData;
-import at.tugraz.igi.util.StraightSkeleton;
-import at.tugraz.igi.util.Triangle;
-import at.tugraz.igi.util.Util;
+import at.tugraz.igi.util.*;
 import data.Graph;
 
 public class Controller {
 	public static enum TYPES {
-		OPEN, SAVE, SAVE_AS, PLAY, STEP, RESET, OPEN_POLY, SVG
+		OPEN, SAVE, SAVE_AS, PLAY, STEP, BACK, RESET, OPEN_POLY, SVG
 	}
 
 	public static boolean isCounterClockwise;
@@ -54,7 +55,8 @@ public class Controller {
 	public static ImageIcon play_icon;
 	public static ImageIcon color_icon;
 	public static ImageIcon step_icon;
-	public static ImageIcon reset_icon;
+    public static ImageIcon back_icon;
+    public static ImageIcon reset_icon;
 	public static ImageIcon edit_icon;
 	public static ImageIcon visible_icon;
 	public static ImageIcon not_visible_icon;
@@ -104,8 +106,9 @@ public class Controller {
 		delete_icon = getImage("delete");
 		play_icon = getImage("play");
 		color_icon = getImage("color");
-		step_icon = getImage("step");
-		reset_icon = getImage("reset");
+		step_icon = getImage("go-next");
+		back_icon = getImage("go-previous");
+		reset_icon = getImage("view-refresh");
 		edit_icon = getImage("edit");
 		visible_icon = getImage("eye");
 		not_visible_icon = getImage("eye_blocked");
@@ -176,16 +179,44 @@ public class Controller {
 	}
 
 	private ImageIcon getImage(String name) {
-		//InputStream imgStream = getClass().getClassLoader().getResourceAsStream("resources/" + name + ".png");
 		InputStream imgStream = getClass().getClassLoader().getResourceAsStream(name + ".png");
-		ImageIcon icon = null;
-		try {
-			icon = new ImageIcon(ImageIO.read(imgStream));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return icon;
-	}
+        if (imgStream == null)
+            imgStream = getClass().getClassLoader().getResourceAsStream("tango/" + name + ".png");
+        if (imgStream != null) {
+            ImageIcon icon = null;
+            try {
+                icon = new ImageIcon(ImageIO.read(imgStream));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return icon;
+        }
+        return null;
+        /*
+        imgStream = getClass().getClassLoader().getResourceAsStream("tango/" + name + ".svg");
+        if (imgStream == null) return null;
+
+        SVGTranscoder transcoder = new SVGTranscoder();
+        TranscodingHints hints = new TranscodingHints();
+        hints.put(ImageTranscoder.KEY_WIDTH, new Float(64));
+        hints.put(ImageTranscoder.KEY_HEIGHT, new Float(64));
+        hints.put(ImageTranscoder.KEY_DOM_IMPLEMENTATION, SVGDOMImplementation.getDOMImplementation());
+        hints.put(ImageTranscoder.KEY_DOCUMENT_ELEMENT_NAMESPACE_URI, SVGConstants.SVG_NAMESPACE_URI);
+        hints.put(ImageTranscoder.KEY_DOCUMENT_ELEMENT, SVGConstants.SVG_SVG_TAG);
+        hints.put(ImageTranscoder.KEY_XML_PARSER_VALIDATING, false);
+        transcoder.setTranscodingHints(hints);
+
+        try {
+            transcoder.transcode(new TranscoderInput(imgStream), null);
+        } catch (TranscoderException e) {
+            e.printStackTrace();
+            return null;
+        }
+        // FIXME: why do we get null here?
+        if (transcoder.getImage() == null) return null;
+        return new ImageIcon(transcoder.getImage());
+        */
+    }
 
 	public int getSelectedIndex() {
 		for (int i = 0; i < table.getRowCount(); i++) {
@@ -274,7 +305,7 @@ public class Controller {
 		finished = false;
 		isRunning = true;
 		ArrayList<Point> points = new ArrayList<>(this.points);
-		if (points.size() > 3) {
+		if (points.size() > 2) {
 
 			Util.closePolygon(points, lines);
 			closed = true;
@@ -305,7 +336,7 @@ public class Controller {
 		finished = false;
 		isRunning = true;
 		ArrayList<Point> points = new ArrayList<>(this.points);
-		if (points.size() > 3) {
+		if (points.size() > 2) {
 
 			Util.closePolygon(points, lines);
 			closed = true;
@@ -550,6 +581,9 @@ public class Controller {
 			case PLAY:
 				play();
 				break;
+			case BACK:
+				back();
+				break;
 			case STEP:
 				step();
 				break;
@@ -604,6 +638,9 @@ public class Controller {
 				view.setEnabled(false);
 			}
 		}
+
+        private void back() {
+        }
 
 		private void step() {
 

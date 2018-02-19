@@ -11,6 +11,8 @@ public class TreeCheck {
      * Checks if the graph defined by given set of points and lines is a tree.
      *
      * Points can be null.
+     *
+     * TODO: how far do we need to relax this for polygons with holes?
      */
     public static boolean isTree(List<Point> points, List<Line> edges) throws Exception {
         Pseudograph<Point, DefaultEdge> gr = new Pseudograph<>(DefaultEdge.class);

@@ -81,7 +81,7 @@ public class SimpleAlgorithmNoSwingWorker {
 //		long cpu = thread.getCurrentThreadCpuTime();
 		long time = System.currentTimeMillis();
 		Map<Line, Event> simultaneousEvents = new HashMap<Line, Event>();
-    // FIXME: Is this what we want?!
+        // FIXME: Is this what we want?!
 		// EventCalculation.vertex_counter = points.get(points.size() - 1).getNumber() + 1;
 		EventCalculation.vertex_counter = points.size() + 1;
 		boolean convex = true;
