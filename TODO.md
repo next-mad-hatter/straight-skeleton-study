@@ -32,6 +32,9 @@
 * Bug(s): sometimes duplicate edges are present in computed skeleton
   (currently e.g. misc/crashes.[4-6])
 
+* Bug: when using the applet, recomputing skeleton a second time can (e.g. with
+  crashes.2.min) yield incorrect skeleton
+
 * Bug(s)/numerical issues: in some instances (currently, e.g. simple-02)
   some very short edges are inserted
 
