@@ -241,8 +241,8 @@ public class Util {
 	}
 
 	public static Point clonePoint(Point p, int vertex_counter) {
-		Point copy = new Point(vertex_counter, p.getOriginalX(), p.getOriginalY());
-		EventCalculation.vertex_counter++;
+        Point copy = new Point(vertex_counter, p.getOriginalX(), p.getOriginalY());
+        EventCalculation.vertex_counter++;
 		return copy;
 	}
 

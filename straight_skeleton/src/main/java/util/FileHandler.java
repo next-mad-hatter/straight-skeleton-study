@@ -103,7 +103,7 @@ public class FileHandler {
      *  - the xml-based graph format as produced by the random generator app found here
      *  - the simple two-floats-per-line format used by generated polygons dataset
      *
-     * While iianm #open() below attempts to take care of former two, this read the latter.
+     * While #open() below attempts to take care of former two, this reads the latter.
      * We'll also try reading input as xz stream first.
      *
      * For now we expect the input to fit in memory easily, so we read it in all at once.
@@ -118,7 +118,7 @@ public class FileHandler {
 
     /**
      * Parses whitespace-separated list of float coordinates, returning a list of points
-     * (numbered, as is being expected).
+     * (numbered, as is being expected in other application parts).
      */
     private static List<Point> parseCoordinates(String input) throws ParseException {
         try {
@@ -232,6 +232,8 @@ public class FileHandler {
             } catch (ParseException ee) {
                 readFromFile(file, panel, controller);
             }
+        } catch (ParseException e) {
+            throw e;
         } catch (NumberFormatException | IOException e) {
             openPoly(file, panel, controller);
         }
@@ -274,7 +276,6 @@ public class FileHandler {
 			Line l;
 			Line screenLine;
 			if (p1.adjacentLines.size() == 0 || p1.adjacentLines.get(0).getP1().equals(p1)) {
-				
 				l = new Line(p2, p1, controller.randomWeights?controller.generateWeight():1);
 				screenLine = new Line(screenVertices.get(indexV2 - 1), screenVertices.get(indexV1 - 1),
 						l.getWeight());
@@ -299,8 +300,13 @@ public class FileHandler {
 		loadedEdges = reorder(loadedEdges);
 		Set<Point> points = new LinkedHashSet<Point>();
 		for (Line l : loadedEdges) {
-			points.add(l.getP1());
-		}
+            points.add(l.getP1());
+            // FIXME: we'll try and keep points' numbers in order for now --
+            //        there seems to be at least some implicit reliance on the
+            //        structure of those numbers (grep for use of
+            //        vertex_counter, clonePoint & closePolygon for examples)
+            l.getP1().setNumber(points.size());
+        }
 
 		if (panel != null) {
 			controller.setLoadedData(loadedEdges, reorder(screenEdges), points);
@@ -380,6 +386,11 @@ public class FileHandler {
 			Set<Point> points = new LinkedHashSet<Point>();
 			for (Line l : loadedEdges) {
 				points.add(l.getP1());
+                // FIXME: we'll try and keep points' numbers in order for now --
+                //        there seems to be at least some implicit reliance on the
+                //        structure of those numbers (grep for use of
+                //        vertex_counter, clonePoint & closePolygon for examples)
+                l.getP1().setNumber(points.size());
 			}
 
 			controller.setLoadedData(loadedEdges, reorder(screenEdges), points);
@@ -470,60 +481,105 @@ public class FileHandler {
 			BufferedReader br = new BufferedReader(new InputStreamReader(in));
 			String line = br.readLine();
 
-			List<Line> lines = new ArrayList<Line>();
-			List<Line> screenLines = new ArrayList<Line>();
-			Set<Point> points = new LinkedHashSet<Point>();
+			List<Line> lines = new ArrayList<>();
+			List<Line> screenLines = new ArrayList<>();
+			ArrayList<Point> points = new ArrayList<>();
 			Point p1 = null;
 			Point screenP1 = null;
+			Point p2 = null;
+			Point screenP2 = null;
+
+            // FIXME: given implementation seems to rely on points' "numbers" being
+            //        consequtive ordinals starting at 1 (grep for usage of
+            //        vertex_counter or clonePoint) -- apparently not necessarily in
+            //        order (apart from vertex_counter initialization, which
+            //        definitely looks like a bug) though, if we look at use of
+            //        FileHandler.reorder().
+            //
+            //        We'll try and ignore given numbers here (not for screen lines
+            //        though -- if it works).
+            ArrayList<Integer> pointIDs = new ArrayList<>();
+            // backward lookup map -- in case we wanted to implement non-consecutive lines input:
+            // HashMap<Integer, Integer> pointIDsLU = new HashMap<>();
+
 			while (line != null) {
 				String[] pts = line.split("-");
 
 				String[] p_data1 = pts[0].split(";");
-				if (p1 == null) {
-					p1 = new Point(Integer.parseInt(p_data1[0]), Double.parseDouble(p_data1[1]),
-							Double.parseDouble(p_data1[2]));
-					points.add(p1);
-					screenP1 = new Point(p1.getNumber(), p1.getOriginalX(), p1.getOriginalY());
 
-				}
-				String[] p_data2 = pts[1].split(";");
-				Point p2 = new Point(Integer.parseInt(p_data2[0]), Double.parseDouble(p_data2[1]),
-						Double.parseDouble(p_data2[2]));
-				if (p2.getOriginalX() > max_x) {
-					max_x = (int) p2.getOriginalX();
-				}
-				if (p2.getOriginalY() > max_y) {
-					max_y = (int) p2.getOriginalY();
-				}
-				Point screenP2 = new Point(p2.getNumber(), p2.getOriginalX(), p2.getOriginalY());
-				if (lines.size() > 0 && p2.equals(lines.get(0).getP1())) {
-					p2 = lines.get(0).getP1();
-					screenP2 = screenLines.get(0).getP1();
-				}
+                Integer id = new Integer(Integer.parseInt(p_data1[0]));
+                double x = Double.parseDouble(p_data1[1]);
+                double y = Double.parseDouble(p_data1[2]);
+                if (p1 == null) {
+                    p1 = new Point(points.size()+1, x, y);
+                    points.add(p1);
+                    pointIDs.add(id);
+                    // pointIDsLU.put(id, points.size());
+                    if (x > max_x) max_x = (int) x;
+                    if (y > max_y) max_y = (int) y;
+                    // screenP1 = new Point(points.size(), x, y);
+                    screenP1 = new Point(id.intValue(), x, y);
+                } else {
+                    if (pointIDs.get(pointIDs.size()-1).intValue() != id.intValue()) {
+                        throw new ParseException("Not yet supported input feature.");
+                    }
+                    if (p2.getOriginalX() != x || p2.getOriginalY() != y )
+                        throw new ParseException("Inconsistent input");
+                }
 
-				points.add(p2);
+                String[] p_data2 = pts[1].split(";");
+                id = new Integer(Integer.parseInt(p_data2[0]));
+                x = Double.parseDouble(p_data2[1]);
+                y = Double.parseDouble(p_data2[2]);
 
-				Line l = new Line(p1, p2, Integer.parseInt(pts[2]));
-				p1.adjacentLines.add(l);
-				p2.adjacentLines.add(l);
-				Line screenLine = new Line(screenP1, screenP2, Integer.parseInt(pts[2]));
-				screenLines.add(screenLine);
-				lines.add(l);
+                p2 = new Point(points.size()+1, x, y);
+                points.add(p2);
+                pointIDs.add(id);
+                // pointIDsLU.put(id, points.size());
+                if (x > max_x) max_x = (int) x;
+                if (y > max_y) max_y = (int) y;
+                // screenP2 = new Point(points.size(), x, y);
+                screenP2 = new Point(id.intValue(), x, y);
 
-				CustomTextField field = new CustomTextField(l, screenLine, controller);
-				panel.add(field);
-				panel.repaint();
-				panel.revalidate();
+                if (lines.size() > 0 && pointIDs.get(0).intValue() == pointIDs.get(pointIDs.size()-1).intValue()) {
+                    p2 = points.get(0);
+                    if (x != p2.getOriginalX() || y != p2.getOriginalY())
+                        throw new ParseException("Inconsistent input for point " + String.valueOf(p2.getNumber()));
+                    screenP2 = screenLines.get(0).getP1();
+                }
 
-				p1 = p2;
-				screenP1 = screenP2;
+                Line l = new Line(p1, p2, Integer.parseInt(pts[2]));
+                p1.adjacentLines.add(l);
+                p2.adjacentLines.add(l);
+                Line screenLine = new Line(screenP1, screenP2, Integer.parseInt(pts[2]));
+                screenLines.add(screenLine);
+                lines.add(l);
 
-				line = br.readLine();
-			}
-			br.close();
+                CustomTextField field = new CustomTextField(l, screenLine, controller);
+                panel.add(field);
+                panel.repaint();
+                panel.revalidate();
 
-			// controller.reset();
-			controller.setLoadedData(lines, screenLines, points);
+                p1 = p2;
+                screenP1 = screenP2;
+
+                line = br.readLine();
+            }
+            br.close();
+
+            if(points.size() == 0) {
+                return;
+            }
+            if (pointIDs.get(pointIDs.size()-1).intValue() != pointIDs.get(0).intValue()) {
+                throw new ParseException("Polygon not closed explicitly by last edge");
+            }
+            pointIDs.remove(pointIDs.size()-1);
+            if(pointIDs.stream().map((x) -> x.intValue()).distinct().count() != pointIDs.size()) throw new ParseException("Bad polygon");
+            points.get(points.size()-1).setNumber(1);
+
+            // controller.reset();
+            // FIXME: do we want to otherwise enforce uniqueness of points?
+            controller.setLoadedData(lines, screenLines, new LinkedHashSet<Point>(points));
 			panel.setPreferredSize(new Dimension(max_x + 20, max_y + 20));
 			panel.repaint();
 			if (Util.isCounterClockwise(new ArrayList<Point>(points))) {

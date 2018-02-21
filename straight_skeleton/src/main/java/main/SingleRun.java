@@ -16,8 +16,8 @@ import at.tugraz.igi.util.Point;
 public class SingleRun {
 
     /**
-     * Given a data file name and output file(s)' name(s),
-     * computes the straight skeleton.
+     * Given a data file name and output file(s)' name(s), computes the straight
+     * skeleton.
      */
     public static void main(String[] args) throws Exception {
 

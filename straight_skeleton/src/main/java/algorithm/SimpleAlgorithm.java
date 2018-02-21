@@ -77,7 +77,9 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, String> {
 	@Override
 	protected Boolean doInBackground() throws Exception {
 		Map<Line, Event> simultaneousEvents = new HashMap<Line, Event>();
-		EventCalculation.vertex_counter = points.get(points.size() - 1).getNumber() + 1;
+        // FIXME: Is this what we want?!
+        // EventCalculation.vertex_counter = points.get(points.size() - 1).getNumber() + 1;
+        EventCalculation.vertex_counter = points.size() + 1;
 		boolean convex = true;
 		controller.addPolygon(new HashSet<Point>(points));
 		for (Point p : points) {

@@ -3,6 +3,8 @@
 * Count events (flip, split etc, extraordinary = flip not changing angle
   category?)
 
+* Enable saving skeleton to a file from applet
+
 * Show triangulation as very first step
 
 * History: back steps
@@ -23,15 +25,21 @@
 
 * Get confirmation from user before overwriting files
 
-* Separate algorithm form the applet
+* Separate algorithm from the applet
 
-* Extend the set of correctness tests
+* Bug(s): numerous instances yield incorrect results and/or crash
 
-* Bug(s): found number of instances which yield incorrect behaviour -> check e.g. behaviour at coinsiding events
+* Bug(s): sometimes duplicate edges are present in computed skeleton
+  (currently e.g. misc/crashes.[4-6])
 
-* Bug: on one specific instance (simple-07 as of now) correct skeleton is
-  computed when run via noswingworker (single/batch) variant while the applet
-  version produces bad result
+* Bug: when using the applet, recomputing skeleton a second time can (e.g. with
+  crashes.2.min) yield incorrect skeleton
+
+* Bug(s)/numerical issues: in some instances (currently, e.g. simple-02)
+  some very short edges are inserted
+
+* Bug(s): some instances compute correctly when run via applet only and vice versa
+  (currently e.g. simple-07 and simple-18)
 
 * Bug: ConcurrentModificationException(s) encountered when drawing in GraphicPanel.paintMovedPoints
 
@@ -39,17 +47,18 @@
   yields a null pointer exception (not sure yet when this triggers -- maybe if
   we start close enough to a vertex?)
 
-* Bug: sometimes (loading invalid file?) FileHandler.openPoly barfs a "File cannot be null" exception
+* Bug: polygon generating program writes those as xml files while skeleton part
+  reads/writes plain text.  Loading former always crashes on my box -- a
+  workaround right now would be to load the polygon into main app by closing
+  the generating app window.
 
-* Bug: Polygon generating program writes those as xml files while skeleton part
-  reads/writes plain text.  A workaround right now would be to load the polygon
-  into main app by closing the generating app window.
+* Bug: when loading invalid file, FileHandler.openPoly barfs a "File cannot be null" exception
 
 * Batch runner: read multiple batch files & add output prefix option -> shell batch runner
 
 * Add loaded file name to window title
 
-* Get rid of bad/hardcoded resource paths
+* Get rid of bad/hardcoded resource paths ('/images/')
 
 * Get rid of dependencies remaining local (randomPolygon & poly2tri)
   or replace libs in question by something more robust
@@ -63,10 +72,14 @@
 
 * Alternative (fx/tornado/fn-fx/re-frame etc) ui if changes extensive?
 
-* Investigate numerical stability
+* Investigate numerical stability (see very short arcs example); further
+  research: can we use e.g. apache commons math library to implement exact
+  computations (if this is algebraically feasible at all)?
+
 
 * Investigate rendering artefacts
 
-* Create a useful readme?
+* Extend the set of correctness tests
 
-* Check source for appropriate line breaks (shouldn't git have converted those? O_x)
+* Set up consistant indenting & os-appropriate line breaks (wtf spacemacs?!)
+
