@@ -51,6 +51,8 @@
 
 * Bug: when loading invalid file, FileHandler.openPoly barfs a "File cannot be null" exception
 
+* Whenever dragging a vertex results in nonsimple polygon, the app barfs
+
 * Batch runner: read multiple batch files & add output prefix option -> shell batch runner
 
 * Add loaded file name to window title

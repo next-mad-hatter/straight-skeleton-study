@@ -1,5 +1,7 @@
 package at.tugraz.igi.ui;
 
+import lombok.*;
+
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -38,7 +40,7 @@ public class GraphicPanel extends JPanel {
 	private Graphics graphics;
 	private JPopupMenu popup;
 
-	private List<Triangle> screenTriangles;
+	@Getter private List<Triangle> screenTriangles;
 	private List<Line> lines;
 	// public List<Line> polyLines;
 	private Set<Point> points;

@@ -149,7 +149,7 @@ public class SkeletonApplet extends JFrame {
 		stepButton.addActionListener(controller.createActionListener(TYPES.STEP));
 
 		JButton backButton = new JButton("Back");
-		stepButton.addActionListener(controller.createActionListener(TYPES.BACK));
+		backButton.addActionListener(controller.createActionListener(TYPES.BACK));
 
 		JButton resetButton = new JButton("Reset");
 		resetButton.addActionListener(controller.createActionListener(TYPES.RESET));

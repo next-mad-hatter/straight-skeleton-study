@@ -1,5 +1,7 @@
 package at.tugraz.igi.algorithm;
 
+import org.apache.commons.lang3.tuple.*;
+
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,7 +31,7 @@ import at.tugraz.igi.util.Triangle;
 import at.tugraz.igi.util.Util;
 import at.tugraz.igi.util.Vector;
 
-public class SimpleAlgorithm extends SwingWorker<Boolean, String> {
+public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>> {
 	private Color[] colors = { Color.BLUE, new Color(135, 206, 255), new Color(50, 205, 50), new Color(0, 100, 0),
 			new Color(255, 0, 0), new Color(255, 127, 80), new Color(205, 51, 51) };
 	private PriorityQueue<Event> events = new PriorityQueue<Event>(1, new EventComparator());
@@ -106,8 +108,8 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, String> {
 
 		boolean eventExists = true;
 
-		if (!controller.isNextStep() && !isCancelled())
-			publish("Triangulated");
+		if (!isCancelled())
+			publish(new ImmutablePair<>("Triangulated", true));
 		// FIXME: Can we not block the calculations here or
 		//        at least have a callback from the controller?
 		while (!controller.isNextStep() && !isCancelled()) {
@@ -169,8 +171,7 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, String> {
 			calculateEvents();
 
 			if (events.size() > 0) {
-				if (!controller.isNextStep() && !isCancelled())
-					publish(event.getName());
+				if (!isCancelled()) publish(new ImmutablePair<>(event.getName(), true));
 				// FIXME: Can we not block the calculations here or
 				//        at least have a callback from the controller?
 				while (!controller.isNextStep() && !isCancelled()) {
@@ -219,7 +220,7 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, String> {
 	}
 
 	@Override
-	protected void process(final List<String> chunks) {
+	protected void process(final List<Pair<String, Boolean>> chunks) {
 		if (!isCancelled()) {
 			controller.publish(chunks, i, triangles);
 		}

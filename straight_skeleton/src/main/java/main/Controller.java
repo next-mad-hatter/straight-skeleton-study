@@ -10,6 +10,12 @@ import org.apache.batik.transcoder.image.*;
 import org.apache.batik.transcoder.image.ImageTranscoder;
 */
 
+import org.apache.commons.lang3.tuple.*;
+import java.util.function.*;
+import java.util.stream.*;
+import java.util.*;
+// import java.util.concurrent.atomic.*;
+
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
@@ -23,13 +29,6 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
 
 import javax.imageio.*;
 import javax.swing.ImageIcon;
@@ -77,6 +76,12 @@ public class Controller {
 	public GraphicPanel view;
 	private SimpleAlgorithm algo;
 	private ConfigurationTable table;
+
+	// TODO: do we need to synchronize these?
+	// private List<Pair<StraightSkeleton, List<Triangle>>> history = new ArrayList<>();
+	private List<Triple<StraightSkeleton, List<Set<Point>>, List<Triangle>>> history = new ArrayList<>();
+	private Triple<StraightSkeleton, List<Set<Point>>, List<Triangle>> lastState;
+	private int historyPtr = 0;
 
 	private List<StraightSkeleton> straightSkeletons;
 	private StraightSkeleton straightSkeleton;
@@ -165,17 +170,142 @@ public class Controller {
 		table.setValueAt(new Boolean(true), straightSkeletons.indexOf(straightSkeleton), 0);
 	}
 
-	public void publish(final List<String> chunks, Point i, List<Triangle> triangles) {
-		if (!chunks.isEmpty() && chunks.get(0) != "Triangulated" ) {
+	public void publish(final List<Pair<String, Boolean>> chunks, Point i, List<Triangle> triangles) {
+		if (!chunks.isEmpty() && chunks.get(0).getLeft() != "Triangulated" && !nextStep) {
 			Graphics2D g2 = (Graphics2D) view.getGraphics();
-			int width = g2.getFontMetrics().stringWidth(chunks.get(0));
-			JLabel label = new JLabel(chunks.get(0));
+			int width = g2.getFontMetrics().stringWidth(chunks.get(0).getLeft());
+			JLabel label = new JLabel(chunks.get(0).getLeft());
 			label.setLocation((int) (i.current_x - width / 2), (int) (i.current_y + 20));
 			setCurrentEvent(label);
-
 		}
 		view.setCurrentData(straightSkeletons, straightSkeleton, triangles);
+
+		if (!chunks.isEmpty() && chunks.get(0).getRight()) {
+			try {
+				makeSnapshot(straightSkeleton, polygons, triangles, true);
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.err.println("History broke");
+			}
+		}
+
 		view.repaint();
+	}
+
+	/**
+	 * As the design mixes computations, rendering and state quite intricately,
+	 * for purpose of providing means of navigating back through event history
+	 * we'll try and keep a history of corresponding states.
+	 */
+	private void makeSnapshot(StraightSkeleton straightSkeleton, List<Set<Point>> polygons, List<Triangle> triangles, boolean toHistory) throws Exception {
+		LinkedHashMap<Integer, Point> histPoints = new LinkedHashMap<>();
+		Function<Point, Point> getHistPt = (pt) -> {
+			if (histPoints.containsKey(pt.getNumber()))
+				return histPoints.get(pt.getNumber());
+			Point np = new Point(pt.getNumber(), pt.getOriginalX(), pt.getOriginalY());
+			np.current_x = pt.current_x;
+			np.current_y = pt.current_y;
+			np.adjacentLines = pt.adjacentLines;
+			histPoints.put(np.getNumber(), np);
+			return np;
+		};
+
+		LinkedHashMap<Line, Line> histLines = new LinkedHashMap<>();
+
+		StraightSkeleton histSkeleton = new StraightSkeleton();
+		histSkeleton.setColor(straightSkeleton.getColor());
+
+		for (Line line: straightSkeleton.getLines()) {
+		    Line nl = line.clone();
+		    nl.setP1(getHistPt.apply(line.getP1()));
+			nl.setP2(getHistPt.apply(line.getP2()));
+			nl.polyLine = line.polyLine;
+			histSkeleton.add(nl);
+			histLines.put(line, nl);
+		}
+
+		List<Line> polyLines = new ArrayList<>();
+		for (Line line: straightSkeleton.getPolyLines()) {
+			Line nl = line.clone();
+			nl.setP1(getHistPt.apply(line.getP1()));
+			nl.setP2(getHistPt.apply(line.getP2()));
+			nl.polyLine = line.polyLine;
+			polyLines.add(nl);
+			histLines.put(line, nl);
+		}
+		histSkeleton.setPolyLines(polyLines);
+
+		List<Set<Point>> histPolygons = new ArrayList<>();
+		for (Set<Point> pts : getPolygons()) {
+			Set<Point> newPoly = new LinkedHashSet<>();
+			for (Point p : pts) {
+			    newPoly.add(getHistPt.apply(p));
+			}
+			histPolygons.add(newPoly);
+		}
+
+		List<Triangle> histTriangles = new ArrayList<>();
+		for (Triangle tri: triangles) {
+		    histTriangles.add(new Triangle(
+		    		getHistPt.apply(tri.p1),
+					getHistPt.apply(tri.p2),
+					getHistPt.apply(tri.p3)));
+		}
+
+        for (Point pt: histPoints.values()) {
+			if (pt.adjacentLines.isEmpty())
+				throw new Exception("WHOOOOTT");
+			// TODO: some lines not yet translated!
+		    pt.adjacentLines = pt.adjacentLines.stream().map((x) -> histLines.get(x)).collect(Collectors.toList());
+		    if (pt.adjacentLines.contains(null))
+					throw new Exception("BOOOOOM");
+			if (pt.adjacentLines.isEmpty())
+				throw new Exception("BAAAAM");
+		}
+		for (Point pt: histPoints.values()) {
+			pt.calculateMovementInfo();
+		}
+
+		// history.add(new ImmutablePair<>(histSkeleton, histTriangles));
+		// history.add(new ImmutableTriple<>(new LinkedHashSet<>(histPoints), histSkeleton, histTriangles));
+		Triple<StraightSkeleton, List<Set<Point>>, List<Triangle>> state =
+				new ImmutableTriple<>(histSkeleton, histPolygons, histTriangles);
+		if (toHistory)
+			history.add(state);
+		else
+			lastState = state;
+
+		if (toHistory)
+            System.out.println("SAVING " + history.size());
+		else
+			System.out.println("SAVING LAST");
+		// System.out.println(System.currentTimeMillis());
+		// System.out.println(histPoints.size() + " " + histTriangles.size() + " " + polygons.size());
+		// System.out.println(history.size());
+	}
+
+	private void loadSnapshot(boolean fromHistory) {
+		Triple<StraightSkeleton, List<Set<Point>>, List<Triangle>> state;
+		if (fromHistory)
+            System.out.println("LOADING " + historyPtr + "/" + history.size());
+		else
+            System.out.println("LOADING LAST");
+	    if (fromHistory)
+	    	state = history.get(historyPtr-1);
+		else
+		    state = lastState;
+		straightSkeleton = state.getLeft();
+		polygons = state.getMiddle();
+		view.setCurrentData(null, null, state.getRight());
+		if (!fromHistory)
+			lastState = null;
+	}
+
+	private void truncateHistory() {
+	    if (historyPtr == 0)
+	    	return;
+	    history.subList(historyPtr, history.size()).clear();
+	    lastState = null;
 	}
 
 	private ImageIcon getImage(String name) {
@@ -230,6 +360,7 @@ public class Controller {
 	}
 
 	public void playSelected(int skeleton, boolean animate, boolean recreate) {
+	    // TODO: history
 		if (skeleton == -1) {
 			straightSkeleton = null;
 		} else {
@@ -487,6 +618,8 @@ public class Controller {
 	}
 
 	public void reset() {
+		history.clear();
+		historyPtr = 0;
 		if (algo != null && algo.getState().equals(StateValue.STARTED)) {
 			algo.cancel(true);
 		}
@@ -519,6 +652,12 @@ public class Controller {
 	}
 
 	public List<StraightSkeleton> getStraightSkeletons() {
+        if (historyPtr > 0) {
+            // TODO
+            List<StraightSkeleton> res = new ArrayList<>();
+            res.add(getStraightSkeleton());
+            return res;
+		}
 		if (straightSkeletons == null) {
 			straightSkeletons = new ArrayList<StraightSkeleton>();
 		}
@@ -526,6 +665,8 @@ public class Controller {
 	}
 
 	public StraightSkeleton getStraightSkeleton() {
+		if (historyPtr > 0 && historyPtr <= history.size())
+			return history.get(historyPtr-1).getLeft();
 		return straightSkeleton;
 	}
 
@@ -550,6 +691,8 @@ public class Controller {
 	}
 
 	public List<Set<Point>> getPolygons() {
+	    if (historyPtr > 0 && historyPtr <= history.size())
+	    	return history.get(historyPtr-1).getMiddle();
 		return polygons;
 	}
 
@@ -619,11 +762,19 @@ public class Controller {
 		}
 
 		private void play() {
+			if (historyPtr != 0) {
+				loadSnapshot(true);
+				// TODO: can we continue from here as if we never went further earlier?
+				truncateHistory();
+				historyPtr = 0;
+			}
 			if (step) {
 				step = false;
 				nextStep = true;
 			}
 			if (restart) {
+				history.clear();
+				historyPtr = 0;
 				step = false;
 				nextStep = true;
 				restart(null);
@@ -640,11 +791,36 @@ public class Controller {
 		}
 
         private void back() {
+		    if (history.isEmpty() || historyPtr == 1)
+		    	return;
+		    if (historyPtr == 0) {
+				historyPtr = history.size();
+				try {
+					makeSnapshot(straightSkeleton, polygons, view.getScreenTriangles(), false);
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.err.println("History broke");
+				}
+			} else {
+				historyPtr--;
+				loadSnapshot(true);
+			}
         }
 
 		private void step() {
-
+		    if (historyPtr != 0 && !history.isEmpty()) {
+		        historyPtr++;
+		        if (historyPtr > history.size()) {
+					historyPtr = 0;
+		            loadSnapshot(false);
+				} else {
+					loadSnapshot(true);
+					return;
+				}
+			}
 			if (restart) {
+		    	history.clear();
+		    	historyPtr = 0;
 				EventCalculation.vertex_counter = view.getPoints().size();
 				nextStep = true;
 				restart(null);
