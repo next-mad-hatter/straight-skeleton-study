@@ -5,6 +5,7 @@ import java.awt.image.*;
 import java.io.*;
 import java.util.*;
 import javax.imageio.*;
+import java.nio.file.*;
 import javax.swing.*;
 import java.util.List;
 import java.util.stream.*;
@@ -19,7 +20,7 @@ public class Run {
      * Given a data file name and output file(s)' name(s), computes the straight
      * skeleton.  img_file can be null.
      */
-    public static void run(String in_file, String out_file, String img_file) throws Exception {
+    public static void run(String in_file, String out_file, String stats_file, String img_file) throws Exception {
 
         Controller controller = new Controller();
         GraphicPanel panel = new GraphicPanel(controller);
@@ -42,11 +43,17 @@ public class Run {
             //.filter((l) -> l.getP1() != l.getP2())
             .distinct().collect(Collectors.toList());
 
-        // TODO: get event counts
-
         FileHandler.file = new File(out_file);
         if (FileHandler.file.getParentFile() != null) FileHandler.file.getParentFile().mkdirs();
         FileHandler.save(skeleton, false);
+
+        if (stats_file != null && controller.polyMeasureData != null) {
+            String stats = "# Flip events:  " + String.valueOf(controller.polyMeasureData.getNumberOfFlip()) +
+                    "\n# Edge events:  " + String.valueOf(controller.polyMeasureData.getNumberOfEdge()) +
+                    "\n# Split events: " + String.valueOf(controller.polyMeasureData.getNumberOfSplit());
+            Files.write(Paths.get(stats_file), stats.getBytes());
+        }
+
         if (img_file != null) {
             File outputfile = new File(img_file);
             if (outputfile.getParentFile() != null) outputfile.getParentFile().mkdirs();

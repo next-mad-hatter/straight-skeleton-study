@@ -1,5 +1,7 @@
 package at.tugraz.igi.util;
 
+import lombok.*;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -13,9 +15,9 @@ public class PolygonMeasureData {
 	public double variance_area;
 	public double standardDeviation_area;
 	public double runningTime;
-	private int numberOfFlip;
-	private int numberOfEdge;
-	private int numberOfSplit;
+	@Getter private int numberOfFlip;
+	@Getter private int numberOfEdge;
+	@Getter private int numberOfSplit;
  
 	
 
