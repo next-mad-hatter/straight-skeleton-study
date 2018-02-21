@@ -101,9 +101,21 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, String> {
 			}
 			triangles = Util.triangulate(pts, lines);
 		}
+
 		calculateEvents();
 
 		boolean eventExists = true;
+
+		if (!controller.isNextStep() && !isCancelled())
+			publish("Triangulated");
+		// FIXME: Can we not block the calculations here or
+		//        at least have a callback from the controller?
+		while (!controller.isNextStep() && !isCancelled()) {
+			Thread.sleep(100);
+		}
+		if (controller.isStep()) {
+			controller.setNextStep(false);
+		}
 
 		while (eventExists && !isCancelled()) {
 			if (events.size() == 0) {
@@ -116,11 +128,14 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, String> {
 			Event e = events.peek();
 			if (e != null) {
 				if (e.getCollapsingTime() - event.getCollapsingTime() <= 1e-12) {
+				    // FIXME: Shouldn't we check where two events happen before throwing out one of them?
+                    //        And what about involved entities?  Should those be processed somehow?
 					if (event instanceof ConcaveEvent && e instanceof EdgeEvent) {
 						event = e;
 					} else if (event instanceof FlipEvent) {
 						event = e;
 					} else {
+						// FIXME: Really?
 						e.setCollapsingTime(e.getCollapsingTime() - event.getCollapsingTime());
 						simultaneousEvents.put(e.getLine().clone(), e);
 					}
@@ -154,8 +169,11 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, String> {
 			calculateEvents();
 
 			if (events.size() > 0) {
-				while (!controller.isNextStep() && !isCancelled()) {
+				if (!controller.isNextStep() && !isCancelled())
 					publish(event.getName());
+				// FIXME: Can we not block the calculations here or
+				//        at least have a callback from the controller?
+				while (!controller.isNextStep() && !isCancelled()) {
 					Thread.sleep(100);
 				}
 				if (controller.isStep()) {

@@ -120,11 +120,14 @@ public class SimpleAlgorithmNoSwingWorker {
 			Event e = events.peek();
 			if (e != null) {
 				if (e.getCollapsingTime() - event.getCollapsingTime() <= 1e-12) {
+					// FIXME: Shouldn't we check where two events happen before throwing out one of them?
+					//        And what about involved entities?  Should those be processed somehow?
 					if (event instanceof ConcaveEvent && e instanceof EdgeEvent) {
 						event = e;
 					} else if (event instanceof FlipEvent) {
 						event = e;
 					} else {
+						// FIXME: Really?
 						e.setCollapsingTime(e.getCollapsingTime() - event.getCollapsingTime());
 						simultaneousEvents.put(e.getLine().clone(), e);
 					}

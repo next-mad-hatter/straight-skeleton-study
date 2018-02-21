@@ -166,7 +166,7 @@ public class Controller {
 	}
 
 	public void publish(final List<String> chunks, Point i, List<Triangle> triangles) {
-		if (!chunks.isEmpty()) {
+		if (!chunks.isEmpty() && chunks.get(0) != "Triangulated" ) {
 			Graphics2D g2 = (Graphics2D) view.getGraphics();
 			int width = g2.getFontMetrics().stringWidth(chunks.get(0));
 			JLabel label = new JLabel(chunks.get(0));

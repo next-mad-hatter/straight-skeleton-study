@@ -2,8 +2,6 @@
 
 * Enable saving skeleton to a file from applet
 
-* Show triangulation as very first step
-
 * History: back steps
 
 * Straight jump to result
