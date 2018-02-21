@@ -21,15 +21,18 @@ public class SingleRun {
      */
     public static void main(String[] args) throws Exception {
 
-        if (args.length < 2 || args.length > 3) {
+        if (args.length < 2 || args.length > 4) {
             StackTraceElement[] stackTraceElements= new Exception().getStackTrace();
             String className = stackTraceElements[0].getClassName();
-            System.out.println("Usage: " + className + " in_file out_file [out_image]");
+            System.out.println("Usage: " + className + " in_file skeleton_file [stats_file] [image_file]");
             System.exit(1);
         }
 
         try {
-          Run.run(args[0], args[1], args.length > 2 ? args[2] : null);
+          Run.run(args[0],
+                  args[1],
+                  args.length > 2 ? args[2] : null,
+                  args.length > 3 ? args[3] : null);
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);

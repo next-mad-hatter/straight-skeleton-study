@@ -49,7 +49,7 @@ public class BatchRun {
                 if (line.isEmpty()) continue;
                 List<String> strs = Arrays.asList(line.split("(?<!\\\\)\\s+"));
                 strs = strs.stream().map((x) -> x.replaceAll("\\\\ ", " ")).collect(Collectors.toList());
-                if (strs.size() < 2 || strs.size() > 3) {
+                if (strs.size() < 2 || strs.size() > 4) {
                     throw new Exception("Bad input file line " + line_count);
                 }
                 lines.add(strs);
@@ -62,7 +62,10 @@ public class BatchRun {
         pb.start();
         for(List<String> strs: lines) {
             try {
-                Run.run(strs.get(0), strs.get(1), strs.size() > 2 ? strs.get(2): null);
+                Run.run(strs.get(0),
+                        strs.get(1),
+                        strs.size() > 2 ? strs.get(2): null,
+                        strs.size() > 3 ? strs.get(3): null);
                 succeeded += 1;
             } catch (Exception e) {
                 System.err.println();

@@ -1,8 +1,5 @@
 * Use issue tracker?
 
-* Count events (flip, split etc, extraordinary = flip not changing angle
-  category?)
-
 * Enable saving skeleton to a file from applet
 
 * Show triangulation as very first step
@@ -14,6 +11,8 @@
 * Zoom; autozoom & autopan at load
 
 * Separate points coordinates and drawn points' coordinates, automatically compute good mappings
+
+* Count different kinds of flip events
 
 * Adjustable animation speed, animations switchable & pausable
 
