@@ -10,6 +10,11 @@ import org.apache.batik.transcoder.image.*;
 import org.apache.batik.transcoder.image.ImageTranscoder;
 */
 
+import org.apache.commons.lang3.tuple.*;
+import java.util.function.*;
+import java.util.stream.*;
+import java.util.*;
+
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
@@ -23,13 +28,6 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
 
 import javax.imageio.*;
 import javax.swing.ImageIcon;
@@ -46,6 +44,13 @@ import at.tugraz.igi.util.*;
 import data.Graph;
 
 public class Controller {
+
+	/**
+	 * We want to globally change weird point comparison logic while making history snapshots.
+	 * See makeSnapshot() and Point.equals().
+	 */
+	public static boolean HISTORY_MODE = false;
+
 	public static enum TYPES {
 		OPEN, SAVE, SAVE_AS, PLAY, STEP, BACK, RESET, OPEN_POLY, SVG
 	}
@@ -78,6 +83,26 @@ public class Controller {
 	private SimpleAlgorithm algo;
 	private ConfigurationTable table;
 
+	/**
+	 * As the design mixes computations, rendering and state quite intricately,
+	 * for purpose of providing means of navigating back through events we'll
+	 * try and keep a history of corresponding states, i.e. data relevant to
+	 * rendering those, plus one more snapshot (lastState below) for whenever
+	 * we want to go back from non-event point.
+	 * Below, historyPtr should be either zero or 1-based index of currently
+	 * shown history event.
+	 */
+	@Data private class Snapshot {
+	    private final StraightSkeleton straightSkeleton;
+		private final List<Set<Point>> polygons;
+		private final List<Line> polyLines;
+		private final List<Triangle> triangles;
+		private final JLabel label;
+	}
+	private List<Snapshot> history = new ArrayList<>();
+	private Snapshot lastState;
+	private int historyPtr = 0;
+
 	private List<StraightSkeleton> straightSkeletons;
 	private StraightSkeleton straightSkeleton;
 
@@ -94,7 +119,7 @@ public class Controller {
 
 	private Map<Point, List<StraightSkeleton>> movedPoints;
 	private List<Line> lines;
-	public List<Line> polyLines;
+	private List<Line> polyLines;
 	@Getter private Set<Point> points;
 	private List<Set<Point>> polygons;
 
@@ -161,21 +186,204 @@ public class Controller {
 		isRunning = false;
 		animation = false;
 		step = false;
+		makeSnapshot(straightSkeleton, polygons, view.getScreenTriangles(), null, true);
+		// makeSnapshot(straightSkeleton, polygons, view.getScreenTriangles(), null, false);
+		historyPtr = history.size();
 		nextStep = true;
 		table.setValueAt(new Boolean(true), straightSkeletons.indexOf(straightSkeleton), 0);
 	}
 
-	public void publish(final List<String> chunks, Point i, List<Triangle> triangles) {
-		if (!chunks.isEmpty()) {
+	public void publish(final List<Pair<String, Boolean>> chunks, Point i, List<Triangle> triangles) {
+		JLabel label = null;
+		if (!chunks.isEmpty() && chunks.get(0).getLeft() != "Triangulated") {
 			Graphics2D g2 = (Graphics2D) view.getGraphics();
-			int width = g2.getFontMetrics().stringWidth(chunks.get(0));
-			JLabel label = new JLabel(chunks.get(0));
+			int width = g2.getFontMetrics().stringWidth(chunks.get(0).getLeft());
+			label = new JLabel(chunks.get(0).getLeft());
 			label.setLocation((int) (i.current_x - width / 2), (int) (i.current_y + 20));
-			setCurrentEvent(label);
-
+			if (!nextStep)
+                setCurrentEvent(label);
 		}
 		view.setCurrentData(straightSkeletons, straightSkeleton, triangles);
+		if (!chunks.isEmpty() && chunks.get(0).getRight()) {
+			makeSnapshot(straightSkeleton, polygons, triangles, label, true);
+		}
 		view.repaint();
+	}
+
+	/**
+	 * Saves snapshot of currently seen data to history or lastState.
+	 *
+	 * As the classes' clone logic seems to vary or involve changing global counters,
+	 * we'll resort to making a deep copy of what we want manually.
+	 */
+	@Synchronized
+	private void makeSnapshot(StraightSkeleton straightSkeleton, List<Set<Point>> polygons, List<Triangle> triangles, JLabel label, boolean toHistory) {
+
+		// A hack to make point comparison work with maps herein.  See Point.equals().
+		HISTORY_MODE = true;
+
+		val clonedPointsMap = new LinkedHashMap<Point, Point>();
+		Function<Point, Point> clonePoint = (pt) -> {
+			if (clonedPointsMap.containsKey(pt))
+				return clonedPointsMap.get(pt);
+			val np = new Point(pt.getNumber(), pt.getOriginalX(), pt.getOriginalY());
+			np.current_x = pt.current_x;
+			np.current_y = pt.current_y;
+			np.adjacentLines = pt.adjacentLines;
+			// np.setStrictComparison(true);
+			clonedPointsMap.put(pt, np);
+			return np;
+		};
+
+		val clonedLinesMap = new LinkedHashMap<Line, Line>();
+		Function<Line, Line> cloneLine = (line) -> {
+			if (clonedLinesMap.containsKey(line))
+				return clonedLinesMap.get(line);
+			val nl = new Line(
+					clonePoint.apply(line.getP1()),
+					clonePoint.apply(line.getP2()),
+					line.getWeight());
+			nl.polyLine = line.polyLine;
+			clonedLinesMap.put(line, nl);
+			return nl;
+		};
+
+		val clonedLineListsMap = new LinkedHashMap<List<Line>, List<Line>>();
+		Function<List<Line>, List<Line>> cloneLineList = (lines) -> {
+		    if (!clonedLineListsMap.containsKey(lines))
+				clonedLineListsMap.put(lines, lines.stream().map(cloneLine).collect(Collectors.toList()));
+		    return clonedLineListsMap.get(lines);
+		};
+
+		val snapSkeleton = new StraightSkeleton();
+		snapSkeleton.setColor(straightSkeleton.getColor());
+		snapSkeleton.setVisible(straightSkeleton.isVisible());
+		snapSkeleton.setLines(cloneLineList.apply(straightSkeleton.getLines()));
+		snapSkeleton.setPolyLines(cloneLineList.apply(straightSkeleton.getPolyLines()));
+		if (straightSkeleton.polygon != null) {
+			snapSkeleton.polygon = new HashMap<>();
+			for (val e : straightSkeleton.polygon.entrySet()) {
+				val d = new MeasuringData(
+						cloneLine.apply(e.getValue().getPolyLine()),
+						cloneLineList.apply(e.getValue().getPolygon()),
+						e.getValue().getArea()
+				);
+				snapSkeleton.polygon.put(cloneLineList.apply(e.getKey()), d);
+			}
+		}
+
+		val snapPolyLines = cloneLineList.apply(polyLines);
+
+		val snapPolygons = new ArrayList<Set<Point>>();
+		for (val pts : getPolygons()) {
+			val newPoly = new LinkedHashSet<Point>();
+			for (val p : pts) {
+			    newPoly.add(clonePoint.apply(p));
+			}
+			snapPolygons.add(newPoly);
+		}
+
+		val snapTriangles = new ArrayList<Triangle>();
+		for (val tri: triangles) {
+			val nt = new Triangle(
+					clonePoint.apply(tri.p1),
+					clonePoint.apply(tri.p2),
+					clonePoint.apply(tri.p3));
+
+			nt.polyLines = cloneLineList.apply(tri.polyLines);
+			nt.strokes = cloneLineList.apply(tri.strokes);
+			snapTriangles.add(nt);
+		}
+
+		// What lines did we forget here?
+		boolean rescan = false;
+		do {
+			for (val pt : clonedPointsMap.values()) {
+				for (val line : pt.adjacentLines) {
+					if (clonedLinesMap.get(line) == null) {
+						rescan = !clonedPointsMap.containsKey(line.getP1()) ||
+								 !clonedPointsMap.containsKey(line.getP2());
+						cloneLine.apply(line);
+					}
+				}
+			}
+		} while (rescan);
+
+        for (val pt: clonedPointsMap.values()) {
+		    pt.adjacentLines = pt.adjacentLines.stream().map((x) -> clonedLinesMap.get(x)).collect(Collectors.toList());
+		    if (pt.adjacentLines.contains(null))
+				System.err.println("History forgot a line");
+		}
+
+		/*
+		for (val pt: clonedPointsMap.values()) {
+			pt.calculateMovementInfo();
+		}
+		*/
+
+		val state = new Snapshot(snapSkeleton, snapPolygons, snapPolyLines, snapTriangles, label);
+		if (toHistory)
+			history.add(state);
+		else
+			lastState = state;
+
+		/*
+		Function<Point, String> pointDetails = (pt) ->
+				"[" + pt.getNumber() + ": (" + pt.getOriginalX() + ", " + pt.getOriginalY() + ") ~ (" +
+						                       pt.getCurrentX() + ", " + pt.getCurrentY() + ")";
+
+		if (toHistory)
+            System.err.println("SAVING " + history.size());
+		else
+			System.err.println("SAVING LAST");
+		for (val e: clonedPointsMap.entrySet())
+			System.err.println(pointDetails.apply(e.getKey()) + " -> " + pointDetails.apply(e.getValue()));
+		*/
+
+		HISTORY_MODE = false;
+	}
+
+	private void loadSnapshot(boolean fromHistory) {
+		HISTORY_MODE = true;
+
+		Snapshot state;
+		/*
+		if (fromHistory)
+            System.out.println("LOADING " + historyPtr + "/" + history.size());
+		else
+            System.out.println("LOADING LAST");
+		*/
+	    if (fromHistory)
+	    	state = history.get(historyPtr-1);
+		else
+		    state = lastState;
+		/*
+		straightSkeleton = state.getLeft().getLeft();
+		polygons = state.getLeft().getMiddle();
+		polyLines = state.getLeft().getRight();
+		*/
+		view.setCurrentData(null, null, state.getTriangles());
+		setCurrentEvent(state.getLabel());
+		if (!fromHistory)
+			lastState = null;
+		view.repaint();
+
+		HISTORY_MODE = false;
+	}
+
+	private void truncateHistory() {
+	    if (historyPtr == 0)
+	    	return;
+	    history.subList(historyPtr, history.size()).clear();
+	    lastState = null;
+	}
+
+	public boolean isBrowsingHistory() {
+	    return historyPtr > 0;
+	}
+
+	public boolean wantsUpdates() {
+		return isNextStep() && !isBrowsingHistory() && !finished;
 	}
 
 	private ImageIcon getImage(String name) {
@@ -230,6 +438,7 @@ public class Controller {
 	}
 
 	public void playSelected(int skeleton, boolean animate, boolean recreate) {
+	    // TODO: history
 		if (skeleton == -1) {
 			straightSkeleton = null;
 		} else {
@@ -487,6 +696,8 @@ public class Controller {
 	}
 
 	public void reset() {
+		history.clear();
+		historyPtr = 0;
 		if (algo != null && algo.getState().equals(StateValue.STARTED)) {
 			algo.cancel(true);
 		}
@@ -522,10 +733,19 @@ public class Controller {
 		if (straightSkeletons == null) {
 			straightSkeletons = new ArrayList<StraightSkeleton>();
 		}
+        if (isBrowsingHistory()) {
+			if (straightSkeletons.size() != 1 && straightSkeletons.get(0) != straightSkeleton)
+                System.err.println("TODO " + straightSkeletons.size());
+            List<StraightSkeleton> res = new ArrayList<>();
+            res.add(getStraightSkeleton());
+            return res;
+		}
 		return straightSkeletons;
 	}
 
 	public StraightSkeleton getStraightSkeleton() {
+		if (historyPtr > 0 && historyPtr <= history.size())
+			return history.get(historyPtr-1).getStraightSkeleton();
 		return straightSkeleton;
 	}
 
@@ -550,9 +770,16 @@ public class Controller {
 	}
 
 	public List<Set<Point>> getPolygons() {
+	    if (historyPtr > 0 && historyPtr <= history.size())
+	    	return history.get(historyPtr-1).getPolygons();
 		return polygons;
 	}
 
+	public List<Line> getPolyLines() {
+		if (historyPtr > 0 && historyPtr <= history.size())
+			return history.get(historyPtr-1).getPolyLines();
+		return polyLines;
+	}
 	public boolean isAnimation() {
 		return animation;
 	}
@@ -619,14 +846,26 @@ public class Controller {
 		}
 
 		private void play() {
+            historyPtr = history.size();
+			if (historyPtr != 0) {
+				// loadSnapshot(false);
+                loadSnapshot(true);
+                // truncateHistory();
+				step = false;
+				nextStep = true;
+				historyPtr = 0;
+			}
 			if (step) {
 				step = false;
 				nextStep = true;
 			}
 			if (restart) {
+				history.clear();
+				historyPtr = 0;
 				step = false;
 				nextStep = true;
 				restart(null);
+                restart = false;
 				EventCalculation.vertex_counter = view.getPoints().size();
 				if(controller.getStraightSkeleton()!= null){
 					controller.getStraightSkeleton().polygon = null;
@@ -640,11 +879,42 @@ public class Controller {
 		}
 
         private void back() {
+		    if (!finished && (nextStep || history.isEmpty() || historyPtr == 1)) {
+                step = true;
+		    	return;
+            }
+		    if (historyPtr == 0) {
+				historyPtr = history.size();
+				// makeSnapshot(straightSkeleton, polygons, view.getScreenTriangles(), null, false);
+				if (!nextStep && historyPtr > 1) {
+					historyPtr--;
+                    loadSnapshot(true);
+				}
+				nextStep = false;
+			} else {
+				historyPtr--;
+				loadSnapshot(true);
+			}
         }
 
 		private void step() {
-
+		    if (historyPtr != 0 && !history.isEmpty()) {
+		        historyPtr++;
+		        if (historyPtr > history.size()) {
+		            if (finished)
+		            	historyPtr = history.size();
+		            else {
+						// loadSnapshot(false);
+						historyPtr = 0;
+					}
+				} else {
+					loadSnapshot(true);
+					return;
+				}
+			}
 			if (restart) {
+		    	history.clear();
+		    	historyPtr = 0;
 				EventCalculation.vertex_counter = view.getPoints().size();
 				nextStep = true;
 				restart(null);

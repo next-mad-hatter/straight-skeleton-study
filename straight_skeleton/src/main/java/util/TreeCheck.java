@@ -29,5 +29,4 @@ public class TreeCheck {
         return GraphTests.isTree(gr);
     }
 
-
 }

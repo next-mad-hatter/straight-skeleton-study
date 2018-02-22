@@ -1,5 +1,7 @@
 package at.tugraz.igi.ui;
 
+import lombok.*;
+
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -38,7 +40,7 @@ public class GraphicPanel extends JPanel {
 	private Graphics graphics;
 	private JPopupMenu popup;
 
-	private List<Triangle> screenTriangles;
+	@Getter private List<Triangle> screenTriangles;
 	private List<Line> lines;
 	// public List<Line> polyLines;
 	private Set<Point> points;
@@ -123,7 +125,7 @@ public class GraphicPanel extends JPanel {
 		g2.setColor(Color.BLACK);
 		g2.setFont(new Font(this.getFont().getName(), Font.ITALIC, 14));
 
-		if (controller.polyLines.size() == 0 && point1 != null) {
+		if (controller.getPolyLines().size() == 0 && point1 != null) {
 			g2.setStroke(new BasicStroke(1));
 			drawPoint(g2, point1, Color.BLACK);
 		}
@@ -183,7 +185,7 @@ public class GraphicPanel extends JPanel {
 		g2.setColor(Color.BLACK);
 		g2.setFont(new Font(this.getFont().getName(), Font.ITALIC, 14));
 
-		if (controller.polyLines.size() == 0 && point1 != null) {
+		if (controller.getPolyLines().size() == 0 && point1 != null) {
 			g2.setStroke(new BasicStroke(1));
 			drawPoint(g2, point1, Color.BLACK);
 		}
@@ -192,7 +194,7 @@ public class GraphicPanel extends JPanel {
 		g2.drawString("Drawing area", 20, 20);
 		
 		if(show){
-		paintPolygon(g2);
+			paintPolygon(g2);
 		}
 		if (currentEvent != null) {
 			g2.setFont(new Font("default", Font.BOLD, 14));
@@ -202,7 +204,7 @@ public class GraphicPanel extends JPanel {
 	}
 
 	private void paintMovedPoints(Graphics2D g2) {
-		if (controller.isAnimation()) {
+		if (controller.isAnimation() || controller.isBrowsingHistory()) {
 			for (Set<Point> points : controller.getPolygons()) {
 				for (Point p : new ArrayList<Point>(points)) {
 					Line l = null;
@@ -249,7 +251,7 @@ public class GraphicPanel extends JPanel {
 	}
 
 	private void paintPolygon(Graphics2D g2) {
-		for (int i = 0; i < controller.polyLines.size(); i++) {
+		for (int i = 0; i < controller.getPolyLines().size(); i++) {
 			// if (editMode) {
 			// g2.setStroke(dashed);
 			// g2.setColor(Color.LIGHT_GRAY);
@@ -257,7 +259,7 @@ public class GraphicPanel extends JPanel {
 			g2.setColor(Color.BLACK);
 			// }
 
-			Line line = controller.polyLines.get(i);
+			Line line = controller.getPolyLines().get(i);
 			Point p1 = line.getP1();
 			Point p2 = line.getP2();
 

@@ -152,7 +152,7 @@ public class TestScript {
 					}
 					String varName = algo + weighting;
 					FileHandler.file = new File(String.format("%s%s%s", algoPath, weighting, ".txt"));
-					FileHandler.save(controller.polyLines, false);
+					FileHandler.save(controller.getPolyLines(), false);
 
 					File outputfile = new File(String.format("%s%s%s", algoPath, weighting, ".jpg"));
 					try {

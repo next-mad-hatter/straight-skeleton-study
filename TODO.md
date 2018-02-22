@@ -1,16 +1,16 @@
 * Use issue tracker?
 
-* Enable saving skeleton to a file from applet
+* History: test back steps, better controls (usability/stability)
 
-* Show triangulation as very first step
-
-* History: back steps
-
-* Straight jump to result
+* History animation?
 
 * Zoom; autozoom & autopan at load
 
 * Separate points coordinates and drawn points' coordinates, automatically compute good mappings
+
+* Straight jump to result
+
+* Enable saving skeleton to a file from applet
 
 * Count different kinds of flip events
 
@@ -40,6 +40,8 @@
 * Bug(s): some instances compute correctly when run via applet only and vice versa
   (currently e.g. simple-07 and simple-18)
 
+* Bug: Some polygons yield ConcurrentModificationException (e.g. misc/snail.01)
+
 * Bug: ConcurrentModificationException(s) encountered when drawing in GraphicPanel.paintMovedPoints
 
 * Bug: dragging mouse inside a built polygon in the main canvas pane sometimes
@@ -52,6 +54,8 @@
   the generating app window.
 
 * Bug: when loading invalid file, FileHandler.openPoly barfs a "File cannot be null" exception
+
+* Whenever dragging a vertex results in nonsimple polygon, the app barfs
 
 * Batch runner: read multiple batch files & add output prefix option -> shell batch runner
 
