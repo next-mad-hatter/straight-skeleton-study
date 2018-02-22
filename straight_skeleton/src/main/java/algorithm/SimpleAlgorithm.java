@@ -112,7 +112,7 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 			publish(new ImmutablePair<>("Triangulated", true));
 		// FIXME: Can we not block the calculations here or
 		//        at least have a callback from the controller?
-		while (!controller.isNextStep() && !isCancelled()) {
+		while (!controller.wantsUpdates() && !isCancelled()) {
 			Thread.sleep(100);
 		}
 		if (controller.isStep()) {
@@ -174,7 +174,7 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 				if (!isCancelled()) publish(new ImmutablePair<>(event.getName(), true));
 				// FIXME: Can we not block the calculations here or
 				//        at least have a callback from the controller?
-				while (!controller.isNextStep() && !isCancelled()) {
+				while (!controller.wantsUpdates() && !isCancelled()) {
 					Thread.sleep(100);
 				}
 				if (controller.isStep()) {
