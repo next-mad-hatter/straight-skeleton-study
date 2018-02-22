@@ -1,5 +1,6 @@
 package at.tugraz.igi.util;
 
+import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -174,6 +175,8 @@ public class Point implements Cloneable {
 	 * Apparently some code depends on conflating those though, since adding this functionality to
 	 * the Point class breaks some test cases (which then produce skeletons with unconnected
 	 * closely placed points).
+     *
+	 * Also, it seems we need to change the behaviour globally for snapshots to work, hence the hack.
 	 */
 	@Override
 	public boolean equals(Object obj) {
@@ -188,13 +191,14 @@ public class Point implements Cloneable {
 		if (number != other.number)
 			return false;
 
-		/*
-		if (number == other.number) {
+		if (!Controller.HISTORY_MODE && number == other.number)
 			return true;
-		}
-		*/
-		if (Math.abs(original_x - other.original_x) > 1e-5 || Math.abs(original_y - other.original_y) > 1e-5 ||
-		    Math.abs(current_x - other.current_x) > 1e-5 || Math.abs(current_y - other.current_y) > 1e-5)
+		if (number != other.number)
+			return false;
+
+		if (Controller.HISTORY_MODE && (
+		    Math.abs(original_x - other.original_x) > 1e-5 || Math.abs(original_y - other.original_y) > 1e-5 ||
+		    Math.abs(current_x - other.current_x) > 1e-5 || Math.abs(current_y - other.current_y) > 1e-5))
 			return false;
 
 		return true;

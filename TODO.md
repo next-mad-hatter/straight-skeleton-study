@@ -1,7 +1,5 @@
 * Use issue tracker?
 
-* Exact point comparison: keep for history only or repair/connect components in runner?
-
 * History: test back steps
 
 * History animation?

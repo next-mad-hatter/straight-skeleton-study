@@ -44,6 +44,13 @@ import at.tugraz.igi.util.*;
 import data.Graph;
 
 public class Controller {
+
+	/**
+	 * We want to globally change weird point comparison logic while making history snapshots.
+	 * See makeSnapshot() and Point.equals().
+	 */
+	public static boolean HISTORY_MODE = false;
+
 	public static enum TYPES {
 		OPEN, SAVE, SAVE_AS, PLAY, STEP, BACK, RESET, OPEN_POLY, SVG
 	}
@@ -212,43 +219,10 @@ public class Controller {
 	@Synchronized
 	private void makeSnapshot(StraightSkeleton straightSkeleton, List<Set<Point>> polygons, List<Triangle> triangles, JLabel label, boolean toHistory) {
 
+		// A hack to make point comparison work with maps herein.  See Point.equals().
+		HISTORY_MODE = true;
+
 		val clonedPointsMap = new LinkedHashMap<Point, Point>();
-		/*
-		val clonedPointsMap = new TreeMap<Point, Point>(new Comparator<Point>() {
-			public int compare(Point p1, Point p2) {
-				if (p1 == p2)
-					return 0;
-				if (p1 == null)
-					return -1;
-				if (p2 == null)
-				    return +1;
-
-				if (p1.getNumber() != p2.getNumber())
-					return p1.getNumber() < p2.getNumber() ? -1 : +1;
-
-                if (Math.abs(p1.getOriginalX() - p2.getOriginalX()) > 1e-7 || Math.abs(p1.getOriginalY() - p2.getOriginalY()) > 1e-7 ||
-                    Math.abs(p1.getCurrentX() - p2.getCurrentX()) > 1e-7 || Math.abs(p1.getCurrentY() - p2.getCurrentY()) > 1e-7) {
-                	if (p1.getOriginalX() < p2.getOriginalX())
-						return -1;
-					if (p1.getOriginalX() > p2.getOriginalX())
-						return +1;
-					if (p1.getOriginalY() < p2.getOriginalY())
-						return -1;
-					if (p1.getOriginalY() > p2.getOriginalY())
-						return +1;
-					if (p1.getCurrentX() < p2.getCurrentX())
-						return -1;
-					if (p1.getCurrentX() > p2.getCurrentX())
-						return +1;
-					if (p1.getCurrentY() < p2.getCurrentY())
-						return -1;
-					if (p1.getCurrentY() > p2.getCurrentY())
-						return +1;
-                    return +1;
-				}
-				return 0;
-			}});
-        */
 		Function<Point, Point> clonePoint = (pt) -> {
 			if (clonedPointsMap.containsKey(pt))
 				return clonedPointsMap.get(pt);
@@ -256,6 +230,7 @@ public class Controller {
 			np.current_x = pt.current_x;
 			np.current_y = pt.current_y;
 			np.adjacentLines = pt.adjacentLines;
+			// np.setStrictComparison(true);
 			clonedPointsMap.put(pt, np);
 			return np;
 		};
@@ -364,6 +339,8 @@ public class Controller {
 		for (val e: clonedPointsMap.entrySet())
 			System.err.println(pointDetails.apply(e.getKey()) + " -> " + pointDetails.apply(e.getValue()));
 		*/
+
+		HISTORY_MODE = false;
 	}
 
 	private void loadSnapshot(boolean fromHistory) {
