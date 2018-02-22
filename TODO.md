@@ -42,6 +42,8 @@
 * Bug(s): some instances compute correctly when run via applet only and vice versa
   (currently e.g. simple-07 and simple-18)
 
+* Bug: Some polygons yield ConcurrentModificationException (e.g. misc/snail.01)
+
 * Bug: ConcurrentModificationException(s) encountered when drawing in GraphicPanel.paintMovedPoints
 
 * Bug: dragging mouse inside a built polygon in the main canvas pane sometimes

@@ -28,5 +28,7 @@ misc/crashes.5          ../tmp/crashes-05.skel /dev/null ../tmp/crashes-05.png  
 misc/crashes.6          ../tmp/crashes-06.skel /dev/null ../tmp/crashes-06.png            # fixed by counting parser? skeleton includes duplicate edges unless cleaned, bad skeleton with exact points comparator
 misc/weird.1            ../tmp/weird-01.skel   /dev/null ../tmp/weird-01.png              # fixed by counting parser? bad skeleton with exact points comparator
 
+misc/snail.01           ../tmp/snail-01.skel   /dev/null ../tmp/snail-01.png              # yields concurrent modification exception (both in master & dev-max branches right now)
+
 # polygons_raw_by_size/10/dubay-20_10.dat.xz ../tmp/dubai.skel
 
