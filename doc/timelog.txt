@@ -12,4 +12,5 @@
 2018.02.17     3:30    counting input parser/vertex counter fix attempt
 2018.02.18     3:40    try and renumber vertices for generated polygons, skeleton tree check, duplicate arcs filter, more bugs documented
 2018.02.19     4:40    events & animations destructuring/debugging
-2018.02.21     2:00    more debugging, writing events counts from single/batch runner
+2018.02.21     8:40    more debugging, writing events counts from single/batch runner, show initial triangulation when stepping, history hacking
+2018.02.22     6:50    history & points comparators hacking
