@@ -187,7 +187,7 @@ public class Controller {
 		animation = false;
 		step = false;
 		makeSnapshot(straightSkeleton, polygons, view.getScreenTriangles(), null, true);
-		makeSnapshot(straightSkeleton, polygons, view.getScreenTriangles(), null, false);
+		// makeSnapshot(straightSkeleton, polygons, view.getScreenTriangles(), null, false);
 		historyPtr = history.size();
 		nextStep = true;
 		table.setValueAt(new Boolean(true), straightSkeletons.indexOf(straightSkeleton), 0);
@@ -344,6 +344,8 @@ public class Controller {
 	}
 
 	private void loadSnapshot(boolean fromHistory) {
+		HISTORY_MODE = true;
+
 		Snapshot state;
 		/*
 		if (fromHistory)
@@ -365,6 +367,8 @@ public class Controller {
 		if (!fromHistory)
 			lastState = null;
 		view.repaint();
+
+		HISTORY_MODE = false;
 	}
 
 	private void truncateHistory() {
@@ -842,9 +846,13 @@ public class Controller {
 		}
 
 		private void play() {
+            historyPtr = history.size();
 			if (historyPtr != 0) {
-				loadSnapshot(true);
-				truncateHistory();
+				// loadSnapshot(false);
+                loadSnapshot(true);
+                // truncateHistory();
+				step = false;
+				nextStep = true;
 				historyPtr = 0;
 			}
 			if (step) {
@@ -857,6 +865,7 @@ public class Controller {
 				step = false;
 				nextStep = true;
 				restart(null);
+                restart = false;
 				EventCalculation.vertex_counter = view.getPoints().size();
 				if(controller.getStraightSkeleton()!= null){
 					controller.getStraightSkeleton().polygon = null;
@@ -870,14 +879,16 @@ public class Controller {
 		}
 
         private void back() {
-		    if (history.isEmpty() || historyPtr == 1)
+		    if (!finished && (nextStep || history.isEmpty() || historyPtr == 1)) {
+                step = true;
 		    	return;
+            }
 		    if (historyPtr == 0) {
 				historyPtr = history.size();
-				makeSnapshot(straightSkeleton, polygons, view.getScreenTriangles(), null, false);
+				// makeSnapshot(straightSkeleton, polygons, view.getScreenTriangles(), null, false);
 				if (!nextStep && historyPtr > 1) {
 					historyPtr--;
-					loadSnapshot(true);
+                    loadSnapshot(true);
 				}
 				nextStep = false;
 			} else {
@@ -893,8 +904,8 @@ public class Controller {
 		            if (finished)
 		            	historyPtr = history.size();
 		            else {
+						// loadSnapshot(false);
 						historyPtr = 0;
-						loadSnapshot(false);
 					}
 				} else {
 					loadSnapshot(true);

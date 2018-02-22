@@ -3,10 +3,10 @@
 simple/simple.01 ../tmp/simple-01.skel ../tmp/simple-01.stat                              # good
 simple/simple.02 ../tmp/simple-02.skel ../tmp/simple-02.stat ../tmp/simple-02.png         # good, but numerical issue (short extra arc)
 simple/simple.03 ../tmp/simple-03.skel ../tmp/simple-03.stat                              # crashes when run via noswingworkder
-simple/simple.04 ../tmp/simple-04.skel ../tmp/simple-04.stat ../tmp/simple-04.png         # bad skeleton with exact points comparator
+simple/simple.04 ../tmp/simple-04.skel ../tmp/simple-04.stat ../tmp/simple-04.png         # good
 simple/simple.05 ../tmp/simple-05.skel ../tmp/simple-05.stat ../tmp/simple-05.png         # bad skeleton
 simple/simple.06 ../tmp/simple-06.skel ../tmp/simple-06.stat ../tmp/simple-06.png         # bad skeleton
-simple/simple.07 ../tmp/simple-07.skel ../tmp/simple-07.stat ../tmp/simple-07.png         # bad skeleton when run via applet, seems good when run as noswingworker version ?!, bad skeleton with exact points comparator
+simple/simple.07 ../tmp/simple-07.skel ../tmp/simple-07.stat ../tmp/simple-07.png         # bad skeleton when run via applet, seems good when run as noswingworker version ?!
 simple/simple.08 ../tmp/simple-08.skel ../tmp/simple-08.stat                              # crashes
 simple/simple.09 ../tmp/simple-09.skel ../tmp/simple-09.stat ../tmp/simple-09.png         # bad skeleton
 simple/simple.10 ../tmp/simple-10.skel ../tmp/simple-10.stat ../tmp/simple-10.png         # bad skeleton
@@ -17,18 +17,18 @@ simple/simple.14 ../tmp/simple-14.skel ../tmp/simple-14.stat                    
 simple/simple.15 ../tmp/simple-15.skel ../tmp/simple-15.stat ../tmp/simple-15.png         # bad skeleton
 simple/simple.16 ../tmp/simple-16.skel ../tmp/simple-16.stat                              # crashes
 simple/simple.17 ../tmp/simple-17.skel ../tmp/simple-17.stat                              # crashes
-simple/simple.18 ../tmp/simple-18.skel ../tmp/simple-18.stat ../tmp/simple-18.png         # bad skeleton when run as noswingworker, good when run via applet ?!, bad skeleton with exact points comparator
+simple/simple.18 ../tmp/simple-18.skel ../tmp/simple-18.stat ../tmp/simple-18.png         # bad skeleton when run as noswingworker, good when run via applet ?!
 
-misc/crashes.1          ../tmp/crashes-01.skel ../tmp/crashes-01.stat ../tmp/misc-01.png  # fixed by counting parser? bad skeleton with exact points comparator
-misc/crashes.2.min      ../tmp/crashes-02-min.skel                                        # fixed by counting parser? bad skeleton with exact points comparator
-misc/crashes.2.working  ../tmp/crashes-02-working.skel                                    # bad skeleton with exact points comparator
-misc/crashes.3          /dev/null                                                         # fixed by counting parser? bad skeleton with exact points comparator
-misc/crashes.4          ../tmp/crashes-04.skel /dev/null ../tmp/crashes-04.png            # fixed by counting parser? skeleton includes duplicate edges unless cleaned, bad skeleton with exact points comparator
-misc/crashes.5          ../tmp/crashes-05.skel /dev/null ../tmp/crashes-05.png            # fixed by counting parser? skeleton includes duplicate edges unless cleaned, bad skeleton with exact points comparator
-misc/crashes.6          ../tmp/crashes-06.skel /dev/null ../tmp/crashes-06.png            # fixed by counting parser? skeleton includes duplicate edges unless cleaned, bad skeleton with exact points comparator
-misc/weird.1            ../tmp/weird-01.skel   /dev/null ../tmp/weird-01.png              # fixed by counting parser? bad skeleton with exact points comparator
+misc/crashes.1          ../tmp/crashes-01.skel ../tmp/crashes-01.stat ../tmp/misc-01.png  # fixed by counting parser?
+misc/crashes.2.min      ../tmp/crashes-02-min.skel                                        # fixed by counting parser?
+misc/crashes.2.working  ../tmp/crashes-02-working.skel                                    # good
+misc/crashes.3          /dev/null                                                         # fixed by counting parser?
+misc/crashes.4          ../tmp/crashes-04.skel /dev/null ../tmp/crashes-04.png            # fixed by counting parser? skeleton includes duplicate edges unless cleaned
+misc/crashes.5          ../tmp/crashes-05.skel /dev/null ../tmp/crashes-05.png            # fixed by counting parser? skeleton includes duplicate edges unless cleaned
+misc/crashes.6          ../tmp/crashes-06.skel /dev/null ../tmp/crashes-06.png            # fixed by counting parser? skeleton includes duplicate edges unless cleaned
+misc/weird.1            ../tmp/weird-01.skel   /dev/null ../tmp/weird-01.png              # fixed by counting parser?
 
-misc/snail.01           ../tmp/snail-01.skel   /dev/null ../tmp/snail-01.png              # yields concurrent modification exception (both in master & dev-max branches right now)
+misc/snail.01           ../tmp/snail-01.skel   /dev/null ../tmp/snail-01.png              # yields concurrent modification exception (applet only?)
 
 # polygons_raw_by_size/10/dubay-20_10.dat.xz ../tmp/dubai.skel
 

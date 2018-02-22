@@ -1,6 +1,6 @@
 * Use issue tracker?
 
-* History: test back steps
+* History: test back steps, better controls (usability/stability)
 
 * History animation?
 
