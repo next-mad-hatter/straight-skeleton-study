@@ -1,3 +1,6 @@
+* Implemented basic browsing back through events history
+* Singe/batch runners count event & check tree structure of the results
+* Polygon loading parser: ordering bugs fixed
 * Added a batch runner & a set of test cases
 * Implemented plaintext/xz-compressed coordinates reading & loading
 * Added autonomous single file runner
