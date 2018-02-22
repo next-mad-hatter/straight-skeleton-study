@@ -6,9 +6,9 @@ import java.util.List;
 import at.tugraz.igi.main.Controller;
 
 public class Point implements Cloneable {
-	private int number;
-	private double original_x;
-	private double original_y;
+	protected int number;
+	protected double original_x;
+	protected double original_y;
 	public double current_x;
 	public double current_y;
 	public List<Line> adjacentLines;
@@ -167,6 +167,14 @@ public class Point implements Cloneable {
 		return result;
 	}
 
+	/**
+	 * We want to be able to differentiate between Points with same id ("number") and
+	 * different coordinates (e.g. for keeping snapshots history).
+	 *
+	 * Apparently some code depends on conflating those though, since adding this functionality to
+	 * the Point class breaks some test cases (which then produce skeletons with unconnected
+	 * closely placed points).
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -179,9 +187,16 @@ public class Point implements Cloneable {
 		Point other = (Point) obj;
 		if (number != other.number)
 			return false;
+
+		/*
 		if (number == other.number) {
 			return true;
 		}
+		*/
+		if (Math.abs(original_x - other.original_x) > 1e-5 || Math.abs(original_y - other.original_y) > 1e-5 ||
+		    Math.abs(current_x - other.current_x) > 1e-5 || Math.abs(current_y - other.current_y) > 1e-5)
+			return false;
+
 		return true;
 	}
 

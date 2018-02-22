@@ -1,14 +1,18 @@
 * Use issue tracker?
 
-* Enable saving skeleton to a file from applet
+* Exact point comparison: keep for history only or repair/connect components in runner?
 
-* History: back steps
+* History: test back steps
 
-* Straight jump to result
+* History animation?
 
 * Zoom; autozoom & autopan at load
 
 * Separate points coordinates and drawn points' coordinates, automatically compute good mappings
+
+* Straight jump to result
+
+* Enable saving skeleton to a file from applet
 
 * Count different kinds of flip events
 

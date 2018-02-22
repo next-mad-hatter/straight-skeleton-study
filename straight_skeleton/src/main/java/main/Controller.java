@@ -180,6 +180,7 @@ public class Controller {
 		animation = false;
 		step = false;
 		makeSnapshot(straightSkeleton, polygons, view.getScreenTriangles(), null, true);
+		makeSnapshot(straightSkeleton, polygons, view.getScreenTriangles(), null, false);
 		historyPtr = history.size();
 		nextStep = true;
 		table.setValueAt(new Boolean(true), straightSkeletons.indexOf(straightSkeleton), 0);
@@ -212,6 +213,42 @@ public class Controller {
 	private void makeSnapshot(StraightSkeleton straightSkeleton, List<Set<Point>> polygons, List<Triangle> triangles, JLabel label, boolean toHistory) {
 
 		val clonedPointsMap = new LinkedHashMap<Point, Point>();
+		/*
+		val clonedPointsMap = new TreeMap<Point, Point>(new Comparator<Point>() {
+			public int compare(Point p1, Point p2) {
+				if (p1 == p2)
+					return 0;
+				if (p1 == null)
+					return -1;
+				if (p2 == null)
+				    return +1;
+
+				if (p1.getNumber() != p2.getNumber())
+					return p1.getNumber() < p2.getNumber() ? -1 : +1;
+
+                if (Math.abs(p1.getOriginalX() - p2.getOriginalX()) > 1e-7 || Math.abs(p1.getOriginalY() - p2.getOriginalY()) > 1e-7 ||
+                    Math.abs(p1.getCurrentX() - p2.getCurrentX()) > 1e-7 || Math.abs(p1.getCurrentY() - p2.getCurrentY()) > 1e-7) {
+                	if (p1.getOriginalX() < p2.getOriginalX())
+						return -1;
+					if (p1.getOriginalX() > p2.getOriginalX())
+						return +1;
+					if (p1.getOriginalY() < p2.getOriginalY())
+						return -1;
+					if (p1.getOriginalY() > p2.getOriginalY())
+						return +1;
+					if (p1.getCurrentX() < p2.getCurrentX())
+						return -1;
+					if (p1.getCurrentX() > p2.getCurrentX())
+						return +1;
+					if (p1.getCurrentY() < p2.getCurrentY())
+						return -1;
+					if (p1.getCurrentY() > p2.getCurrentY())
+						return +1;
+                    return +1;
+				}
+				return 0;
+			}});
+        */
 		Function<Point, Point> clonePoint = (pt) -> {
 			if (clonedPointsMap.containsKey(pt))
 				return clonedPointsMap.get(pt);
@@ -315,21 +352,28 @@ public class Controller {
 		else
 			lastState = state;
 
-		// System.out.println(System.currentTimeMillis());
+		/*
+		Function<Point, String> pointDetails = (pt) ->
+				"[" + pt.getNumber() + ": (" + pt.getOriginalX() + ", " + pt.getOriginalY() + ") ~ (" +
+						                       pt.getCurrentX() + ", " + pt.getCurrentY() + ")";
+
 		if (toHistory)
-            System.out.println("SAVING " + history.size());
+            System.err.println("SAVING " + history.size());
 		else
-			System.out.println("SAVING LAST");
-		// System.out.println(snapPoints.size() + " " + snapTriangles.size() + " " + polygons.size());
-		// System.out.println(history.size());
+			System.err.println("SAVING LAST");
+		for (val e: clonedPointsMap.entrySet())
+			System.err.println(pointDetails.apply(e.getKey()) + " -> " + pointDetails.apply(e.getValue()));
+		*/
 	}
 
 	private void loadSnapshot(boolean fromHistory) {
 		Snapshot state;
+		/*
 		if (fromHistory)
             System.out.println("LOADING " + historyPtr + "/" + history.size());
 		else
             System.out.println("LOADING LAST");
+		*/
 	    if (fromHistory)
 	    	state = history.get(historyPtr-1);
 		else
@@ -710,7 +754,7 @@ public class Controller {
 		}
         if (isBrowsingHistory()) {
 			if (straightSkeletons.size() != 1 && straightSkeletons.get(0) != straightSkeleton)
-                System.out.println("TODO " + straightSkeletons.size());
+                System.err.println("TODO " + straightSkeletons.size());
             List<StraightSkeleton> res = new ArrayList<>();
             res.add(getStraightSkeleton());
             return res;
@@ -823,7 +867,6 @@ public class Controller {
 		private void play() {
 			if (historyPtr != 0) {
 				loadSnapshot(true);
-				// TODO: can we continue from here as if we never went further earlier?
 				truncateHistory();
 				historyPtr = 0;
 			}
@@ -855,11 +898,11 @@ public class Controller {
 		    if (historyPtr == 0) {
 				historyPtr = history.size();
 				makeSnapshot(straightSkeleton, polygons, view.getScreenTriangles(), null, false);
-				if (nextStep && historyPtr > 1) {
+				if (!nextStep && historyPtr > 1) {
 					historyPtr--;
 					loadSnapshot(true);
 				}
-				nextStep = true;
+				nextStep = false;
 			} else {
 				historyPtr--;
 				loadSnapshot(true);
