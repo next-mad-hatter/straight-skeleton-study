@@ -2,13 +2,11 @@
 
 * History: test back steps, better controls (usability/stability)
 
-* History animation?
-
-* Zoom; autozoom & autopan at load
-
-* Separate points coordinates and drawn points' coordinates, automatically compute good mappings
+* Zoom: autozoom & autopan at load / manually triggered apart from that?
 
 * Straight jump to result
+
+* History animation?
 
 * Enable saving skeleton to a file from applet
 
