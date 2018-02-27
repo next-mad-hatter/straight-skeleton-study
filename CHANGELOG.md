@@ -1,3 +1,4 @@
+* Added autozoom functionality (not yet fully complete/tested)
 * Implemented basic browsing back through events history
 * Applet: show triangulation as first step
 * Singe/batch runners count events & check tree structure of the results
