@@ -18,6 +18,7 @@ simple/simple.15 ../tmp/simple-15.skel ../tmp/simple-15.stat ../tmp/simple-15.pn
 simple/simple.16 ../tmp/simple-16.skel ../tmp/simple-16.stat                              # crashes
 simple/simple.17 ../tmp/simple-17.skel ../tmp/simple-17.stat                              # crashes
 simple/simple.18 ../tmp/simple-18.skel ../tmp/simple-18.stat ../tmp/simple-18.png         # bad skeleton when run as noswingworker, good when run via applet ?!
+simple/simple.19 ../tmp/simple-19.skel ../tmp/simple-19.stat ../tmp/simple-19.png         # bad skeleton, png produced by batch runner seems fine though
 
 misc/crashes.1          ../tmp/crashes-01.skel ../tmp/crashes-01.stat ../tmp/misc-01.png  # fixed by counting parser
 misc/crashes.2.min      ../tmp/crashes-02-min.skel                                        # fixed by counting parser
