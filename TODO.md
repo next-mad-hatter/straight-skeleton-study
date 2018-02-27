@@ -86,3 +86,5 @@
 
 * Set up consistant indenting & os-appropriate line breaks (wtf spacemacs?!)
 
+* Apply license in filehandler to prior code only
+

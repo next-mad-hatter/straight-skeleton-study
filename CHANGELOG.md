@@ -1,9 +1,9 @@
 * Implemented basic browsing back through events history
-* Show triangulation as first step
-* Singe/batch runners count event & check tree structure of the results
+* Applet: show triangulation as first step
+* Singe/batch runners count events & check tree structure of the results
 * Polygon loading parser: ordering bugs fixed
-* Added a batch runner & a set of test cases
-* Implemented plaintext/xz-compressed coordinates reading & loading
+* Added a batch runner & a set of small test polygons
+* Implemented loading plaintext/xz-compressed coordinates lists
 * Added autonomous single file runner
 * Added some simple polygons which yield incorrect behaviour
 * Got rid of some linter warnings (some redundand casts, raw types and unchecked casts eliminated)

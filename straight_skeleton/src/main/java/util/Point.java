@@ -172,11 +172,13 @@ public class Point implements Cloneable {
 	 * We want to be able to differentiate between Points with same id ("number") and
 	 * different coordinates (e.g. for keeping snapshots history).
 	 *
-	 * Apparently some code depends on conflating those though, since adding this functionality to
-	 * the Point class breaks some test cases (which then produce skeletons with unconnected
-	 * closely placed points).
+	 * Apparently some code depends on conflating Points with same number values though,
+	 * since simply adding this functionality to the Point class breaks some test cases
+	 * (which then produce skeletons featuring unconnected components albeit not visibly
+	 * so due to very closely placed points, i.e. "almost" connected).
      *
-	 * Also, it seems we need to change the behaviour globally for snapshots to work, hence the hack.
+	 * Also, it seems we need to change the behaviour globally for snapshots to work --
+	 * hence the HISTORY_MODE hack.
 	 */
 	@Override
 	public boolean equals(Object obj) {
