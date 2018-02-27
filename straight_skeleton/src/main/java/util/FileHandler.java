@@ -85,6 +85,8 @@ public class FileHandler {
           try {
               result = fetchStreamContents(new XZInputStream(in), "UTF-8");
           } catch (XZFormatException e) {
+              in.close();
+              in = new FileInputStream(file);
               result = fetchStreamContents(in, "UTF-8");
           }
         } catch (Exception e) {
@@ -130,7 +132,7 @@ public class FileHandler {
             Stream<Indexed<Double>> xs = zi.stream().filter(t -> t.getIndex() % 2 == 0);
             Stream<Indexed<Double>> ys = zi.stream().filter(t -> t.getIndex() % 2 != 0);
             return StreamUtils.zip(xs, ys, (x, y) ->
-                                   new Point(toIntExact(x.getIndex()), x.getValue(), y.getValue())).
+                                   new Point(1 + toIntExact(x.getIndex())/2, x.getValue(), y.getValue())).
                 collect(Collectors.toList());
         } catch (NumberFormatException e) {
             throw new ParseException("Bad float format encountered in coordinates file");
