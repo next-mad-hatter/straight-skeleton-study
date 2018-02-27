@@ -1,5 +1,8 @@
 package at.tugraz.igi.ui;
 
+import lombok.*;
+
+import java.awt.geom.*;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.MouseEvent;
@@ -46,6 +49,12 @@ public class CustomTextField extends JTextField implements DocumentListener, Mou
 
 	}
 
+	/*
+	public void setScale(int size) {
+		this.setFont(new Font(this.getFont().getName(), Font.BOLD, size));
+	}
+	*/
+
 	public void updatePosition(boolean counterclockwise) {
 		position(screenLine);
 		if (counterclockwise) {
@@ -53,18 +62,37 @@ public class CustomTextField extends JTextField implements DocumentListener, Mou
 		}
 	}
 
+	public void position() {
+	    position(screenLine);
+	}
+
 	private void position(Line line) {
+	    val p2 = controller.view.transformCoordinates(
+	    		line.getP2().getOriginalX(),
+				line.getP2().getOriginalY(), true);
+		val p1 = controller.view.transformCoordinates(
+				line.getP1().getOriginalX(),
+				line.getP1().getOriginalY(), true);
+
+		int x2 = (int) (p2.getX() + p1.getX()) / 2;
+		int y2 = (int) (p2.getY() + p1.getY()) / 2;
+		double v_y = -(p2.getX() - p1.getX());
+		double v_x = (p2.getY() - p1.getY());
+		/*
 		int x2 = (int) (line.getP2().getOriginalX() + line.getP1().getOriginalX()) / 2;
 		int y2 = (int) (line.getP2().getOriginalY() + line.getP1().getOriginalY()) / 2;
 		double v_y = -(line.getP2().getOriginalX() - line.getP1().getOriginalX());
 		double v_x = (line.getP2().getOriginalY() - line.getP1().getOriginalY());
+		*/
 
 		double length = Math.sqrt(v_y * v_y + v_x * v_x);
 		v_y /= length;
 		v_x /= length;
 		this.vector = new Vector(v_x, v_y);
 
-		this.setText(line.getWeightAsString());
+		if (!this.getText().equals(line.getWeightAsString())) { // && this.getText().matches("^-?\\d+$")) {
+			this.setText(line.getWeightAsString());
+		}
 
 		this.setBounds((int) (x2 - this.getPreferredSize().width / 2 + (v_x * 16)),
 				(int) (y2 - this.getPreferredSize().height / 2 + (v_y * 16)), 30, this.getPreferredSize().height);

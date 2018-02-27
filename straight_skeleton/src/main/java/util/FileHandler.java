@@ -31,6 +31,7 @@
 
 package at.tugraz.igi.util;
 
+// import lombok.*;
 import java.awt.*;
 import java.util.*;
 import java.util.function.*;
@@ -53,47 +54,49 @@ import org.w3c.dom.*;
 import at.tugraz.igi.main.*;
 import at.tugraz.igi.ui.*;
 import at.tugraz.igi.ui.*;
+import at.tugraz.igi.util.Point;
 import data.*;
 
 public class FileHandler {
 
 	public static File file = null;
 	public static File svgfile = null;
-  public static String parent = (new File(System.getProperty("user.dir"))).getPath();
+	public static String parent = (new File(System.getProperty("user.dir"))).getPath();
 
     /**
      * Reads contents of a stream into a string.
      */
-    private static String fetchStreamContents(InputStream in, String encoding) throws IOException {
-        byte[] buffer = new byte[8192];
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int size;
-        while ((size = in.read(buffer)) != -1)
-            out.write(buffer, 0, size);
-        return out.toString(encoding);
-    }
+	private static String fetchStreamContents(InputStream in, String encoding) throws IOException {
+		byte[] buffer = new byte[8192];
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		int size;
+		while ((size = in.read(buffer)) != -1)
+			out.write(buffer, 0, size);
+		return out.toString(encoding);
+	}
 
 
     /**
      * Reads contents of a UTF-8-encoded file into a String object.  Tries to interpret
      * contents of the file as xz-compressed stream first, and if that fails, as plain text.
      */
-    private static String fetchFileContents(File file) throws IOException {
-        InputStream in = new FileInputStream(file);
-        String result;
-        try {
-          try {
-              result = fetchStreamContents(new XZInputStream(in), "UTF-8");
-          } catch (XZFormatException e) {
-              result = fetchStreamContents(in, "UTF-8");
-          }
-        } catch (Exception e) {
-            in.close();
-            throw e;
-        }
-        in.close();
-        return result;
-    }
+	private static String fetchFileContents(File file) throws IOException {
+		InputStream in = new FileInputStream(file);
+		String result;
+		try {
+			try {
+				result = fetchStreamContents(new XZInputStream(in), "UTF-8");
+			} catch (XZFormatException e) {
+				in = new FileInputStream(file);
+				result = fetchStreamContents(in, "UTF-8");
+			}
+		} catch (Exception e) {
+			in.close();
+			throw e;
+		}
+		in.close();
+		return result;
+	}
 
 
     /**
@@ -130,7 +133,7 @@ public class FileHandler {
             Stream<Indexed<Double>> xs = zi.stream().filter(t -> t.getIndex() % 2 == 0);
             Stream<Indexed<Double>> ys = zi.stream().filter(t -> t.getIndex() % 2 != 0);
             return StreamUtils.zip(xs, ys, (x, y) ->
-                                   new Point(toIntExact(x.getIndex()), x.getValue(), y.getValue())).
+                                   new Point(1 + toIntExact(x.getIndex())/2, x.getValue(), y.getValue())).
                 collect(Collectors.toList());
         } catch (NumberFormatException e) {
             throw new ParseException("Bad float format encountered in coordinates file");
@@ -148,7 +151,7 @@ public class FileHandler {
         if(pointsList.size() > 1) {
             Point p1 = pointsList.get(0);
             Point p2 = pointsList.get(pointsList.size() - 1);
-            if (p1.getOriginalX() == p2.getOriginalX() && p2.getOriginalY() == p2.getOriginalY())
+            if (p1.getOriginalX() == p2.getOriginalX() && p1.getOriginalY() == p2.getOriginalY())
                 pointsList.remove(pointsList.size() - 1);
         }
         if(pointsList.size() < 3) {
@@ -156,8 +159,10 @@ public class FileHandler {
         }
 
         Set<Point> points = new LinkedHashSet<Point>(pointsList);
-        int max_x = 0;
-        int max_y = 0;
+        Double max_x = null;
+        Double max_y = null;
+		Double min_x = null;
+		Double min_y = null;
         List<Line> lines = new ArrayList<Line>();
         List<Line> screenLines = new ArrayList<Line>();
 
@@ -171,8 +176,10 @@ public class FileHandler {
             }
 
             for (Point p2: pointsList) {
-                if (p2.getOriginalX() > max_x) max_x = (int) p2.getOriginalX();
-                if (p2.getOriginalY() > max_y) max_y = (int) p2.getOriginalY();
+                if (max_x == null || p2.getOriginalX() > max_x) max_x = new Double(p2.getOriginalX());
+				if (min_x == null || p2.getOriginalX() < min_x) min_x = new Double(p2.getOriginalX());
+                if (max_y == null || p2.getOriginalY() > max_y) max_y = new Double(p2.getOriginalY());
+				if (min_y == null || p2.getOriginalY() < min_y) min_y = new Double(p2.getOriginalY());
 
                 Point sp2;
                 try {
@@ -199,8 +206,9 @@ public class FileHandler {
         }
 
         controller.setLoadedData(lines, screenLines, points);
-        panel.setSize(new Dimension(max_x + 20, max_y + 20));
-        panel.setPreferredSize(new Dimension(max_x + 20, max_y + 20));
+        panel.setSize(new Dimension( (int) Math.ceil(max_x) + 20,  (int) Math.ceil(max_y) + 20));
+        // panel.setPreferredSize(new Dimension( (int) Math.ceil(max_x) + 20, (int) Math.ceil(max_y) + 20));
+		panel.setCoordinatesBounds(min_x, min_y, max_x, max_y);
         panel.repaint();
         if (Util.isCounterClockwise(pointsList)) {
             panel.repositionTextfields();
@@ -240,7 +248,10 @@ public class FileHandler {
     }
 
   public static void createPoly(GraphicPanel panel, Controller controller, Graph graph) {
-		int max_x = 0, max_y = 0;
+	  Double max_x = null;
+	  Double max_y = null;
+	  Double min_x = null;
+	  Double min_y = null;
 		List<Point> loadedVertices = new ArrayList<Point>();
 		List<Point> screenVertices = new ArrayList<Point>();
 		ArrayList<Line> loadedEdges = new ArrayList<>();
@@ -256,12 +267,10 @@ public class FileHandler {
 
 		for (int i = 0; i < graph.getVertices().size(); i++) {
 			Vertex v = graph.getVertices().get(i);
-			if (v.getX() > max_x) {
-				max_x = v.getX();
-			}
-			if (v.getY() > max_y) {
-				max_y = v.getY();
-			}
+			if (max_x == null || v.getX() > max_x) max_x = new Double(v.getX());
+			if (min_x == null || v.getX() < min_x) min_x = new Double(v.getX());
+			if (max_y == null || v.getY() > max_y) max_y = new Double(v.getY());
+			if (min_y == null || v.getY() < min_y) min_y = new Double(v.getY());
 			loadedVertices.add(new Point(i + 1, v.getX(), v.getY()));
 			screenVertices.add(new Point(i + 1, v.getX(), v.getY()));
 		}
@@ -310,7 +319,8 @@ public class FileHandler {
 
 		if (panel != null) {
 			controller.setLoadedData(loadedEdges, reorder(screenEdges), points);
-			panel.setPreferredSize(new Dimension(max_x + 20, max_y + 20));
+			// panel.setPreferredSize(new Dimension((int) Math.ceil(max_x) + 20, (int) Math.ceil(max_y) + 20));
+			panel.setCoordinatesBounds(min_x, min_y, max_x, max_y);
 			panel.repaint();
 			if (Util.isCounterClockwise(new ArrayList<Point>(loadedVertices))) {
 				panel.repositionTextfields();
@@ -319,7 +329,10 @@ public class FileHandler {
 	}
 
 	public static void openPoly(File file, GraphicPanel panel, Controller controller) {
-		int max_x = 0, max_y = 0;
+		Double max_x = null;
+		Double max_y = null;
+		Double min_x = null;
+		Double min_y = null;
 		// JFileChooser fc = new JFileChooser();
 		// int retVal = fc.showOpenDialog(panel);
 		// if (retVal == JFileChooser.APPROVE_OPTION) {
@@ -345,12 +358,10 @@ public class FileHandler {
 					Element vElement = (Element) vNode;
 					int x = Integer.parseInt(vElement.getElementsByTagName("x").item(0).getTextContent());
 					int y = Integer.parseInt(vElement.getElementsByTagName("y").item(0).getTextContent());
-					if (x > max_x) {
-						max_x = x;
-					}
-					if (y > max_y) {
-						max_y = y;
-					}
+					if (max_x == null || x > max_x) max_x = new Double(x);
+					if (min_x == null || x < min_x) min_x = new Double(x);
+					if (max_y == null || y > max_y) max_y = new Double(y);
+					if (min_y == null || y < min_y) min_y = new Double(y);
 					loadedVertices.add(new Point(i + 1, x, y));
 					screenVertices.add(new Point(i + 1, x, y));
 				}
@@ -395,7 +406,8 @@ public class FileHandler {
 
 			controller.setLoadedData(loadedEdges, reorder(screenEdges), points);
 
-			panel.setPreferredSize(new Dimension(max_x + 20, max_y + 20));
+			// panel.setPreferredSize(new Dimension((int) Math.ceil(max_x) + 20, (int) Math.ceil(max_y) + 20));
+			panel.setCoordinatesBounds(min_x, min_y, max_x, max_y);
 			panel.repaint();
 
 			if (Util.isCounterClockwise(new ArrayList<Point>(loadedVertices))) {
@@ -474,7 +486,10 @@ public class FileHandler {
 	private static void readFromFile(File file, GraphicPanel panel, Controller controller)
 			throws IOException, NumberFormatException {
 		if (file != null) {
-			int max_x = 0, max_y = 0;
+			Double max_x = null;
+			Double max_y = null;
+			Double min_x = null;
+			Double min_y = null;
 			controller.reset();
 			panel.revalidate();
 			InputStream in = Files.newInputStream(file.toPath(), StandardOpenOption.READ);
@@ -515,8 +530,10 @@ public class FileHandler {
                     points.add(p1);
                     pointIDs.add(id);
                     // pointIDsLU.put(id, points.size());
-                    if (x > max_x) max_x = (int) x;
-                    if (y > max_y) max_y = (int) y;
+					if (max_x == null || x > max_x) max_x = new Double(x);
+					if (min_x == null || x < min_x) min_x = new Double(x);
+					if (max_y == null || y > max_y) max_y = new Double(y);
+					if (min_y == null || y < min_y) min_y = new Double(y);
                     // screenP1 = new Point(points.size(), x, y);
                     screenP1 = new Point(id.intValue(), x, y);
                 } else {
@@ -536,8 +553,10 @@ public class FileHandler {
                 points.add(p2);
                 pointIDs.add(id);
                 // pointIDsLU.put(id, points.size());
-                if (x > max_x) max_x = (int) x;
-                if (y > max_y) max_y = (int) y;
+				if (max_x == null || x > max_x) max_x = new Double(x);
+				if (min_x == null || x < min_x) min_x = new Double(x);
+				if (max_y == null || y > max_y) max_y = new Double(y);
+				if (min_y == null || y < min_y) min_y = new Double(y);
                 // screenP2 = new Point(points.size(), x, y);
                 screenP2 = new Point(id.intValue(), x, y);
 
@@ -580,7 +599,8 @@ public class FileHandler {
             // controller.reset();
             // FIXME: do we want to otherwise enforce uniqueness of points?
             controller.setLoadedData(lines, screenLines, new LinkedHashSet<Point>(points));
-			panel.setPreferredSize(new Dimension(max_x + 20, max_y + 20));
+			// panel.setPreferredSize(new Dimension((int) Math.ceil(max_x) + 20, (int) Math.ceil(max_y) + 20));
+			panel.setCoordinatesBounds(min_x, min_y, max_x, max_y);
 			panel.repaint();
 			if (Util.isCounterClockwise(new ArrayList<Point>(points))) {
 				panel.repositionTextfields();

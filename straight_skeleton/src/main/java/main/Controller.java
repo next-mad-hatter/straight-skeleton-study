@@ -73,7 +73,7 @@ public class Controller {
 	private boolean step;
 	private boolean animation;
 	private boolean enabled = true;
-	private boolean closed;
+	@Getter private boolean closed;
 	private boolean editMode;
 	public boolean randomWeights;
 	public boolean finished = true;
@@ -113,7 +113,6 @@ public class Controller {
 	private boolean init_drag;
 
 	private Point sdragPoint;
-	private Point dragPoint;
 
 	private Random randomGenerator = new Random();
 
@@ -255,20 +254,25 @@ public class Controller {
 		    return clonedLineListsMap.get(lines);
 		};
 
-		val snapSkeleton = new StraightSkeleton();
-		snapSkeleton.setColor(straightSkeleton.getColor());
-		snapSkeleton.setVisible(straightSkeleton.isVisible());
-		snapSkeleton.setLines(cloneLineList.apply(straightSkeleton.getLines()));
-		snapSkeleton.setPolyLines(cloneLineList.apply(straightSkeleton.getPolyLines()));
-		if (straightSkeleton.polygon != null) {
-			snapSkeleton.polygon = new HashMap<>();
-			for (val e : straightSkeleton.polygon.entrySet()) {
-				val d = new MeasuringData(
-						cloneLine.apply(e.getValue().getPolyLine()),
-						cloneLineList.apply(e.getValue().getPolygon()),
-						e.getValue().getArea()
-				);
-				snapSkeleton.polygon.put(cloneLineList.apply(e.getKey()), d);
+		StraightSkeleton snapSkeleton;
+		if (straightSkeleton == null)
+			snapSkeleton = null;
+		else {
+			snapSkeleton = new StraightSkeleton();
+			snapSkeleton.setColor(straightSkeleton.getColor());
+			snapSkeleton.setVisible(straightSkeleton.isVisible());
+			snapSkeleton.setLines(cloneLineList.apply(straightSkeleton.getLines()));
+			snapSkeleton.setPolyLines(cloneLineList.apply(straightSkeleton.getPolyLines()));
+			if (straightSkeleton.polygon != null) {
+				snapSkeleton.polygon = new HashMap<>();
+				for (val e : straightSkeleton.polygon.entrySet()) {
+					val d = new MeasuringData(
+							cloneLine.apply(e.getValue().getPolyLine()),
+							cloneLineList.apply(e.getValue().getPolygon()),
+							e.getValue().getArea()
+					);
+					snapSkeleton.polygon.put(cloneLineList.apply(e.getKey()), d);
+				}
 			}
 		}
 
@@ -942,14 +946,25 @@ public class Controller {
 				return;
 			}
 			move = true;
-			// if (dragPoint != null) {
+			// if (sdragPoint != null) {
 			if (!enabled) {
 				enabled = true;
 			}
-			dragPoint.setBothXCoordinates(e.getPoint().getX());
-			dragPoint.setBothYCoordinates(e.getPoint().getY());
+			val loc = view.transformCoordinates(
+					e.getPoint().getX(),
+					e.getPoint().getY(), false);
+
+			if (view.getMin_x() > loc.getX()) view.setMin_x(loc.getX());
+			if (view.getMin_y() > loc.getY()) view.setMin_y(loc.getY());
+			if (view.getMax_x() < loc.getX()) view.setMax_x(loc.getX());
+			if (view.getMax_y() < loc.getY()) view.setMax_y(loc.getY());
+
+			sdragPoint.setBothXCoordinates(loc.getX());
+			sdragPoint.setBothYCoordinates(loc.getY());
+			/*
 			sdragPoint.setBothXCoordinates(e.getPoint().getX());
 			sdragPoint.setBothYCoordinates(e.getPoint().getY());
+			*/
 
 			for (int j = 0; j < view.getComponentCount(); j++) {
 				CustomTextField field = ((CustomTextField) view.getComponents()[j]);
@@ -961,6 +976,7 @@ public class Controller {
 				move = false;
 				restart = true;
 			}
+			// FIXME: clean this up
 			restart(null);
 			if (getStraightSkeletons().size() != 0) {
 				runAlgorithm();
@@ -1112,16 +1128,14 @@ public class Controller {
 
 			for (Line l : polyLines) {
 				Point p = l.getP1();
-				Ellipse2D c = new Ellipse2D.Double(p.getOriginalX() - 7, p.getOriginalY() - 7, 14, 14);
+				val loc = view.transformCoordinates(
+						p.getOriginalX(),
+						p.getOriginalY(), true);
+				// Ellipse2D c = new Ellipse2D.Double(p.getOriginalX() - 7, p.getOriginalY() - 7, 14, 14);
+				Ellipse2D c = new Ellipse2D.Double(loc.getX() - 7, loc.getY() - 7, 14, 14);
 				if (c.contains(ep)) {
 					sdragPoint = p;
 					init_drag = true;
-					for (Point po : points) {
-						if (po.equals(p)) {
-							dragPoint = po;
-
-						}
-					}
 					break;
 				}
 			}

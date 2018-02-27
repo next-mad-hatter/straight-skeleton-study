@@ -2,32 +2,20 @@ package at.tugraz.igi.ui;
 
 import lombok.*;
 
-import java.awt.AlphaComposite;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.RenderingHints;
+import org.apache.commons.lang3.tuple.*;
+import javafx.scene.transform.Affine;
+import java.awt.*;
+import java.awt.geom.*;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
-
-import javax.swing.BorderFactory;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-
+import javax.swing.*;
 import org.jfree.graphics2d.svg.SVGGraphics2D;
 
 import at.tugraz.igi.main.Controller;
-import at.tugraz.igi.util.EventCalculation;
+import at.tugraz.igi.util.*;
 import at.tugraz.igi.util.Line;
 import at.tugraz.igi.util.Point;
-import at.tugraz.igi.util.StraightSkeleton;
-import at.tugraz.igi.util.Triangle;
 
 public class GraphicPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
@@ -37,7 +25,8 @@ public class GraphicPanel extends JPanel {
 	private boolean finished;
 
 	private Image image;
-	private Graphics graphics;
+	private Graphics2D graphics;
+	@Getter @Setter private Double min_x, min_y, max_x, max_y; //coors_scale;
 	private JPopupMenu popup;
 
 	@Getter private List<Triangle> screenTriangles;
@@ -80,14 +69,64 @@ public class GraphicPanel extends JPanel {
 	public void update(Graphics g) {
 		if (image == null) {
 			image = createImage(this.getWidth(), this.getHeight());
-			graphics = image.getGraphics();
+			graphics = (Graphics2D) image.getGraphics();
 		}
 		graphics.setColor(getBackground());
 
 		graphics.fillRect(this.getX(), this.getY(), this.getWidth(), this.getHeight());
 		graphics.setColor(getForeground());
+
 		paint(graphics);
 		g.drawImage(image, this.getX(), this.getY(), this);
+	}
+
+	public void setCoordinatesBounds(Double min_x, Double min_y,
+									 Double max_x, Double max_y) {
+		this.min_x = min_x;
+		this.min_y = min_y;
+		this.max_x = max_x;
+		this.max_y = max_y;
+	}
+
+	private double getScale() {
+		if (min_x == null)
+			return 1.0;
+		return Math.min((getWidth()-40)/ (max_x - min_x),
+				        (getHeight()-40)/ (max_y - min_y));
+	}
+
+	public Pair<AffineTransform, AffineTransform> getCoordinatesTransform() {
+		if (min_x == null)
+			return null;
+		val scale = getScale();
+		val tx = new AffineTransform(
+				scale, 0, 0, scale,
+				20 + getX() - min_x * scale,
+				20 + getY() - min_y * scale
+		);
+		AffineTransform inv;
+		try {
+			inv = tx.createInverse();
+		} catch (NoninvertibleTransformException e) {
+			e.printStackTrace();
+			return null;
+		}
+		return new ImmutablePair<>(tx, inv);
+	}
+
+	public Point2D transformCoordinates(double x, double y, boolean toScreen) {
+		val loc = new Point2D.Double(x, y);
+		val zooms = getCoordinatesTransform();
+		if (zooms == null)
+			return loc;
+		AffineTransform zoom;
+		if (toScreen)
+			zoom = zooms.getLeft();
+		else
+			zoom = zooms.getRight();
+		if (zoom != null)
+			zoom.transform(loc, loc);
+		return loc;
 	}
 
 	public void paintSVG(SVGGraphics2D g2) {
@@ -153,13 +192,23 @@ public class GraphicPanel extends JPanel {
 	}
 
 	public void paintComponent(Graphics g) {
-		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D) g;
+		super.paintComponent(g);
 		g2.setColor(Color.WHITE);
 		g2.fillRect(this.getX(), this.getY(), getWidth(), getHeight());
+		AffineTransform zoomIn = null;
+		AffineTransform zoomOut = null;
+		val ts = getCoordinatesTransform();
+		if (ts != null) {
+			zoomIn = ts.getLeft();
+			zoomOut = ts.getRight();
+		}
+		if (zoomIn != null) g2.transform(zoomIn);
+
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		g2.setStroke(basic);
+
 		if (controller.getPolygons() != null) {
 			g2.setStroke(new BasicStroke(1));
 			g2.setColor(Color.GREEN);
@@ -192,15 +241,24 @@ public class GraphicPanel extends JPanel {
 
 		g2.setFont(new Font(this.getFont().getName(), Font.ITALIC, 14));
 		g2.drawString("Drawing area", 20, 20);
-		
+
 		if(show){
 			paintPolygon(g2);
 		}
 		if (currentEvent != null) {
 			g2.setFont(new Font("default", Font.BOLD, 14));
+			g2.setFont(new Font("default", Font.BOLD, (int) Math.ceil(14 / getScale())));
 			g2.drawString(currentEvent.getText(), currentEvent.getLocation().x, currentEvent.getLocation().y);
 		}
 		g2.setColor(Color.BLACK);
+
+		for (val c: getComponents())
+			if (c instanceof CustomTextField)
+				((CustomTextField) c).updatePosition(
+						controller.isClosed() ? Util.isCounterClockwise(new ArrayList<Point>(points)) : false);
+
+		if (zoomOut != null) g2.transform(zoomOut);
+
 	}
 
 	private void paintMovedPoints(Graphics2D g2) {
@@ -370,19 +428,71 @@ public class GraphicPanel extends JPanel {
 		return true;
 	}
 
+	private void drawZoomedLine(Graphics2D g2, double x1, double y1, double x2, double y2) {
+		val p1 = transformCoordinates(x1, y1, true);
+		val p2 = transformCoordinates(x2, y2, true);
+
+		val zooms = getCoordinatesTransform();
+		val zoomIn = zooms.getLeft();
+		val zoomOut = zooms.getRight();
+
+		if (zoomIn != null)
+			g2.transform(zoomOut);
+		g2.drawLine((int) p1.getX(), (int) p1.getY(), (int) p2.getX(), (int) p2.getY());
+		if (zoomOut != null)
+			g2.transform(zoomOut);
+
+	}
+
 	private void drawLine(Graphics2D g2, Line l) {
-		Point p1 = l.getP1();
-		Point p2 = l.getP2();
+	    val p1 = l.getP1();
+		val p2 = l.getP2();
+
+		// drawZoomedLine(g2, p1.getOriginalX(), p1.getOriginalY(), p2.getOriginalX(), p2.getOriginalY());
 		g2.drawLine((int) p1.getOriginalX(), (int) p1.getOriginalY(), (int) p2.getOriginalX(), (int) p2.getOriginalY());
 	}
 
 	private void drawPoint(Graphics2D g2, Point p, Color color) {
+	    val loc = new Point2D.Double(p.getOriginalX(), p.getOriginalY());
+		Pair<AffineTransform, AffineTransform> zooms = getCoordinatesTransform();
+
+		if (zooms == null) {
+			setCoordinatesBounds(getX()+20.0, getY()+20.0, getX() + getWidth() - 20.0, getY() + getHeight() - 20.0);
+			zooms = getCoordinatesTransform();
+		}
+
+		val zoomIn = zooms.getLeft();
+		val zoomOut = zooms.getRight();
+		if (zoomIn != null)
+			zoomIn.transform(loc, loc);
+
+		g2.transform(zoomOut);
+
+		g2.setColor(Color.WHITE);
+		g2.fillOval((int) loc.getX() - 7, (int) loc.getY() - 7, 14, 14);
+		g2.setColor(color);
+		g2.drawOval((int) loc.getX() - 7, (int) loc.getY() - 7, 14, 14);
+		int width = g2.getFontMetrics().stringWidth(p.getNumberAsString());
+		g2.drawString(p.getNumberAsString(), (int) loc.getX() - width / 2, (int) loc.getY() + 6);
+
+		g2.transform(zoomIn);
+
+	    /*
+		g2.setColor(Color.WHITE);
+		g2.fillOval((int) p.getOriginalX() - (int) (7.0/getScale()), (int) p.getOriginalY() - (int) (7.0/getScale()), (int) (14.0/getScale()), (int) (14.0/getScale()));
+		g2.setColor(color);
+		g2.drawOval((int) p.getOriginalX() - (int) (7.0/getScale()), (int) p.getOriginalY() - (int) (7.0/getScale()), (int) (14.0/getScale()), (int) (14.0/getScale()));
+		int width = g2.getFontMetrics().stringWidth(p.getNumberAsString());
+		g2.drawString(p.getNumberAsString(), (int) p.getOriginalX() - width / 2, (int) p.getOriginalY() + (int) (6.0/getScale()));
+		*/
+	    /*
 		g2.setColor(Color.WHITE);
 		g2.fillOval((int) p.getOriginalX() - 7, (int) p.getOriginalY() - 7, 14, 14);
 		g2.setColor(color);
 		g2.drawOval((int) p.getOriginalX() - 7, (int) p.getOriginalY() - 7, 14, 14);
 		int width = g2.getFontMetrics().stringWidth(p.getNumberAsString());
 		g2.drawString(p.getNumberAsString(), (int) p.getOriginalX() - width / 2, (int) p.getOriginalY() + 6);
+		*/
 	}
 
 	public void reset() {
@@ -390,6 +500,12 @@ public class GraphicPanel extends JPanel {
 		point1 = null;
 		p1 = null;
 		p2 = null;
+
+		min_x = null;
+		min_y = null;
+		max_x = null;
+		max_y = null;
+		// coors_scale = 1.0;
 
 		EventCalculation.vertex_counter = 1;
 		screenTriangles = new ArrayList<Triangle>();
