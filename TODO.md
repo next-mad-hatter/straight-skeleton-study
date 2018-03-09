@@ -1,10 +1,14 @@
 * Use issue tracker?
 
+* Run on the large polygons set
+
 * Debug + test + cleanup zoom & history
 
 * History: test back steps, better controls (usability/stability)
 
 * Zoom: autozoom & autopan at load / manually triggered apart from that?
+
+* Zoom in on area
 
 * Straight jump to result
 
