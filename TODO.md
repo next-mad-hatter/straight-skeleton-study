@@ -8,6 +8,8 @@
     - input scaling setting for applet
     - per entry setting in batch run
 
+* Result checker: check if set of all vertices is equal to set of all tree leafs?
+
 * Debug + test + cleanup zoom & history
 
 * History: test back steps, better controls (usability/stability)
