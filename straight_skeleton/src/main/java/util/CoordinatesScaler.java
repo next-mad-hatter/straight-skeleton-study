@@ -1,19 +1,24 @@
 package at.tugraz.igi.util;
 
 import lombok.*;
-import org.apache.commons.math3.fraction.*;
 import org.apache.commons.lang3.tuple.*;
+import org.apache.commons.math3.exception.MathParseException;
+import org.apache.commons.math3.fraction.*;
+import org.apache.commons.math3.exception.*;
+
+import java.math.*;
 
 import java.util.*;
 import java.util.stream.*;
 import java.util.function.*;
 
+/*
+ * For reasons of numerical stability, we might want to scale our input to some
+ * (nonnegative, for safety's sake :)) range.  This is where said functionality
+ * lives.
+ */
 public class CoordinatesScaler {
 
-    /**
-     * Sometimes we'll want to scale our input to some (nonnegative, for safety :)) range.
-     * This is where we could keep data for inverse transformation.
-     */
     @NoArgsConstructor @Data public class ScalingData {
         private BigFraction
                 scale = null,
@@ -23,46 +28,61 @@ public class CoordinatesScaler {
 
 
     /**
+     * BigFractionFormat cannot read floating point format, hence this.
+     */
+    private static BigFraction str2bf(String str) throws NumberFormatException {
+        BigDecimal val = new BigDecimal(str);
+        int scale = val.scale();
+        return scale >= 0 ? new BigFraction(val.unscaledValue(), BigInteger.TEN.pow(scale)) :
+                            new BigFraction(val.unscaledValue().multiply(BigInteger.TEN.pow(-scale)));
+    }
+
+
+    /**
      *  Scales a list of coordinates to range of [0..scaleFactor].
      */
     public <T> Pair<ScalingData, List<Pair<BigFraction, BigFraction>>>
     scalePoints(int scaleFactor, List<Pair<T, T>> coors) throws ParseException {
-        val scaling = new ScalingData();
+        val scalingData = new ScalingData();
 
         List<Pair<BigFraction, BigFraction>> points = new ArrayList<>();
         val fmt = new BigFractionFormat();
         for (val pt: coors) {
-            val x = fmt.parse(String.valueOf(pt.getLeft()));
-            val y = fmt.parse(String.valueOf(pt.getRight()));
-            val v = new ImmutablePair<>(x, y);
-            points.add(v);
-            if (scaling.getMinX() == null || scaling.getMinX().compareTo(x) > 0) scaling.setMinX(x);
-            if (scaling.getMinY() == null || scaling.getMinY().compareTo(y) > 0) scaling.setMinY(y);
-            if (scaling.getMaxX() == null || scaling.getMaxX().compareTo(x) < 0) scaling.setMaxX(x);
-            if (scaling.getMaxY() == null || scaling.getMaxY().compareTo(y) < 0) scaling.setMaxY(y);
+            try {
+                val x = str2bf(String.valueOf(pt.getLeft()));
+                val y = str2bf(String.valueOf(pt.getRight()));
+                val v = new ImmutablePair<>(x, y);
+                points.add(v);
+                if (scalingData.getMinX() == null || scalingData.getMinX().compareTo(x) > 0) scalingData.setMinX(x);
+                if (scalingData.getMinY() == null || scalingData.getMinY().compareTo(y) > 0) scalingData.setMinY(y);
+                if (scalingData.getMaxX() == null || scalingData.getMaxX().compareTo(x) < 0) scalingData.setMaxX(x);
+                if (scalingData.getMaxY() == null || scalingData.getMaxY().compareTo(y) < 0) scalingData.setMaxY(y);
+            } catch (NumberFormatException e) {
+                throw new ParseException(e.getMessage());
+            }
         }
 
-        BigFraction sx = scaling.getMaxX().subtract(scaling.getMinX());
-        BigFraction sy = scaling.getMaxY().subtract(scaling.getMinY());
+        BigFraction sx = scalingData.getMaxX().subtract(scalingData.getMinX());
+        BigFraction sy = scalingData.getMaxY().subtract(scalingData.getMinY());
         if (sx.compareTo(sy) < 0)
-            scaling.setScale(sx);
+            scalingData.setScale(sx);
         else
-            scaling.setScale(sy);
+            scalingData.setScale(sy);
 
         List<Pair<BigFraction, BigFraction>> res = points.stream().map((p) -> new ImmutablePair<>(
-                p.getLeft().subtract(scaling.getMinX()).divide(scaling.getScale()).multiply(scaleFactor),
-                p.getRight().subtract(scaling.getMinY()).divide(scaling.getScale()).multiply(scaleFactor)
+                p.getLeft().subtract(scalingData.getMinX()).divide(scalingData.getScale()).multiply(scaleFactor),
+                p.getRight().subtract(scalingData.getMinY()).divide(scalingData.getScale()).multiply(scaleFactor)
         )).collect(Collectors.toList());
 
-        scaling.setScale(scaling.getScale().divide(scaleFactor));
-        return new ImmutablePair<>(scaling, res);
+        scalingData.setScale(scalingData.getScale().divide(scaleFactor));
+        return new ImmutablePair<>(scalingData, res);
     }
 
 
     /**
      * The inverse transform.
      */
-    public Function<Pair<Double, Double>, Pair<BigFraction, BigFraction>> backScaler(ScalingData scalingData) {
+    static public Function<Pair<Double, Double>, Pair<BigFraction, BigFraction>> inverseTransform(ScalingData scalingData) {
         return (pt) -> new ImmutablePair<>(
                 new BigFraction(pt.getLeft()).multiply(scalingData.getScale()).add(scalingData.getMinX()),
                 new BigFraction(pt.getRight()).multiply(scalingData.getScale()).add(scalingData.getMinY())

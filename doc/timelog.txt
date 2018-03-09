@@ -17,5 +17,5 @@
 2018.02.26     4:30    researching/debugging zoom/transforms for graphics & components
 2018.02.27     4:10    zoom/transforms hacking
 
-2018.03.09     3:00    input scaling
+2018.03.09     8:00    input scaling, compressed svg output, large batch experiments
 

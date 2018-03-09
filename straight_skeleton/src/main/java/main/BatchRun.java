@@ -1,5 +1,7 @@
 package at.tugraz.igi.main;
 
+import org.apache.commons.lang3.*;
+
 import java.awt.*;
 import java.awt.image.*;
 import java.io.*;
@@ -30,10 +32,14 @@ public class BatchRun {
      * purpose of having a definite progress indication.
      */
     public static void main(String[] args) throws Exception {
-        if (args.length != 1) {
+
+        boolean scaleInput = ArrayUtils.contains(args, "-s");
+        if (scaleInput) args = ArrayUtils.removeAllOccurences(args, "-s");
+
+        if (!(args.length == 1 || args.length == 2 && args[0] == "-s")) {
             StackTraceElement[] stackTraceElements= new Exception().getStackTrace();
             String className = stackTraceElements[0].getClassName();
-            System.out.println("Usage: " + className + " batch_file");
+            System.out.println("Usage: " + className + " [-s] batch_file");
             System.exit(1);
         }
 
@@ -65,7 +71,8 @@ public class BatchRun {
                 Run.run(strs.get(0),
                         strs.get(1),
                         strs.size() > 2 ? strs.get(2): null,
-                        strs.size() > 3 ? strs.get(3): null);
+                        strs.size() > 3 ? strs.get(3): null,
+                        scaleInput);
                 succeeded += 1;
             } catch (Exception e) {
                 System.err.println();

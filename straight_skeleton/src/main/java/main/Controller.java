@@ -55,6 +55,8 @@ public class Controller {
 		OPEN, SAVE, SAVE_AS, PLAY, STEP, BACK, RESET, OPEN_POLY, SVG
 	}
 
+	public static CoordinatesScaler.ScalingData inputScalingData;
+
 	public static boolean isCounterClockwise;
 	public static ImageIcon delete_icon;
 	public static ImageIcon play_icon;
@@ -841,7 +843,7 @@ public class Controller {
 
 		// }
 		private void save(boolean saveAs) {
-			FileHandler.save(controller.polyLines, saveAs);
+			FileHandler.save(controller.polyLines, saveAs, inputScalingData);
 		}
 
 		private void saveSVG() {

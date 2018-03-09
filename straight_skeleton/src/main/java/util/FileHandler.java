@@ -31,7 +31,9 @@
 
 package at.tugraz.igi.util;
 
-// import lombok.*;
+import lombok.*;
+import org.apache.commons.lang3.tuple.*;
+
 import java.awt.*;
 import java.util.*;
 import java.util.function.*;
@@ -39,8 +41,6 @@ import java.util.List;
 import java.io.*;
 import org.tukaani.xz.*;
 
-//import org.jooq.lambda.*;
-//import org.jooq.lambda.tuple.*;
 import com.codepoetics.protonpack.*;
 import static java.lang.Math.toIntExact;
 
@@ -113,9 +113,10 @@ public class FileHandler {
      *
      * Maybe contrary to app design, we'd rather separate this logic from the controller.
      */
-    public static List<Point> readCoordinatesFile(File file) throws IOException {
+    public static Pair<CoordinatesScaler.ScalingData, List<Point>>
+	readCoordinatesFile(File file, boolean scaleInput) throws IOException {
         String input = fetchFileContents(file);
-        return parseCoordinates(input);
+        return parseCoordinates(input, scaleInput);
     }
 
 
@@ -123,18 +124,38 @@ public class FileHandler {
      * Parses whitespace-separated list of float coordinates, returning a list of points
      * (numbered, as is being expected in other application parts).
      */
-    private static List<Point> parseCoordinates(String input) throws ParseException {
+    private static Pair<CoordinatesScaler.ScalingData, List<Point>>
+	parseCoordinates(String input, boolean scaleInput) throws ParseException {
         try {
             input = input.replaceAll("#.*(\n|$)", "").trim();
-            List<Double> nums = Stream.of(input.split("\\s+")).map(Double::valueOf).collect(Collectors.toList());
-            if ((nums.size() % 2) != 0)
+            val strs = Stream.of(input.split("\\s+")).collect(Collectors.toList());
+            if ((strs.size() % 2) != 0)
                 throw new ParseException("Uneven number of fields in coordinates file");
-            List<Indexed<Double>> zi = StreamUtils.zipWithIndex(nums.stream()).collect(Collectors.toList());
-            Stream<Indexed<Double>> xs = zi.stream().filter(t -> t.getIndex() % 2 == 0);
-            Stream<Indexed<Double>> ys = zi.stream().filter(t -> t.getIndex() % 2 != 0);
-            return StreamUtils.zip(xs, ys, (x, y) ->
-                                   new Point(1 + toIntExact(x.getIndex())/2, x.getValue(), y.getValue())).
-                collect(Collectors.toList());
+
+            List<Indexed<String>> zi = StreamUtils.zipWithIndex(strs.stream()).collect(Collectors.toList());
+            Stream<Indexed<String>> xs = zi.stream().filter(t -> t.getIndex() % 2 == 0);
+            Stream<Indexed<String>> ys = zi.stream().filter(t -> t.getIndex() % 2 != 0);
+			List<Pair<String, String>> coors = StreamUtils.zip(
+					xs, ys, (x, y) -> new ImmutablePair<>(x.getValue(), y.getValue())
+			).collect(Collectors.toList());
+
+			if(scaleInput) {
+			    val scaled = (new CoordinatesScaler()).<String>scalePoints(1000, coors);
+			    val scaling = scaled.getLeft();
+				val points = StreamUtils.zipWithIndex(scaled.getRight().stream())
+						.map((v) -> new Point(toIntExact(v.getIndex()),
+								              v.getValue().getLeft().doubleValue(),
+								              v.getValue().getRight().doubleValue()))
+						.collect(Collectors.toList());
+				return new ImmutablePair<>(scaling, points);
+			} else {
+				val points = StreamUtils.zipWithIndex(coors.stream())
+						.map((v) -> new Point(toIntExact(v.getIndex()),
+								new Double(v.getValue().getLeft()),
+								new Double(v.getValue().getRight())))
+						.collect(Collectors.toList());
+				return new ImmutablePair<>(null, points);
+			}
         } catch (NumberFormatException e) {
             throw new ParseException("Bad float format encountered in coordinates file");
         }
@@ -217,6 +238,7 @@ public class FileHandler {
 
 
 	// displays open file dialog and reads selected file using FileOpenService
+	// TODO: add input scaling option to applet
     public static void open(GraphicPanel panel, Controller controller) {
 		JFileChooser fc = new JFileChooser(parent);
 		int retVal = fc.showOpenDialog(panel);
@@ -224,26 +246,32 @@ public class FileHandler {
 			file = fc.getSelectedFile();
 			parent = file.getParent();
       try {
-          open(panel, controller, file);
+          Controller.inputScalingData = open(panel, controller, file, true);
       } catch (Exception e) {
           e.printStackTrace();
       }
 		}
 	}
 
-    public static void open(GraphicPanel panel, Controller controller, File newfile) throws Exception {
+    public static CoordinatesScaler.ScalingData
+	open(GraphicPanel panel, Controller controller, File newfile, boolean scaleInput) throws Exception {
         file = newfile;
         try {
             try {
-                List<Point> pts = readCoordinatesFile(newfile);
-                loadPoints(pts, panel, controller);
+                val res = readCoordinatesFile(newfile, scaleInput);
+                loadPoints(res.getRight(), panel, controller);
+                return res.getLeft();
             } catch (ParseException ee) {
+				// TODO: implement input scaling
                 readFromFile(file, panel, controller);
+                return null;
             }
         } catch (ParseException e) {
             throw e;
         } catch (NumberFormatException | IOException e) {
+			// TODO: implement input scaling
             openPoly(file, panel, controller);
+            return null;
         }
     }
 
@@ -446,15 +474,22 @@ public class FileHandler {
 	}
 
 	// displays saveFileDialog and saves file using FileSaveService
-	public static void save(List<Line> lines, boolean saveAs) {
+	public static void save(List<Line> lines, boolean saveAs, CoordinatesScaler.ScalingData scalingData) {
 		// initialize();
 		// try {
 		StringBuilder sb = new StringBuilder();
+		val transform = scalingData == null ? null : CoordinatesScaler.inverseTransform(scalingData);
 		for (Line l : lines) {
-			Point p1 = l.getP1();
-			Point p2 = l.getP2();
-			sb.append(p1.getNumber() + ";" + p1.getOriginalX() + ";" + p1.getOriginalY() + "-");
-			sb.append(p2.getNumber() + ";" + p2.getOriginalX() + ";" + p2.getOriginalY() + "-");
+			Pair<Double, Double> p1 = new ImmutablePair<>(l.getP1().getOriginalX(), l.getP1().getOriginalY());
+			Pair<Double, Double> p2 = new ImmutablePair<>(l.getP2().getOriginalX(), l.getP2().getOriginalY());
+			if (scalingData != null) {
+                val tp1 = transform.apply(p1);
+				val tp2 = transform.apply(p2);
+				p1 = new ImmutablePair<>(tp1.getLeft().doubleValue(), tp1.getRight().doubleValue());
+				p2 = new ImmutablePair<>(tp2.getLeft().doubleValue(), tp2.getRight().doubleValue());
+			}
+			sb.append(l.getP1().getNumber() + ";" + p1.getLeft() + ";" + p1.getRight() + "-");
+			sb.append(l.getP2().getNumber() + ";" + p2.getLeft() + ";" + p2.getRight() + "-");
 			sb.append(l.getWeight() + "\n");
 		}
 		// Show save dialog if no name is already given
@@ -620,9 +655,10 @@ public class FileHandler {
 				return;
 			}
 			svgfile = fc.getSelectedFile();
-			if (!svgfile.getPath().toLowerCase().endsWith(".svg")) {
-				svgfile = new File(svgfile.getPath() + ".svg");
-			}
+			// FIXME: Really?
+			// if (!svgfile.getPath().toLowerCase().endsWith(".svg.gz")) {
+			// 	svgfile = new File(svgfile.getPath() + ".svg.gz");
+			// }
 		}
 		SwingUtilities.invokeLater(new Runnable() {
 
@@ -632,7 +668,7 @@ public class FileHandler {
 				panel.paintSVG(g);
 
 				try {
-					SVGUtils.writeToSVG(svgfile, g.getSVGElement());
+					SVGUtils.writeToSVG(svgfile, g.getSVGElement(), true);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

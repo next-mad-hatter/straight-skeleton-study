@@ -1,5 +1,7 @@
 package at.tugraz.igi.main;
 
+import lombok.*;
+
 import java.awt.*;
 import java.awt.image.*;
 import java.io.*;
@@ -20,14 +22,14 @@ public class Run {
      * Given a data file name and output file(s)' name(s), computes the straight
      * skeleton.  img_file can be null.
      */
-    public static void run(String in_file, String out_file, String stats_file, String img_file) throws Exception {
+    public static void run(String in_file, String out_file, String stats_file, String img_file, boolean scaleInput) throws Exception {
 
         Controller controller = new Controller();
         GraphicPanel panel = new GraphicPanel(controller);
         controller.setView(panel);
         controller.setTable(new ConfigurationTable(controller));
 
-        FileHandler.open(panel, controller, new File(in_file));
+        val scalingData = FileHandler.open(panel, controller, new File(in_file), scaleInput);
         // FIXME: add autozoom
         panel.setSize(new Dimension(2000, 2000));
 
@@ -45,7 +47,7 @@ public class Run {
 
         FileHandler.file = new File(out_file);
         if (FileHandler.file.getParentFile() != null) FileHandler.file.getParentFile().mkdirs();
-        FileHandler.save(skeleton, false);
+        FileHandler.save(skeleton, false, scalingData);
 
         if (stats_file != null && controller.polyMeasureData != null) {
             String stats = "# Flip events:  " + String.valueOf(controller.polyMeasureData.getNumberOfFlip()) +
@@ -57,7 +59,13 @@ public class Run {
         if (img_file != null) {
             File outputfile = new File(img_file);
             if (outputfile.getParentFile() != null) outputfile.getParentFile().mkdirs();
-            ImageIO.write(createImage(controller.view), "png", outputfile);
+            if (!img_file.endsWith(".png")) {
+                FileHandler.svgfile = outputfile;
+                FileHandler.saveSVG(controller.view, false);
+            }
+            else {
+                ImageIO.write(createImage(controller.view), "png", outputfile);
+            }
         }
 
         if(!TreeCheck.isTree(new ArrayList<>(controller.getPoints()), skeleton)) {

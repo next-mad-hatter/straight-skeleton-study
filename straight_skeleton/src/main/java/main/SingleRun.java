@@ -1,5 +1,7 @@
 package at.tugraz.igi.main;
 
+import org.apache.commons.lang3.*;
+
 import java.awt.*;
 import java.awt.image.*;
 import java.io.*;
@@ -21,10 +23,13 @@ public class SingleRun {
      */
     public static void main(String[] args) throws Exception {
 
+        boolean scaleInput = ArrayUtils.contains(args, "-s");
+        if (scaleInput) args = ArrayUtils.removeAllOccurences(args, "-s");
+
         if (args.length < 2 || args.length > 4) {
             StackTraceElement[] stackTraceElements= new Exception().getStackTrace();
             String className = stackTraceElements[0].getClassName();
-            System.out.println("Usage: " + className + " in_file skeleton_file [stats_file] [image_file]");
+            System.out.println("Usage: " + className + " [-s] in_file skeleton_file [stats_file] [image_file]");
             System.exit(1);
         }
 
@@ -32,7 +37,8 @@ public class SingleRun {
           Run.run(args[0],
                   args[1],
                   args.length > 2 ? args[2] : null,
-                  args.length > 3 ? args[3] : null);
+                  args.length > 3 ? args[3] : null,
+                  scaleInput);
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);

@@ -1,6 +1,12 @@
 * Use issue tracker?
 
-* Run on the large polygons set
+* Check large polygons set results
+
+* Ad input scaling: implement
+    - scaling for formats other than simple coordinates list
+    - scaling range setting
+    - input scaling setting for applet
+    - per entry setting in batch run
 
 * Debug + test + cleanup zoom & history
 
