@@ -4,6 +4,7 @@ simple/simple.01 ../tmp/simple-01.skel ../tmp/simple-01.stat                    
 simple/simple.02 ../tmp/simple-02.skel ../tmp/simple-02.stat ../tmp/simple-02.png         # good, but numerical issue (short extra arc)
 simple/simple.03 ../tmp/simple-03.skel ../tmp/simple-03.stat                              # crashes when run via noswingworkder
 simple/simple.04 ../tmp/simple-04.skel ../tmp/simple-04.stat ../tmp/simple-04.png         # good
+simple/simple.04b ../tmp/simple-04b.skel ../tmp/simple-04b.stat ../tmp/simple-04b.png     # ?
 simple/simple.05 ../tmp/simple-05.skel ../tmp/simple-05.stat ../tmp/simple-05.png         # bad skeleton
 simple/simple.06 ../tmp/simple-06.skel ../tmp/simple-06.stat ../tmp/simple-06.png         # bad skeleton
 simple/simple.07 ../tmp/simple-07.skel ../tmp/simple-07.stat ../tmp/simple-07.png         # bad skeleton when run via applet, seems good when run as noswingworker version ?!

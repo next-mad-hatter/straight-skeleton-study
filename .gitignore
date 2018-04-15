@@ -1,13 +1,13 @@
 data/polygons*
 tmp
 
-straight_skeleton/build
-straight_skeleton/gradle
-straight_skeleton/.gradle
-straight_skeleton/.gradletasknamecache
+**/build
+**/gradle
+**/.gradle
+**/.gradletasknamecache
 
-straight_skeleton/lib/*.jar
-straight_skeleton/tmp
+**/lib/*.jar
+**/tmp
 
 doc/*.pdf
 test-201*/
@@ -24,6 +24,7 @@ GPATH
 .dir-locals.el
 .idea
 
+*.iml
 *~
 *.swp
 .\#*

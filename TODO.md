@@ -1,5 +1,7 @@
 * Use issue tracker?
 
+* Keeps using CPU after computation complete (again)
+
 * Check large polygons set results
 
 * Ad input scaling: implement
