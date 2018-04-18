@@ -13,6 +13,8 @@ repositories {
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    compile group: 'org.orbisgis', name: 'poly2tri-core', version: '0.1.+'
+    compile group: 'org.tukaani', name: 'xz', version: '1.+'
 }
 
 sourceSets {
