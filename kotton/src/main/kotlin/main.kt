@@ -1,56 +1,42 @@
 package madhat.kotton
 
 import  madhat.kotton.utils.*
-
-import org.poly2tri.*
-import org.poly2tri.geometry.polygon.*
-//import org.poly2tri.triangulation.delaunay.*
-
-import java.util.*
+import  madhat.kotton.geometry.*
 
 import java.io.*
-import org.tukaani.xz.*
+import java.math.*
 
 
 fun main(args: Array<String>) {
 
-    /*
-     * We must not have points with same coordinates here.
-     * Also, only simple polygons are supported.
-     */
-    var polygon = Polygon(Arrays.asList(
-            PolygonPoint(0.0, 0.0, 0.0),
-            PolygonPoint(10.0, 0.0, 1.0),
-            PolygonPoint(10.0, 10.0, 2.0),
-            PolygonPoint(0.0, 10.0, 3.0)))
-    Poly2Tri.triangulate(polygon)
-    for (t in polygon.getTriangles()) {
-        prn2(t)
-    }
-
-    /*
-     * XZ File reading
-     */
     for (filename in args) {
+        println("\nReading $filename\n")
+
         val file = File(filename)
-        try {
-            try {
-                val a = XZInputStream(FileInputStream(file)).reader()
-                val b = BufferedReader(a)
-                b.useLines {
-                    it.forEach { println(it) }
-                }
-            } catch (e: XZFormatException) {
-                FileInputStream(file).bufferedReader().useLines {
-                    it.forEach { println(it) }
-                }
-            }
+        val poly: ParsedPolygon<Double> = try {
+            parseFile(file)
         } catch (e: IOException) {
             System.err.println("Error reading file $filename : ${e.localizedMessage}")
+            continue
         }
-    }
 
-    val sandbox = Sandbox()
-    sandbox.run()
+        println("  Vertices & Weights:\n")
+        for ((ind, wt) in poly.sortedIndices zip poly.weights) {
+            println("  $ind : ${poly.coordinates[ind]} -- $wt --> ")
+        }
+
+        val triangles = triangulate(poly.sortedIndices.map { x -> poly.coordinates[x]!! })
+        println("\n  Triangulation:\n")
+        for (t in triangles) {
+            println("  ${t.points.map{ poly.indices[Pair(it.x, it.y)] }}")
+        }
+
+        ParsedPolygon<BigDecimal>(
+        poly.sortedIndices,
+        poly.weights,
+        poly.indices.mapKeys({ x -> Pair(x.key.first.toBigDecimal(), x.key.second.toBigDecimal()) }),
+        poly.coordinates.mapValues({ x -> Pair(x.value.first.toBigDecimal(), x.value.second.toBigDecimal()) })
+        )
+    }
 
 }

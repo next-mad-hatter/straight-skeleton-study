@@ -2,6 +2,8 @@ data/polygons*
 out
 tmp
 
+*.xz
+
 **/build
 **/gradle
 **/.gradle

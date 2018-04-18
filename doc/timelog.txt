@@ -16,6 +16,8 @@
 2018.02.22     9:00    history & points comparators experiments, history steps & controls experiments
 2018.02.26     4:30    researching/debugging zoom/transforms for graphics & components
 2018.02.27     4:10    zoom/transforms hacking
-
 2018.03.09     8:30    input scaling, compressed svg output, large batch experiments
+2018.03.09     2:00    more debugging attempts
+2018.04.15     2:00    kotton experiments started
+2018.04.19     5:00    kotton experiments
 
