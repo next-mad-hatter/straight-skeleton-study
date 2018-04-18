@@ -25,25 +25,28 @@ fun main(args: Array<String>) {
             PolygonPoint(0.0, 10.0, 3.0)))
     Poly2Tri.triangulate(polygon)
     for (t in polygon.getTriangles()) {
-        println(t)
+        prn2(t)
     }
 
     /*
      * XZ File reading
      */
-    if (!args.isEmpty()) {
-        val file = File(args[0])
+    for (filename in args) {
+        val file = File(filename)
         try {
-            val a = XZInputStream(FileInputStream(file)).reader()
-            val b = BufferedReader(a)
-            b.useLines {
-                it.forEach { println(it) }
+            try {
+                val a = XZInputStream(FileInputStream(file)).reader()
+                val b = BufferedReader(a)
+                b.useLines {
+                    it.forEach { println(it) }
+                }
+            } catch (e: XZFormatException) {
+                FileInputStream(file).bufferedReader().useLines {
+                    it.forEach { println(it) }
+                }
             }
-        }
-        catch (e: XZFormatException) {
-            FileInputStream(file).bufferedReader().useLines {
-                it.forEach { println(it) }
-            }
+        } catch (e: IOException) {
+            System.err.println("Error reading file $filename : ${e.localizedMessage}")
         }
     }
 
