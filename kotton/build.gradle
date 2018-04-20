@@ -18,6 +18,8 @@ dependencies {
     compile group: 'org.jgrapht', name: 'jgrapht-core', version: '1.1.+'
     // poly2tri wants a logger, so instead of testCompile we'll take compile here:
     compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.6.2'
+    // TODO: add campskeleton/jutils dependencies -- in case we don't want to include it as fat jar
+    compile fileTree(dir: 'lib', include: '*.jar')
 }
 
 sourceSets {
