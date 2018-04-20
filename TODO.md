@@ -73,8 +73,6 @@
 
 * Batch runner: read multiple batch files & add output prefix option -> shell batch runner
 
-* Add loaded file name to window title
-
 * Get rid of bad/hardcoded resource paths ('/images/')
 
 * Get rid of dependencies remaining local (randomPolygon & poly2tri)
