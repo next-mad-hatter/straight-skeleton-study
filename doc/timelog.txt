@@ -21,5 +21,5 @@
 2018.04.15     2:00    kotton experiments started
 2018.04.18     5:00    kotton experiments
 2018.04.19     1:30    more Biedl et al papers reading, campskeleton experiments
-2018.04.20     7:30    special cases reading, more corner test cases, ui updates, campskeleton experiments
+2018.04.20     8:30    special cases reading, more corner test cases, ui updates, campskeleton experiments
 
