@@ -30,9 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import javax.imageio.*;
-import javax.swing.ImageIcon;
-import javax.swing.JColorChooser;
-import javax.swing.JLabel;
+import javax.swing.*;
 import javax.swing.SwingWorker.StateValue;
 
 import at.tugraz.igi.algorithm.SimpleAlgorithm;
@@ -702,6 +700,10 @@ public class Controller {
 	}
 
 	public void reset() {
+        // JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(view);
+		JFrame frame = (JFrame) SwingUtilities.windowForComponent(view);
+		frame.setTitle("Weighted Straight Skeleton");
+
 		history.clear();
 		historyPtr = 0;
 		if (algo != null && algo.getState().equals(StateValue.STARTED)) {

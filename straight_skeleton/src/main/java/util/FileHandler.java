@@ -46,6 +46,7 @@ import static java.lang.Math.toIntExact;
 
 import java.util.stream.*;
 import at.tugraz.igi.util.ParseException;
+import java.nio.*;
 import java.nio.file.*;
 import javax.swing.*;
 import javax.xml.parsers.*;
@@ -239,38 +240,53 @@ public class FileHandler {
 
 	// displays open file dialog and reads selected file using FileOpenService
 	// TODO: add input scaling option to applet
-    public static void open(GraphicPanel panel, Controller controller) {
+	public static void open(GraphicPanel panel, Controller controller) {
 		JFileChooser fc = new JFileChooser(parent);
 		int retVal = fc.showOpenDialog(panel);
 		if (retVal == 0) {
 			file = fc.getSelectedFile();
 			parent = file.getParent();
-      try {
-          Controller.inputScalingData = open(panel, controller, file, true);
-      } catch (Exception e) {
-          e.printStackTrace();
-      }
+			try {
+				Controller.inputScalingData = open(panel, controller, file, true);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return;
+			}
 		}
 	}
 
     public static CoordinatesScaler.ScalingData
 	open(GraphicPanel panel, Controller controller, File newfile, boolean scaleInput) throws Exception {
+		//JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(panel);
+		JFrame frame = (JFrame) SwingUtilities.windowForComponent(panel);
         file = newfile;
+		Path curpath = Paths.get((new File(System.getProperty("user.dir"))).getCanonicalPath());
+		Path filepath = Paths.get(file.getCanonicalPath());
+		String newpath = curpath.relativize(filepath).toString();
         try {
             try {
                 val res = readCoordinatesFile(newfile, scaleInput);
                 loadPoints(res.getRight(), panel, controller);
+				frame.setTitle("Weighted Straight Skeleton - " + newpath);
                 return res.getLeft();
             } catch (ParseException ee) {
 				// TODO: implement input scaling
                 readFromFile(file, panel, controller);
+				frame.setTitle("Weighted Straight Skeleton - " + newpath);
                 return null;
             }
         } catch (ParseException e) {
+			frame.setTitle("Weighted Straight Skeleton");
             throw e;
         } catch (NumberFormatException | IOException e) {
 			// TODO: implement input scaling
-            openPoly(file, panel, controller);
+            try {
+				openPoly(file, panel, controller);
+				frame.setTitle("Weighted Straight Skeleton - " + newpath);
+			} catch (Exception err) {
+				frame.setTitle("Weighted Straight Skeleton");
+            	err.printStackTrace();
+			}
             return null;
         }
     }
@@ -356,7 +372,7 @@ public class FileHandler {
 		}
 	}
 
-	public static void openPoly(File file, GraphicPanel panel, Controller controller) {
+	public static void openPoly(File file, GraphicPanel panel, Controller controller) throws Exception {
 		Double max_x = null;
 		Double max_y = null;
 		Double min_x = null;
@@ -373,79 +389,75 @@ public class FileHandler {
 		ArrayList<Point> screenVertices = new ArrayList<>();
 		ArrayList<Line> loadedEdges = new ArrayList<>();
 		ArrayList<Line> screenEdges = new ArrayList<>();
-		try {
-			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-			Document doc = dBuilder.parse(file);
-			doc.getDocumentElement().normalize();
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+        Document doc = dBuilder.parse(file);
+        doc.getDocumentElement().normalize();
 
-			NodeList vList = doc.getElementsByTagName("vertex");
-			for (int i = 0; i < vList.getLength(); i++) {
-				Node vNode = vList.item(i);
-				if (vNode.getNodeType() == 1) {
-					Element vElement = (Element) vNode;
-					int x = Integer.parseInt(vElement.getElementsByTagName("x").item(0).getTextContent());
-					int y = Integer.parseInt(vElement.getElementsByTagName("y").item(0).getTextContent());
-					if (max_x == null || x > max_x) max_x = new Double(x);
-					if (min_x == null || x < min_x) min_x = new Double(x);
-					if (max_y == null || y > max_y) max_y = new Double(y);
-					if (min_y == null || y < min_y) min_y = new Double(y);
-					loadedVertices.add(new Point(i + 1, x, y));
-					screenVertices.add(new Point(i + 1, x, y));
-				}
-			}
-			NodeList eList = doc.getElementsByTagName("edge");
-			for (int i = 0; i < eList.getLength(); i++) {
-				Node eNode = eList.item(i);
-				if (eNode.getNodeType() == 1) {
-					Element eElement = (Element) eNode;
-					int indexV1 = Integer.parseInt(eElement.getElementsByTagName("idV1").item(0).getTextContent());
-					int indexV2 = Integer.parseInt(eElement.getElementsByTagName("idV2").item(0).getTextContent());
+        NodeList vList = doc.getElementsByTagName("vertex");
+        for (int i = 0; i < vList.getLength(); i++) {
+            Node vNode = vList.item(i);
+            if (vNode.getNodeType() == 1) {
+                Element vElement = (Element) vNode;
+                int x = Integer.parseInt(vElement.getElementsByTagName("x").item(0).getTextContent());
+                int y = Integer.parseInt(vElement.getElementsByTagName("y").item(0).getTextContent());
+                if (max_x == null || x > max_x) max_x = new Double(x);
+                if (min_x == null || x < min_x) min_x = new Double(x);
+                if (max_y == null || y > max_y) max_y = new Double(y);
+                if (min_y == null || y < min_y) min_y = new Double(y);
+                loadedVertices.add(new Point(i + 1, x, y));
+                screenVertices.add(new Point(i + 1, x, y));
+            }
+        }
+        NodeList eList = doc.getElementsByTagName("edge");
+        for (int i = 0; i < eList.getLength(); i++) {
+            Node eNode = eList.item(i);
+            if (eNode.getNodeType() == 1) {
+                Element eElement = (Element) eNode;
+                int indexV1 = Integer.parseInt(eElement.getElementsByTagName("idV1").item(0).getTextContent());
+                int indexV2 = Integer.parseInt(eElement.getElementsByTagName("idV2").item(0).getTextContent());
 
-					Point p1 = loadedVertices.get(indexV1 - 1);
-					Point p2 = loadedVertices.get(indexV2 - 1);
-					Line l;
-					Line screenLine;
-					l = new Line(p2, p1, controller.randomWeights?controller.generateWeight():1);
-					screenLine = new Line(screenVertices.get(indexV2 - 1),
-							screenVertices.get(indexV1 - 1), l.getWeight());
+                Point p1 = loadedVertices.get(indexV1 - 1);
+                Point p2 = loadedVertices.get(indexV2 - 1);
+                Line l;
+                Line screenLine;
+                l = new Line(p2, p1, controller.randomWeights?controller.generateWeight():1);
+                screenLine = new Line(screenVertices.get(indexV2 - 1),
+                        screenVertices.get(indexV1 - 1), l.getWeight());
 
-					loadedEdges.add(l);
-					screenEdges.add(screenLine);
-					p1.adjacentLines.add(l);
-					p2.adjacentLines.add(l);
+                loadedEdges.add(l);
+                screenEdges.add(screenLine);
+                p1.adjacentLines.add(l);
+                p2.adjacentLines.add(l);
 
-					CustomTextField field = new CustomTextField(l, screenLine, controller);
-					panel.add(field);
-					panel.repaint();
-					panel.revalidate();
-				}
-			}
-			loadedEdges = reorder(loadedEdges);
-			Set<Point> points = new LinkedHashSet<Point>();
-			for (Line l : loadedEdges) {
-				points.add(l.getP1());
-                // FIXME: we'll try and keep points' numbers in order for now --
-                //        there seems to be at least some implicit reliance on the
-                //        structure of those numbers (grep for use of
-                //        vertex_counter, clonePoint & closePolygon for examples)
-                l.getP1().setNumber(points.size());
-			}
+                CustomTextField field = new CustomTextField(l, screenLine, controller);
+                panel.add(field);
+                panel.repaint();
+                panel.revalidate();
+            }
+        }
+        loadedEdges = reorder(loadedEdges);
+        Set<Point> points = new LinkedHashSet<Point>();
+        for (Line l : loadedEdges) {
+            points.add(l.getP1());
+            // FIXME: we'll try and keep points' numbers in order for now --
+            //        there seems to be at least some implicit reliance on the
+            //        structure of those numbers (grep for use of
+            //        vertex_counter, clonePoint & closePolygon for examples)
+            l.getP1().setNumber(points.size());
+        }
 
-			controller.setLoadedData(loadedEdges, reorder(screenEdges), points);
+        controller.setLoadedData(loadedEdges, reorder(screenEdges), points);
 
-			// panel.setPreferredSize(new Dimension((int) Math.ceil(max_x) + 20, (int) Math.ceil(max_y) + 20));
-			panel.setCoordinatesBounds(min_x, min_y, max_x, max_y);
-			panel.repaint();
+        // panel.setPreferredSize(new Dimension((int) Math.ceil(max_x) + 20, (int) Math.ceil(max_y) + 20));
+        panel.setCoordinatesBounds(min_x, min_y, max_x, max_y);
+        panel.repaint();
 
-			if (Util.isCounterClockwise(new ArrayList<Point>(loadedVertices))) {
-				panel.repositionTextfields();
-			}
+        if (Util.isCounterClockwise(new ArrayList<Point>(loadedVertices))) {
+            panel.repositionTextfields();
+        }
 
-			// g.load(loadedVertices, loadedEdges);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+        // g.load(loadedVertices, loadedEdges);
 	}
 
 	public static ArrayList<Line> reorder(List<Line> poly) {

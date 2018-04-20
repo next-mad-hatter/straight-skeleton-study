@@ -1,3 +1,4 @@
+* Added loaded file name to window title
 * Added optional input scaling for coordinate list inputs & compressed svg output
 * Added autozoom functionality (not yet fully complete/tested)
 * Implemented basic browsing back through events history
