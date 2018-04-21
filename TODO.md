@@ -1,3 +1,9 @@
+* Kotton:
+
+  - implement tri-skel/campskeleton to svg/plain text pipeline (+batched? +correctness check)
+  - kill swing runner at timeout
+  - can we make both output map of events -> wavefront + partial skel (+ uniquely identified edges for animation?)?
+
 * Use issue tracker?
 
 * Keeps using CPU after computation complete (again)

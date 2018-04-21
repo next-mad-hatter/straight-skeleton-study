@@ -150,9 +150,10 @@ fun parseVertexFormat(lines: List<String>): ParsedPolygon<Double>? {
     if (coors.keys.count() < 3)
         throw IOException("Polygon contains less than three vertices")
 
+    val its = coors.keys.toList()
     return ParsedPolygon(
-            (1..lines.count()).toList(),
-            (1..lines.count()).map { 1.0 },
+            its,
+            its.map { 1.0 },
             inds,
             coors
     )
