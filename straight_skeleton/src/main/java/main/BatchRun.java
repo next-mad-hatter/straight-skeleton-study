@@ -69,6 +69,7 @@ public class BatchRun {
         Integer succeeded = 0;
         Integer failed = 0;
         pb.start();
+        int counter = 1;
         for(List<String> strs: lines) {
             try {
                 Run.run(strs.get(0),
@@ -76,7 +77,8 @@ public class BatchRun {
                         strs.size() > 2 ? strs.get(2): null,
                         strs.size() > 3 ? strs.get(3): null,
                         scaleInput,
-                        timeout ? 3 : null);
+                        timeout ? 3 : null,
+                        counter % 100 == 0);
                 succeeded += 1;
             } catch (Exception ee) {
                 Throwable e = ee.getCause();
@@ -86,6 +88,8 @@ public class BatchRun {
                                    strs.get(0) + " : " + e.toString());
                 e.printStackTrace();
                 failed += 1;
+            } finally {
+                counter += 1;
             }
             pb.step();
             pb.setExtraMessage("Done: " + String.valueOf(succeeded + failed) +

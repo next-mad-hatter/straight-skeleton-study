@@ -3,6 +3,7 @@ package at.tugraz.igi.main;
 import lombok.*;
 
 import java.awt.*;
+import java.awt.event.*;
 import java.awt.image.*;
 import java.io.*;
 import java.util.*;
@@ -23,7 +24,7 @@ public class Run {
      * Given a data file name and output file(s)' name(s), computes the straight
      * skeleton.  img_file can be null.
      */
-    public static void run(String in_file, String out_file, String stats_file, String img_file, boolean scaleInput, Integer seconds) throws Exception {
+    public static void run(String in_file, String out_file, String stats_file, String img_file, boolean scaleInput, Integer seconds, boolean runGC) throws Exception {
 
         Controller controller = new Controller();
         GraphicPanel panel = new GraphicPanel(controller);
@@ -97,6 +98,18 @@ public class Run {
         if(!TreeCheck.isTree(new ArrayList<>(controller.getPoints()), skeleton)) {
             throw new Exception("Bad skeleton");
         };
+
+        if(runGC) {
+            // val queue = Toolkit.getDefaultToolkit().getSystemEventQueue();
+            for (val w : Window.getWindows()) {
+            // for (val w : Frame.getFrames()) {
+                // w.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                w.setVisible(false);
+                w.dispatchEvent(new WindowEvent(w, WindowEvent.WINDOW_CLOSING));
+                w.dispose();
+            }
+            Runtime.getRuntime().gc();
+        }
 
     }
 

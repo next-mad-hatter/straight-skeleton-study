@@ -4,6 +4,8 @@
 
   - can we make both output map of events -> wavefront + partial skel (+ uniquely identified edges for animation?)?
 
+* Investigate OOM errors in batch runner
+
 * Split out triss as a submodule for access / licensing control
 
 * Converge two triss "algorithm" implementations

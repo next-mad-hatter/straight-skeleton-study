@@ -14,7 +14,9 @@ BATCH_NAME=${BATCH_NAME:-simple-batch.txt}
 # gradle build || exit 2
 
 cd "${DATA_DIR}" || exit 1
-exec java -cp "${SRC_DIR}"/build/libs/straight_skeleton.jar \
+exec java \
+  -Xmx1024M -XX:+HeapDumpOnOutOfMemoryError \
+  -cp "${SRC_DIR}"/build/libs/straight_skeleton.jar \
   at.tugraz.igi.main.BatchRun \
   "$@" ${DATA_DIR}/batches/${BATCH_NAME}
 
