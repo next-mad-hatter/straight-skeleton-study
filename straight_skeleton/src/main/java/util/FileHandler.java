@@ -88,6 +88,7 @@ public class FileHandler {
 			try {
 				result = fetchStreamContents(new XZInputStream(in), "UTF-8");
 			} catch (XZFormatException e) {
+				in.close();
 				in = new FileInputStream(file);
 				result = fetchStreamContents(in, "UTF-8");
 			}
@@ -637,6 +638,7 @@ public class FileHandler {
                 line = br.readLine();
             }
             br.close();
+			in.close();
 
             if(points.size() == 0) {
                 return;
