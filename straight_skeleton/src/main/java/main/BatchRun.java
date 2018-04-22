@@ -76,7 +76,7 @@ public class BatchRun {
                         strs.size() > 2 ? strs.get(2): null,
                         strs.size() > 3 ? strs.get(3): null,
                         scaleInput,
-                        timeout ? 2 : null);
+                        timeout ? 3 : null);
                 succeeded += 1;
             } catch (Exception e) {
                 System.err.println();

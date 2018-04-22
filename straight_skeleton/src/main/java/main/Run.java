@@ -50,8 +50,11 @@ public class Run {
             else
                 future.get(seconds, TimeUnit.SECONDS);
         }
+        catch (ExecutionException ee) {
+            throw new Exception(ee.getCause());
+        }
         catch (TimeoutException te) {
-            throw new Exception("Timed out");
+            throw new Exception("Algorithm timed out");
         }
         if (!executor.isTerminated())
             executor.shutdownNow();
