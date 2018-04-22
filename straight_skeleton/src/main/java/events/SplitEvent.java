@@ -141,14 +141,14 @@ public class SplitEvent extends ConcaveEvent {
 		Point p = Util.getOtherPointOfLine(startingPoint, startingPoint.adjacentLines.get(index));
 		while (!p.equals(startingPoint)) {
 			if(i==size){
-				throw new Exception();
+				throw new Exception("FIXME: undocumented error 1");
 			}
 			polygon.add(p);
 			
 			
 			p = Util.getOtherPointOfLine(p, p.adjacentLines.get(index));
 			if(p.getNumber() == 11111){
-				throw new Exception();
+				throw new Exception("FIXME: undocumented error 2");
 			}
 			i++;
 		}

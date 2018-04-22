@@ -78,7 +78,9 @@ public class BatchRun {
                         scaleInput,
                         timeout ? 3 : null);
                 succeeded += 1;
-            } catch (Exception e) {
+            } catch (Exception ee) {
+                Throwable e = ee.getCause();
+                if (e == null) e = ee;
                 System.err.println();
                 System.out.println("Error encountered while processing data file " +
                                    strs.get(0) + " : " + e.toString());

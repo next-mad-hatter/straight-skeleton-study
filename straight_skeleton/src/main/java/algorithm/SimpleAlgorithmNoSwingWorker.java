@@ -156,7 +156,7 @@ public class SimpleAlgorithmNoSwingWorker {
 			} else if (event instanceof FlipEvent) {
 				numberOfFlip++;
 				if (numberOfFlip > maxFlips){
-					throw new Exception();
+					throw new Exception("Max flips error");
 				}
 				flipEdge();
 
