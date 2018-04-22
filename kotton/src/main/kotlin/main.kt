@@ -56,7 +56,9 @@ fun main(args: Array<String>) {
 
         // TODO: remove consequtive collinear edges for campskeleton?
 
+        // TODO: history output (events -> state (i.e. wavefront, current edges, added edges) map)
         // For campskeleton events: liveEdges + output edges ?  Ids from objects ?
+        // For triss events: ?
 
         println("\n  Campskeleton:\n")
 

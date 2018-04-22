@@ -4,8 +4,6 @@
 
   - can we make both output map of events -> wavefront + partial skel (+ uniquely identified edges for animation?)?
 
-* Result checker: check if set of all vertices is equal to set of all tree leafs
-
 * Split out triss as a submodule for access / licensing control
 
 * Converge two triss "algorithm" implementations

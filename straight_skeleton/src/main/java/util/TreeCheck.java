@@ -26,6 +26,10 @@ public class TreeCheck {
               gr.addVertex(e.getP2());
             gr.addEdge(e.getP1(), e.getP2());
         }
+        for (Point p: points) {
+            if(gr.degreeOf(p) != 1)
+                throw new Exception("Bad skeleton: a vertex is not a leaf in skeleton");
+        }
         return GraphTests.isTree(gr);
     }
 
