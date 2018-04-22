@@ -1,7 +1,10 @@
 * Kotton:
 
-  - implement triss/campskeleton to svg/plain text pipeline (+batched? +correctness check)
+  - implement triss/campskeleton to svg & plain text pipeline (+batched? +correctness check)
+
   - can we make both output map of events -> wavefront + partial skel (+ uniquely identified edges for animation?)?
+
+* Result checker: check if set of all vertices is equal to set of all tree leafs
 
 * Split out triss as a submodule for access / licensing control
 
@@ -12,12 +15,11 @@
 * Check large polygons set results
 
 * Ad input scaling: implement
+
     - scaling for formats other than simple coordinates list
     - scaling range setting
     - input scaling setting for applet
     - per entry setting in batch run
-
-* Result checker: check if set of all vertices is equal to set of all tree leafs?
 
 * Debug + test + cleanup zoom & history
 
