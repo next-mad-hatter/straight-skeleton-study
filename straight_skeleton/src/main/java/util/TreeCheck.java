@@ -28,7 +28,7 @@ public class TreeCheck {
         }
         for (Point p: points) {
             if(gr.degreeOf(p) != 1)
-                throw new Exception("Bad skeleton: a vertex is not a leaf in skeleton");
+                throw new Exception("Bad skeleton: a vertex (" + p.getNumber() + ") is not a leaf in skeleton");
         }
         return GraphTests.isTree(gr);
     }
