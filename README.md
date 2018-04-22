@@ -1,6 +1,6 @@
-# Straight Skeleton
+# Weighted Straight Skeleton
 
-### A Java Implementation
+### Triangulation keeping algorithm -- a Java Implementation
 
 The code found under `straight_skeleton` should be buildable with gradle.
 

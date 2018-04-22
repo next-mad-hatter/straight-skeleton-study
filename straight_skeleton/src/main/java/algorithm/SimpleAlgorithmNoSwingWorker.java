@@ -435,6 +435,7 @@ public class SimpleAlgorithmNoSwingWorker {
 
 			updatePoints(false);
 
+			// FIXME: just removing the vertex & triangles here leaves us with incomplete triangulation!
 			List<Triangle> rT = new ArrayList<Triangle>();
 			for (Triangle t : triangles) {
 				if (t.contains(replaceLine)) {
@@ -452,6 +453,7 @@ public class SimpleAlgorithmNoSwingWorker {
 			// o1.calculateMovementInfo();
 			// o2.calculateMovementInfo();
 
+			// FIXME: if we replace multiple collinear edges, we'll end up with superfluous parital skeleton edges.
 			straightSkeleton.add(new Line(keepPoint, i, 1));
 			straightSkeleton.add(new Line(oldP, keepPoint, 1));
 		} else

@@ -36,7 +36,10 @@ public class BatchRun {
         boolean scaleInput = ArrayUtils.contains(args, "-s");
         if (scaleInput) args = ArrayUtils.removeAllOccurences(args, "-s");
 
-        if (!(args.length == 1 || args.length == 2 && args[0] == "-s")) {
+        boolean timeout = ArrayUtils.contains(args, "-t");
+        if (timeout) args = ArrayUtils.removeAllOccurences(args, "-t");
+
+        if (!(args.length == 1)) {
             StackTraceElement[] stackTraceElements= new Exception().getStackTrace();
             String className = stackTraceElements[0].getClassName();
             System.out.println("Usage: " + className + " [-s] batch_file");
@@ -72,7 +75,8 @@ public class BatchRun {
                         strs.get(1),
                         strs.size() > 2 ? strs.get(2): null,
                         strs.size() > 3 ? strs.get(3): null,
-                        scaleInput);
+                        scaleInput,
+                        timeout ? 2 : null);
                 succeeded += 1;
             } catch (Exception e) {
                 System.err.println();

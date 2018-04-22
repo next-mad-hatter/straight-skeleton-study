@@ -38,7 +38,8 @@ public class SingleRun {
                   args[1],
                   args.length > 2 ? args[2] : null,
                   args.length > 3 ? args[3] : null,
-                  scaleInput);
+                  scaleInput,
+                  null);
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);

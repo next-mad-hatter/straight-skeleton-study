@@ -16,13 +16,15 @@ class IntScaler {
     var maxX: Int? = null
     var maxY: Int? = null
 
-    constructor(points: List<Point3d>, minSquaredDist: Double = 5.0) {
+    constructor(points: List<Point3d>, minSquaredDist: Double = 12.0, offset: Int = 8) {
 
         if (points.count() < 2) throw Exception("Not enough points to scale")
 
         var minDist: Double? = null
-        for (p in points) {
-            for (q in points) {
+        for (i in 0 until points.count()) {
+            for (j in i+1 until points.count()) {
+                val p = points[i]
+                val q = points[j]
                 p.z = 0.0
                 q.z = 0.0
                 val d = p.distanceSquared(q)
@@ -30,7 +32,7 @@ class IntScaler {
             }
         }
         if (minDist == null) throw Exception("Cannot scale data with no distinct points")
-        val scale = max(1.0, minSquaredDist / minDist)
+        val scale = max(0.1, minSquaredDist / minDist)
 
         val xs: List<Double> = points.map { it.x }
         val ys: List<Double> = points.map { it.y }
@@ -38,13 +40,13 @@ class IntScaler {
         val minY = ys.min()!!
 
         for (pt in xs zip ys) {
-            map[pt] = Pair(((pt.first - minX) * scale).toInt(), ((pt.second - minY) * scale).toInt())
+            map[pt] = Pair(((pt.first - minX) * scale).toInt() + offset, ((pt.second - minY) * scale).toInt() + offset)
         }
 
         val xis = map.values.map { it.first }
         val yis = map.values.map { it.second }
-        maxX = xis.max()
-        maxY = yis.max()
+        maxX = xis.max()!! + offset // TODO: do we want offset here?
+        maxY = yis.max()!! + offset
     }
 
     operator fun get(p: Point3d): Pair<Int, Int>? {

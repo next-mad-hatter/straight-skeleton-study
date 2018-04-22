@@ -16,6 +16,8 @@ import javax.vecmath.Point3d
 import org.jfree.graphics2d.svg.*
 import org.tukaani.xz.LZMA2Options
 import org.tukaani.xz.XZOutputStream
+import org.twak.camp.debug.DebugDevice
+import org.twak.camp.debug.DebugDevice.*
 import java.nio.file.*
 
 fun main(args: Array<String>) {
@@ -68,7 +70,7 @@ fun main(args: Array<String>) {
             val q = corners[(ind + 1) % corners.count()]
             val e = Edge(p, q)
             loop.append(e)
-            e.machine = Machine(Math.PI/4 * poly.weights[ind]) // TODO: set weight properly
+            e.machine = Machine(atan(poly.weights[ind]))
         }
         val skeleton = Skeleton(loop.singleton(), true)
         skeleton.skeleton()
@@ -81,6 +83,10 @@ fun main(args: Array<String>) {
                     println("  $pt")
         }
         */
+
+        for (str in DebugDevice.instance.toDisplay) {
+            println(str)
+        }
 
         if (skeleton.output.edges.map.isEmpty()) return
 

@@ -478,6 +478,7 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 
 			updatePoints(false);
 
+			// FIXME: just removing the vertex & triangles here leaves us with incomplete triangulation!
 			List<Triangle> rT = new ArrayList<Triangle>();
 			for (Triangle t : triangles) {
 				if (t.contains(replaceLine)) {
@@ -495,6 +496,7 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 			// o1.calculateMovementInfo();
 			// o2.calculateMovementInfo();
 
+			// FIXME: if we replace multiple collinear edges, we'll end up with superfluous parital skeleton edges.
 			straightSkeleton.add(new Line(keepPoint, i, 1));
 			straightSkeleton.add(new Line(oldP, keepPoint, 1));
 		} else

@@ -1,10 +1,11 @@
 * Kotton:
 
-  - implement tri-skel/campskeleton to svg/plain text pipeline (+batched? +correctness check)
-  - kill swing runner at timeout
+  - implement triss/campskeleton to svg/plain text pipeline (+batched? +correctness check)
   - can we make both output map of events -> wavefront + partial skel (+ uniquely identified edges for animation?)?
 
-* Use issue tracker?
+* Split out triss as a submodule for access / licensing control
+
+* Converge two triss "algorithm" implementations
 
 * Keeps using CPU after computation complete (again)
 
@@ -96,7 +97,6 @@
 * Investigate numerical stability (see very short arcs example); further
   research: can we use e.g. apache commons math library to implement exact
   computations (if this is algebraically feasible at all)?
-
 
 * Investigate rendering artefacts
 

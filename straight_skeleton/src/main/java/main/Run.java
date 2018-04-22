@@ -15,6 +15,7 @@ import java.util.stream.*;
 import at.tugraz.igi.ui.*;
 import at.tugraz.igi.util.*;
 import at.tugraz.igi.util.Point;
+import java.util.concurrent.*;
 
 public class Run {
 
@@ -22,7 +23,7 @@ public class Run {
      * Given a data file name and output file(s)' name(s), computes the straight
      * skeleton.  img_file can be null.
      */
-    public static void run(String in_file, String out_file, String stats_file, String img_file, boolean scaleInput) throws Exception {
+    public static void run(String in_file, String out_file, String stats_file, String img_file, boolean scaleInput, Integer seconds) throws Exception {
 
         Controller controller = new Controller();
         GraphicPanel panel = new GraphicPanel(controller);
@@ -33,10 +34,32 @@ public class Run {
         // FIXME: add autozoom
         panel.setSize(new Dimension(2000, 2000));
 
-        controller.runAlgorithmNoSwingWorker();
+        class Call implements Callable<Boolean> {
+            @Override
+            public Boolean call() throws Exception {
+                controller.runAlgorithmNoSwingWorker();
+                return true;
+            }
+        }
+        val executor = Executors.newSingleThreadExecutor();
+        val future = executor.submit(new Call());
+        executor.shutdown();
+        try {
+            if(seconds == null)
+                future.get();
+            else
+                future.get(seconds, TimeUnit.SECONDS);
+        }
+        catch (TimeoutException te) {
+            throw new Exception("Timed out");
+        }
+        if (!executor.isTerminated())
+            executor.shutdownNow();
+
         if (!controller.finished) {
             throw new Exception("Algorithm didn't finish");
         }
+
         // FIXME: currently the algorithm includes some skeleton arcs/edges more than once in the result.
         //        We'll try and repair those cases here for now.
         List<Line> skeleton = controller.getStraightSkeleton().getLines()

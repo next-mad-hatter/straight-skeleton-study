@@ -1,14 +1,19 @@
 plugins {
     id 'application'
     id "org.jetbrains.kotlin.jvm" version "1.2.40"
-    /*
-    id 'java'
-    */
+    // id 'java'
 }
 
 repositories {
     jcenter()
     mavenCentral()
+    /**
+     * For campskeleton and jutils: clone from
+     *   https://github.com/twak/jutils/
+     *   https://github.com/twak/campskeleton/ ,
+     * and do a `mvn compile install` in each.
+     */
+    mavenLocal()
 }
 
 dependencies {
@@ -20,8 +25,8 @@ dependencies {
     compile group: 'org.apache.commons', name: 'commons-math3', version: '3.+'
     // poly2tri wants a logger, so instead of testCompile we'll take compile here:
     compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.6.2'
-    // TODO: add campskeleton/jutils dependencies -- in case we don't want to include it as fat jar
-    compile fileTree(dir: 'lib', include: '*.jar')
+    compile group: 'org.twak.campskeleton', name: 'campskeleton', version: '0.+'
+    compile group: 'org.twak.utils', name: 'utils', version: '0.+'
 }
 
 sourceSets {

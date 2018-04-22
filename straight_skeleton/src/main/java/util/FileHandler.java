@@ -267,24 +267,29 @@ public class FileHandler {
             try {
                 val res = readCoordinatesFile(newfile, scaleInput);
                 loadPoints(res.getRight(), panel, controller);
-				frame.setTitle("Weighted Straight Skeleton - " + newpath);
+                if(frame != null)
+					frame.setTitle("Weighted Straight Skeleton - " + newpath);
                 return res.getLeft();
             } catch (ParseException ee) {
 				// TODO: implement input scaling
                 readFromFile(file, panel, controller);
-				frame.setTitle("Weighted Straight Skeleton - " + newpath);
+				if(frame != null)
+                    frame.setTitle("Weighted Straight Skeleton - " + newpath);
                 return null;
             }
         } catch (ParseException e) {
-			frame.setTitle("Weighted Straight Skeleton");
+			if(frame != null)
+                frame.setTitle("Weighted Straight Skeleton");
             throw e;
         } catch (NumberFormatException | IOException e) {
 			// TODO: implement input scaling
             try {
 				openPoly(file, panel, controller);
-				frame.setTitle("Weighted Straight Skeleton - " + newpath);
+				if(frame != null)
+                    frame.setTitle("Weighted Straight Skeleton - " + newpath);
 			} catch (Exception err) {
-				frame.setTitle("Weighted Straight Skeleton");
+				if(frame != null)
+                    frame.setTitle("Weighted Straight Skeleton");
             	err.printStackTrace();
 			}
             return null;
