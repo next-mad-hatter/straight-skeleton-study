@@ -5,6 +5,7 @@ tmp
 campskeleton
 jutils
 tools/**
+*batch-part.*
 
 *.xz
 

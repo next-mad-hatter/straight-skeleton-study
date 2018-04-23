@@ -75,7 +75,9 @@ public class FileHandler {
 		int size;
 		while ((size = in.read(buffer)) != -1)
 			out.write(buffer, 0, size);
-		return out.toString(encoding);
+		String res = out.toString(encoding);
+		out.close();
+		return res;
 	}
 
 
@@ -147,14 +149,14 @@ public class FileHandler {
 			    val scaled = (new CoordinatesScaler()).<String>scalePoints(1000, coors);
 			    val scaling = scaled.getLeft();
 				val points = StreamUtils.zipWithIndex(scaled.getRight().stream())
-						.map((v) -> new Point(toIntExact(v.getIndex()),
+						.map((v) -> new Point(toIntExact(v.getIndex()) + 1,
 								              v.getValue().getLeft().doubleValue(),
 								              v.getValue().getRight().doubleValue()))
 						.collect(Collectors.toList());
 				return new ImmutablePair<>(scaling, points);
 			} else {
 				val points = StreamUtils.zipWithIndex(coors.stream())
-						.map((v) -> new Point(toIntExact(v.getIndex()),
+						.map((v) -> new Point(toIntExact(v.getIndex()) + 1,
 								new Double(v.getValue().getLeft()),
 								new Double(v.getValue().getRight())))
 						.collect(Collectors.toList());

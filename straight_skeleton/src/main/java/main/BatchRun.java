@@ -100,6 +100,8 @@ public class BatchRun {
         System.out.println("Done: " + String.valueOf(succeeded + failed) +
                            "; finished: " + succeeded.toString() +
                            ", failed: " + failed.toString() + ".");
+
+        System.exit(0);
     }
 
 }

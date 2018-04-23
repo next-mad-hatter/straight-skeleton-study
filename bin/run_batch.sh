@@ -15,7 +15,7 @@ BATCH_NAME=${BATCH_NAME:-simple-batch.txt}
 
 cd "${DATA_DIR}" || exit 1
 exec java \
-  -Xmx256M -XX:+HeapDumpOnOutOfMemoryError \
+  -Xmx4096M -XX:+HeapDumpOnOutOfMemoryError \
   -cp "${SRC_DIR}"/build/libs/straight_skeleton.jar \
   at.tugraz.igi.main.BatchRun \
   "$@" ${DATA_DIR}/batches/${BATCH_NAME}

@@ -4,6 +4,7 @@ import lombok.*;
 
 import java.awt.*;
 import java.awt.image.*;
+import java.awt.event.*;
 import java.io.*;
 import java.util.*;
 import java.util.List;
@@ -44,7 +45,8 @@ public class Run {
             }
         }
         val executor = Executors.newSingleThreadExecutor();
-        val future = executor.submit(new Call());
+        val task = new FutureTask<Boolean>(new Call());
+        val future = executor.submit(task);
         executor.shutdown();
         try {
             if(seconds == null)
@@ -56,6 +58,7 @@ public class Run {
             throw new Exception(ee.getCause());
         }
         catch (TimeoutException te) {
+            task.cancel(true);
             throw new Exception("Algorithm timed out");
         }
         if (!executor.isTerminated())
@@ -91,7 +94,9 @@ public class Run {
             outputfile.createNewFile();
             if (img_file.endsWith(".png")) {
                 ImageIO.write(createImage(controller.view), "png", outputfile);
-            } else if (img_file.endsWith(".xz")) {
+            } else if (img_file.endsWith(".jpg")) {
+                    ImageIO.write(createImage(controller.view), "jpg", outputfile);
+            } else {
                 SVGGraphics2D g = new SVGGraphics2D(panel.getWidth(), panel.getHeight());
                 panel.paintSVG(g);
                 try {
@@ -115,8 +120,6 @@ public class Run {
         TreeCheck.checkTree(new ArrayList<>(controller.getPoints()), skeleton);
 
         if(runGC) {
-            // Toolkit.getDefaultToolkit().getSystemEventQueue().push(new EventQueue());
-            /*
             for (val w : Window.getWindows()) {
             // for (val w : Frame.getFrames()) {
                 // w.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -124,7 +127,6 @@ public class Run {
                 w.dispatchEvent(new WindowEvent(w, WindowEvent.WINDOW_CLOSING));
                 w.dispose();
             }
-            */
             Runtime.getRuntime().gc();
         }
 
