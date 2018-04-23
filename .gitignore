@@ -4,6 +4,7 @@ tmp
 
 campskeleton
 jutils
+tools/**
 
 *.xz
 

@@ -14,7 +14,7 @@ public class TreeCheck {
      *
      * TODO: how far do we need to relax this for polygons with holes?
      */
-    public static boolean isTree(List<Point> points, List<Line> edges) throws Exception {
+    public static void checkTree(List<Point> points, List<Line> edges) throws Exception {
         Pseudograph<Point, DefaultEdge> gr = new Pseudograph<>(DefaultEdge.class);
         if (points != null)
           for (Point p: points)
@@ -30,7 +30,8 @@ public class TreeCheck {
             if(gr.degreeOf(p) != 1)
                 throw new Exception("Bad skeleton: a vertex (" + p.getNumber() + ") is not a leaf in skeleton");
         }
-        return GraphTests.isTree(gr);
+        if(!GraphTests.isTree(gr))
+            throw new Exception("Bad skeleton: not a tree");
     }
 
 }

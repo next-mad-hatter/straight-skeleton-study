@@ -109,9 +109,7 @@ public class Run {
             }
         }
 
-        if(!TreeCheck.isTree(new ArrayList<>(controller.getPoints()), skeleton)) {
-            throw new Exception("Bad skeleton");
-        };
+        TreeCheck.checkTree(new ArrayList<>(controller.getPoints()), skeleton);
 
         if(runGC) {
             // Toolkit.getDefaultToolkit().getSystemEventQueue().push(new EventQueue());
