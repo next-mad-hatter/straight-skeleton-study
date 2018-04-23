@@ -24,5 +24,5 @@
 2018.04.20     8:30    special cases reading, more corner test cases, ui updates, campskeleton experiments
 2018.04.21     3:00    kotton: campskeleton vs straight_skeleton comparison & common processing
 2018.04.22     5:00    batch timeout added, better treecheck, oom initial tests, batch runner & awt event queue cleaning attempts
-2018.04.23     6:30    batch runner: oom fixes, xz writing, jre crash fix, parts runner, large batch run
+2018.04.23     8:30    batch runner: oom fixes, xz writing, jre crash fix, parts runner, large batch run
 
