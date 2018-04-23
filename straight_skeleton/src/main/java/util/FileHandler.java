@@ -527,6 +527,15 @@ public class FileHandler {
 			file = fc.getSelectedFile();
 		}
 
+		if (file.getName().endsWith(".xz")) {
+			try {
+				writeXZFile(file, sb.toString());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return;
+		}
+
 		BufferedWriter out;
 		try {
 			out = new BufferedWriter(new FileWriter(file));
@@ -701,6 +710,28 @@ public class FileHandler {
 			}
 		});
 
+	}
+
+
+	public static void writeXZFile(String filename, String payload) throws IOException {
+		File file = new File(filename);
+		writeXZFile(file, payload);
+	}
+
+
+	public static void writeXZFile(File file, String payload) throws IOException {
+		if (file.getParentFile() != null) file.getParentFile().mkdirs();
+		file.createNewFile();
+		FileOutputStream fos = new FileOutputStream(file);
+		XZOutputStream xzos = new XZOutputStream(fos, new LZMA2Options());
+		PrintWriter pw = new PrintWriter(xzos);
+		try {
+			pw.write(payload);
+			xzos.finish();
+		} finally {
+			xzos.close();
+			fos.close();
+		}
 	}
 
 }

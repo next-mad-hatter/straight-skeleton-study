@@ -3,14 +3,13 @@ package at.tugraz.igi.main;
 import lombok.*;
 
 import java.awt.*;
-import java.awt.event.*;
 import java.awt.image.*;
 import java.io.*;
 import java.util.*;
+import java.util.List;
 import javax.imageio.*;
 import java.nio.file.*;
 import javax.swing.*;
-import java.util.List;
 import java.util.stream.*;
 
 import at.tugraz.igi.ui.*;
@@ -87,25 +86,29 @@ public class Run {
 
         if (img_file != null) {
             File outputfile = new File(img_file);
-            if (outputfile.getParentFile() != null) outputfile.getParentFile().mkdirs();
-            if (!img_file.endsWith(".png")) {
-                // NOTE: apparently invokeLater here fills up the awt event queue
-                //       which makes our vm crash with oom error.
-                //       All my attempts to fix it had been fruitless,
-                //       so we won't be calling it.
-                // FileHandler.svgfile = outputfile;
-                // FileHandler.saveSVG(controller.view, false);
+            if (outputfile.getParentFile() != null)
+                outputfile.getParentFile().mkdirs();
+            outputfile.createNewFile();
+            if (img_file.endsWith(".png")) {
+                ImageIO.write(createImage(controller.view), "png", outputfile);
+            } else if (img_file.endsWith(".xz")) {
                 SVGGraphics2D g = new SVGGraphics2D(panel.getWidth(), panel.getHeight());
                 panel.paintSVG(g);
                 try {
-                    SVGUtils.writeToSVG(outputfile, g.getSVGElement(), img_file.endsWith(".gz"));
+                    if (img_file.endsWith(".xz")) {
+                        FileHandler.writeXZFile(outputfile, g.getSVGDocument());
+                    } else {
+                        // NOTE: apparently invokeLater here fills up the awt event queue
+                        //       which makes our vm crash with oom error.
+                        //       All my attempts to fix it had been fruitless,
+                        //       so we won't be calling it.
+                        // FileHandler.svgfile = outputfile;
+                        // FileHandler.saveSVG(controller.view, false);
+                        SVGUtils.writeToSVG(outputfile, g.getSVGElement(), img_file.endsWith(".gz"));
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
-            }
-            else {
-                ImageIO.write(createImage(controller.view), "png", outputfile);
             }
         }
 
