@@ -18,6 +18,8 @@ import at.tugraz.igi.util.*;
 import at.tugraz.igi.util.Point;
 import java.util.concurrent.*;
 
+import org.jfree.graphics2d.svg.*;
+
 public class Run {
 
     /**
@@ -87,8 +89,20 @@ public class Run {
             File outputfile = new File(img_file);
             if (outputfile.getParentFile() != null) outputfile.getParentFile().mkdirs();
             if (!img_file.endsWith(".png")) {
-                FileHandler.svgfile = outputfile;
-                FileHandler.saveSVG(controller.view, false);
+                // NOTE: apparently invokeLater here fills up the awt event queue
+                //       which makes our vm crash with oom error.
+                //       All my attempts to fix it had been fruitless,
+                //       so we won't be calling it.
+                // FileHandler.svgfile = outputfile;
+                // FileHandler.saveSVG(controller.view, false);
+                SVGGraphics2D g = new SVGGraphics2D(panel.getWidth(), panel.getHeight());
+                panel.paintSVG(g);
+                try {
+                    SVGUtils.writeToSVG(outputfile, g.getSVGElement(), img_file.endsWith(".gz"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
             }
             else {
                 ImageIO.write(createImage(controller.view), "png", outputfile);
@@ -100,7 +114,8 @@ public class Run {
         };
 
         if(runGC) {
-            // val queue = Toolkit.getDefaultToolkit().getSystemEventQueue();
+            // Toolkit.getDefaultToolkit().getSystemEventQueue().push(new EventQueue());
+            /*
             for (val w : Window.getWindows()) {
             // for (val w : Frame.getFrames()) {
                 // w.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -108,6 +123,7 @@ public class Run {
                 w.dispatchEvent(new WindowEvent(w, WindowEvent.WINDOW_CLOSING));
                 w.dispose();
             }
+            */
             Runtime.getRuntime().gc();
         }
 

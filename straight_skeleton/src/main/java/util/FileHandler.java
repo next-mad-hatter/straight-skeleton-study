@@ -35,6 +35,7 @@ import lombok.*;
 import org.apache.commons.lang3.tuple.*;
 
 import java.awt.*;
+import java.awt.event.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.List;
@@ -63,6 +64,7 @@ public class FileHandler {
 	public static File file = null;
 	public static File svgfile = null;
 	public static String parent = (new File(System.getProperty("user.dir"))).getPath();
+	final static JFrame fcFrame = new JFrame("Choose new file name");
 
     /**
      * Reads contents of a stream into a string.
@@ -516,7 +518,9 @@ public class FileHandler {
 			if (file != null) {
 				fc.setCurrentDirectory(file.getParentFile());
 			}
-			int returnVal = fc.showSaveDialog(null);
+
+			int returnVal = fc.showSaveDialog(fcFrame);
+
 			if (returnVal != JFileChooser.APPROVE_OPTION) {
 				return;
 			}
@@ -669,7 +673,9 @@ public class FileHandler {
 			fc.setCurrentDirectory(svgfile.getParentFile());
 		}
 		if (saveAs) {
-			int returnVal = fc.showSaveDialog(null);
+
+			int returnVal = fc.showSaveDialog(fcFrame);
+
 			if (returnVal != JFileChooser.APPROVE_OPTION) {
 				return;
 			}
