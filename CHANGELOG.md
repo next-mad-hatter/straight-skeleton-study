@@ -4,7 +4,7 @@
 * Added autozoom functionality (not yet fully complete/tested)
 * Implemented basic browsing back through events history
 * Applet: show triangulation as first step
-* Singe/batch runners count events & check tree structure of the results
+* Singe/batch runners count events, remove superfluous edges (source unknown as of now) & check tree structure of the results
 * Polygon loading parser: ordering bugs fixed
 * Added a batch runner & a set of small test polygons
 * Implemented loading plaintext/xz-compressed coordinates lists
