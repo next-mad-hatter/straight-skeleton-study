@@ -1,17 +1,28 @@
+buildscript {
+  repositories {
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
+  }
+  dependencies {
+    classpath "com.github.jengelman.gradle.plugins:shadow:2.0.+"
+  }
+}
+
 plugins {
     id 'java'
     id 'application'
     id 'net.ltgt.apt' version '0.10'
-    // id "org.jetbrains.kotlin.jvm" version "1.2.40"
+    id 'maven-publish'
 }
+
+apply plugin: "com.github.johnrengelman.shadow"
 
 repositories {
     jcenter()
     mavenCentral()
-    flatDir
-    {
-      dirs 'lib'
-    }
+    mavenLocal()
+    flatDir { dirs 'lib' }
 }
 
 dependencies {
@@ -29,47 +40,11 @@ dependencies {
     compile group: 'org.tukaani', name: 'xz', version: '1.+'
     compile group: 'me.tongfei', name: 'progressbar', version: '0.4.+'
     compile group: 'org.jgrapht', name: 'jgrapht-core', version: '1.1.+'
-    //compile group: 'org.jgrapht', name: 'jgrapht', version: '1.1.0', ext: 'pom'
-    // compile group: 'org.apache.xmlgraphics', name: 'batik-transcoder', version: '1.7'
-    // compile group: 'org.apache.xmlgraphics', name: 'batik-svg-dom', version: '1.7'
     // testCompile 'junit:junit:4.+'
-    // compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
-
-/*
-sourceSets {
-    main.java.srcDirs += 'src/main/java'
-    main.kotlin.srcDirs += 'src/main/kotlin'
-}
-
-compileKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-}
-compileTestKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-}
-*/
 
 compileJava {
   options.compilerArgs << "-Xlint" // << "-Werror" // "-Xlint:unchecked" << "-Xlint:deprecation"
-}
-
-task(runDebug, dependsOn: 'classes', type: JavaExec) {
-    main = 'at.tugraz.igi.main.Main'
-    classpath = sourceSets.main.runtimeClasspath
-    jvmArgs = ["-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"]
-}
-
-// Append app args like this: gradle run -PappArgs="['in.txt', 'out.txt', 'out.png']"
-// (for SingleRun/BatchRun to be called via gradle)
-run {
-    if (project.hasProperty("appArgs")) {
-        args Eval.me(appArgs)
-    }
 }
 
 jar {
@@ -81,20 +56,44 @@ jar {
           )
     }
   }
-  // This creates a fat/uber-jar:
-  from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 
-  /*
   from('lib') { include '*.jar' }
   jar {
     into('lib') {
       from 'lib'
     }
   }
-  */
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId 'at.tugraz.igi'
+            artifactId 'triton'
+            version '0.0.1'
+            from components.java
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}
+
+task(runDebug, dependsOn: 'classes', type: JavaExec) {
+    main = 'at.tugraz.igi.main.Main'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ["-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"]
 }
 
 mainClassName = 'at.tugraz.igi.main.Main'
 // mainClassName = 'at.tugraz.igi.main.SingleRun'
 // mainClassName = 'at.tugraz.igi.main.BatchRun'
+
+// Append app args like this: gradle run -PappArgs="['in.txt', 'out.txt', 'out.png']"
+// (for SingleRun/BatchRun to be called via gradle)
+run {
+    if (project.hasProperty("appArgs")) {
+        args Eval.me(appArgs)
+    }
+}
 
