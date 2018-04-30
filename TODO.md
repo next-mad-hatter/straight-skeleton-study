@@ -1,8 +1,7 @@
 * Kotton:
 
-  - implement triton/campskeleton to svg & plain text pipeline (+batched? +correctness check)
-
-  - can we make both output map of events -> wavefront + partial skel (+ uniquely identified edges for animation?)?
+  - implement triton to svg & plain text pipeline (+batched? +correctness check)
+  - make triton output map of events -> wavefront + partial skel (+ uniquely identified edges for animation?)
 
 * Investigate jre sigbus in libzip crashes (/tmp space related?)
 
