@@ -27,6 +27,7 @@ repositories {
 
 dependencies {
     compile fileTree(dir: 'lib', include: '*.jar')
+    runtime fileTree(dir: 'lib', include: '*.jar')
     compileOnly 'org.projectlombok:lombok:1.+'
     apt "org.projectlombok:lombok:1.+"
     compile group: 'com.codepoetics', name: 'protonpack', version: '1.+'
@@ -57,12 +58,16 @@ jar {
     }
   }
 
-  from('lib') { include '*.jar' }
+  // In case we wanted to include extra libs in non-fat jar
+  /*
   jar {
     into('lib') {
       from 'lib'
     }
   }
+  */
+  // or so:
+  // from('lib') { include '*.jar' }
 }
 
 publishing {

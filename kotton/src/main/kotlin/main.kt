@@ -6,8 +6,12 @@ import  madhat.kotton.callers.*
 
 import java.io.*
 import java.nio.file.*
+import java.util.concurrent.*
 
 fun main(args: Array<String>) {
+
+    val DEBUG = false
+    val TIMEOUT: Long = 4
 
     for (filename in args) {
         println("\nReading $filename\n")
@@ -21,12 +25,12 @@ fun main(args: Array<String>) {
             continue
         }
 
-        /*
-        println("  Vertices & Weights:\n")
-        for ((ind, wt) in input.sortedIndices zip input.weights) {
-            println("  $ind : ${input.coordinates[ind]} -- $wt --> ")
+        if (DEBUG) {
+            println("Vertices & Weights:\n")
+            for ((ind, wt) in input.sortedIndices zip input.weights) {
+                println("  $ind : ${input.coordinates[ind]} -- $wt --> ")
+            }
         }
-        */
 
         /*
         val triangles = triangulate(input.sortedIndices.map { x -> input.coordinates[x]!! })
@@ -38,46 +42,59 @@ fun main(args: Array<String>) {
 
         // TODO: remove consecutive collinear edges from input?
 
-        try {
-            println("Running Campskeleton\n")
-            val result = CampSkeleton().computeSkeleton(input, null, true, true)
-
-            println("Result:")
-            for (e in result.edges) {
-                println("  Skeleton edge: ${e.first} -- ${e.second}")
-            }
-
+        for ((methodName, method) in listOf(
+                Pair("Triton", Triton()),
+                Pair("Campskeleton", CampSkeleton())
+        )) {
             try {
-                checkTree(input, result.edges)
+                println("\nRunning $methodName\n")
+                val result = method.computeSkeleton(input, TIMEOUT, true, true)
+
+                if (DEBUG) {
+                    println("Result:\n")
+                    for (e in result.edges) {
+                        println("  Skeleton edge: ${e.first} -- ${e.second}")
+                    }
+                }
+
+                try {
+                    checkTree(input, result.edges)
+                    println("\nTree check passed")
+                } catch (err: Exception) {
+                    println("\n! Tree check failed: $err")
+                }
+
+                if (DEBUG) {
+                    if (result.trace != null) {
+                        println("\nTrace:\n")
+                        for ((h, es) in result.trace.events) {
+                            println("  At height $h:")
+                            for (e in es.edgesSet!!) {
+                                println("    ${e.first.x} ${e.first.y} -- ${e.second.x} ${e.second.y}")
+                            }
+                        }
+                    }
+                }
+
+                (Paths.get(filename).fileName.toString() + ".$methodName.skel.gz").let {
+                    writeText(edgesToText(input, result.edges), it)
+                }
+
+                if (result.svg != null) {
+                    (Paths.get(filename).fileName.toString() + ".$methodName.svg.gz").let {
+                        writeSVG(result.svg, it)
+                    }
+                }
+
+                if (result.misc != null) {
+                    (Paths.get(filename).fileName.toString() + ".$methodName.stat.gz").let {
+                        writeText(result.misc, it)
+                    }
+                }
+
             } catch (err: Exception) {
-                System.err.println(err)
-                System.exit(1)
+                System.err.println("! ERROR : $err")
             }
-
-            for ((h, es) in result.trace!!.events) {
-                println("At height $h:")
-                for (e in es.edgesSet!!) {
-                    println("  ${e.first.x} ${e.first.y} -- ${e.second.x} ${e.second.y}")
-                }
-            }
-
-            Paths.get(filename).fileName.toString() + ".skel.gz".let {
-                writeText(edgesToText(input, result.edges), it)
-            }
-
-            Paths.get(filename).fileName.toString() + ".svg.gz".let {
-                writeSVG(result.svg!!, it)
-            }
-
-            if (result.misc != null) {
-                Paths.get(filename).fileName.toString() + ".stat.gz".let {
-                    writeText(result.misc, it)
-                }
-            }
-
-        } catch (err: Exception) {
-            System.err.println(err)
-            System.exit(1)
         }
 
     }

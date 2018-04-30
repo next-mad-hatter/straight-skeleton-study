@@ -1,10 +1,16 @@
 package madhat.kotton.callers
 
 import madhat.kotton.utils.*
-import  madhat.kotton.geometry.*
+import madhat.kotton.geometry.*
+
+import at.tugraz.igi.util.*
+import at.tugraz.igi.main.*
+import at.tugraz.igi.ui.*
+
+import java.util.concurrent.*
+
 import org.jfree.graphics2d.svg.*
 import java.util.*
-import java.util.concurrent.*
 import javax.vecmath.*
 import org.twak.camp.*
 import org.twak.utils.collections.*
@@ -55,17 +61,17 @@ class TimeoutComputation <R> (val call: Callable<R>) {
         executor.shutdown()
         @Suppress("UNCHECKED_CAST")
         try {
+            // FIXME: returning value does not work here
             return future.get(timeout, TimeUnit.SECONDS) as R
-        }
-        catch (ee: ExecutionException) {
+        } catch (ee: ExecutionException) {
             throw Exception(ee.cause)
-        }
-        catch (te: TimeoutException) {
+        } catch (te: TimeoutException) {
             task.cancel(true)
             throw te
-        }
-        finally {
-            if (!executor.isTerminated) executor.shutdownNow()
+        } finally {
+            if (!executor.isTerminated()) {
+                executor.shutdownNow()
+            }
         }
     }
 }
@@ -81,7 +87,7 @@ class CampSkeleton : SkeletonComputation {
         var loop: Loop<Edge> = Loop()
         val corners = input.sortedIndices.map {
             Corner(input.coordinates[it]!!.x,
-                   input.coordinates[it]!!.y)
+                    input.coordinates[it]!!.y)
         }
 
         for (ind in 0 until corners.count()) {
@@ -93,15 +99,14 @@ class CampSkeleton : SkeletonComputation {
         }
 
         val skeleton = Skeleton(loop.singleton(), true)
-        var rawTrace: SortedMap<Double, Set<List<List<Double>>>>
 
-        Callable({ skeleton.skeleton(true) })
-
-        if(timeout == null)
-            rawTrace = skeleton.skeleton(true)
-        else
-            rawTrace = TimeoutComputation(Callable({ skeleton.skeleton(createTrace) })).
-                    run(timeout)
+        val rawTrace =
+                if (timeout == null)
+                    skeleton.skeleton(true)
+                else
+                    TimeoutComputation(Callable({
+                        skeleton.skeleton(createTrace)
+                    })).run(timeout)
 
         /*
         for (face in skeleton.output.faces.values) {
@@ -155,6 +160,62 @@ class CampSkeleton : SkeletonComputation {
         }
 
         return SkeletonResult(skelEdges, SkeletonTrace(traceMap), svg, null)
+    }
+
+}
+
+
+
+class Triton : SkeletonComputation {
+
+    override fun computeSkeleton(input: ParsedPolygon,
+                                 timeout: Long?,
+                                 createTrace: Boolean,
+                                 createSVG: Boolean
+    ): SkeletonResult {
+        var controller = Controller()
+        var panel = GraphicPanel(controller)
+        controller.setView(panel)
+        controller.setTable(ConfigurationTable(controller))
+
+        FileHandler.loadPoints(
+                (1..input.indices.count()).map {
+                    input.sortedIndices[it-1].let { Point(it,
+                            input.coordinates[it]!!.x,
+                            input.coordinates[it]!!.y
+                        )
+                    }
+                },
+                panel,
+                controller)
+
+        if (timeout == null)
+            controller.runAlgorithmNoSwingWorker()
+        else
+            TimeoutComputation(Callable({
+                controller.runAlgorithmNoSwingWorker()
+            })).run(timeout)
+        if (!controller.finished) throw Exception("Algorithm failed to finish")
+
+        var edges: MutableSet<Pair<Point2d, Point2d>> = HashSet()
+        for (line in controller.straightSkeleton.lines) {
+            val p = Point2d(line.p1.originalX, line.p1.originalY)
+            val q = Point2d(line.p2.originalX, line.p2.originalY)
+            if (p != q) edges.add(
+                    if (line.p1.number < line.p2.number)
+                        Pair(p, q)
+                    else
+                        Pair(q, p))
+        }
+
+        var svg: SVGGraphics2D? = null
+        if (createSVG) {
+            svg = SVGGraphics2D(panel.width, panel.height)
+            panel.paintSVG(svg)
+        }
+
+        // TODO: get trace from triton
+        return SkeletonResult(edges, null, svg, null)
     }
 
 }

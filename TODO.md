@@ -1,8 +1,8 @@
 * Kotton:
 
-  - implement triton to svg & plain text pipeline
-  - make triton output map of events -> wavefront + partial skel (+ uniquely identified edges for animation?)
+  - make triton output trace as events -> wavefront + partial skel (+ uniquely identified edges for animation?)
   - add a batch/single runner to kotton
+  - make timeout work in kotton
 
 * Split out triton as a submodule for access / licensing control,
   split & update docs
