@@ -70,12 +70,13 @@ public class Run {
             throw new Exception("Algorithm didn't finish");
         }
 
-        // FIXME: currently the algorithm includes some skeleton arcs/edges more than once in the result.
-        //        We'll try and repair those cases here for now.
+        // FIXME: currently the algorithm includes some skeleton arcs/edges more than once in the result;
+        //        also, sometimes it yields loops;
+        //        we'll try and repair those cases here for now.
         List<Line> skeleton = controller.getStraightSkeleton().getLines()
             .stream()
             .map((l) -> l.getP1().getNumber() < l.getP2().getNumber() ? l : new Line(l.getP2(), l.getP1(), l.getWeight()))
-            //.filter((l) -> l.getP1() != l.getP2())
+            .filter((l) -> l.getP1().getOriginalX() != l.getP2().getOriginalX() || l.getP1().getOriginalY() != l.getP2().getOriginalY() )
             .distinct().collect(Collectors.toList());
 
         FileHandler.file = new File(out_file);
