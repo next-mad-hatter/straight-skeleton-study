@@ -1,8 +1,21 @@
+buildscript {
+  repositories {
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
+  }
+  dependencies {
+    classpath "com.github.jengelman.gradle.plugins:shadow:2.0.+"
+  }
+}
+
 plugins {
     id 'application'
     id "org.jetbrains.kotlin.jvm" version "1.2.40"
-    // id 'java'
+    id 'maven-publish'
 }
+
+apply plugin: "com.github.johnrengelman.shadow"
 
 repositories {
     jcenter()
@@ -27,11 +40,12 @@ dependencies {
     compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.6.2'
     compile group: 'org.twak.campskeleton', name: 'campskeleton', version: '0.+'
     compile group: 'org.twak.utils', name: 'utils', version: '0.+'
+    compile group: 'at.tugraz.igi', name: 'triton', version: '0.+'
 }
 
 sourceSets {
     main.kotlin.srcDirs += 'src/main/kotlin'
-    main.java.srcDirs += 'src/main/java'
+    // main.java.srcDirs += 'src/main/java'
 }
 
 compileKotlin {
@@ -45,26 +59,6 @@ compileTestKotlin {
     }
 }
 
-/*
-compileJava {
-  options.compilerArgs << "-Xlint" << "-Werror" // "-Xlint:unchecked" << "-Xlint:deprecation"
-}
-
-task(runDebug, dependsOn: 'classes', type: JavaExec) {
-    main = 'my.kotlin.MainKt'
-    classpath = sourceSets.main.runtimeClasspath
-    jvmArgs = ["-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"]
-}
-*/
-
-// To 'gradle run' with arguments, append app args like this:
-// gradle run -PappArgs="['in.txt', 'out.txt', 'out.png']"
-run {
-    if (project.hasProperty("appArgs")) {
-        args Eval.me(appArgs)
-    }
-}
-
 jar {
   manifest {
     if (!configurations.compile.isEmpty()) {
@@ -74,10 +68,30 @@ jar {
           )
     }
   }
-  // This creates a fat/uber-jar:
-  from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId 'madhat.kotton'
+            artifactId 'kotton'
+            version '0.0.1'
+            from components.java
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}
 
 }
 
-// what class will get executed by 'gradle run'
 mainClassName = 'madhat.kotton.MainKt'
+
+// To 'gradle run' with arguments, append app args like this:
+// gradle run -PappArgs="['in.txt', 'out.txt', 'out.png']"
+run {
+    if (project.hasProperty("appArgs")) {
+        args Eval.me(appArgs)
+    }
+}
+
