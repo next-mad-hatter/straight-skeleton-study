@@ -702,7 +702,7 @@ public class Controller {
 	public void reset() {
         // JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(view);
 		JFrame frame = (JFrame) SwingUtilities.windowForComponent(view);
-		if(frame != null) frame.setTitle("Weighted Straight Skeleton");
+		if(frame != null) frame.setTitle("Triton");
 
 		history.clear();
 		historyPtr = 0;

@@ -48,7 +48,7 @@ public class SkeletonApplet extends JFrame {
 	public SkeletonApplet() {
 	
 		controller = new Controller();
-		this.setTitle("Weighted Straight Skeleton");
+		this.setTitle("Triton");
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
