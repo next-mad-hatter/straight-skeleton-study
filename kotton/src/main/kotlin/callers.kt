@@ -8,6 +8,8 @@ import at.tugraz.igi.main.*
 import at.tugraz.igi.ui.*
 
 import java.util.concurrent.*
+//import kotlinx.coroutines.experimental.*
+//import java.util.concurrent.TimeUnit
 
 import org.jfree.graphics2d.svg.*
 import java.util.*
@@ -53,7 +55,23 @@ interface SkeletonComputation {
     ): SkeletonResult
 }
 
-class TimeoutComputation <R> (val call: Callable<R>) {
+/*
+// Coroutines need to actively cancel themselves.
+class TimeoutComputation <R> (private val call: () -> R) {
+    fun run(timeout: Long) = runBlocking {
+        try {
+            withTimeout(timeout, TimeUnit.SECONDS) {
+                call()
+            }
+        } catch (err: TimeoutCancellationException) {
+            println("TIMEOUT CAUGHT")
+            throw err
+        }
+    }
+}
+*/
+
+class TimeoutComputation <R> (private val call: Callable<R>) {
     fun run(timeout: Long): R {
         val executor = Executors.newSingleThreadExecutor()
         val task = FutureTask<R>(call)
