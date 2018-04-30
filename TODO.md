@@ -1,14 +1,14 @@
 * Kotton:
 
-  - implement triss/campskeleton to svg & plain text pipeline (+batched? +correctness check)
+  - implement triton/campskeleton to svg & plain text pipeline (+batched? +correctness check)
 
   - can we make both output map of events -> wavefront + partial skel (+ uniquely identified edges for animation?)?
 
 * Investigate jre sigbus in libzip crashes (/tmp space related?)
 
-* Split out triss as a submodule for access / licensing control
+* Split out triton as a submodule for access / licensing control
 
-* Converge two triss "algorithm" implementations
+* Converge two triton "algorithm" implementations
 
 * Keeps using CPU after computation complete (again)
 

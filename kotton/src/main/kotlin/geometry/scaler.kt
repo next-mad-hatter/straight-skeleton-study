@@ -5,10 +5,13 @@ import javax.vecmath.Point3d
 import kotlin.math.*
 
 /**
- * Given a list of floating-point based points,
- * we'll want to scale them such that minimum distance
- * between two points is not less than given value;
- * we'll also want to transform coordinates to non-negative Ints.
+ * Given a list of floating-point based points, for rendering purposes we
+ * want to scale them so that minimum distance between two points is
+ * not less than given value.  We'll also want to transform coordinates
+ * to non-negative Ints.
+ *
+ * This class calculates one such mapping for a given set of points and
+ * stores the coordinates for later retrieval.
  */
 class IntScaler {
 
@@ -40,12 +43,14 @@ class IntScaler {
         val minY = ys.min()!!
 
         for (pt in xs zip ys) {
-            map[pt] = Pair(((pt.first - minX) * scale).toInt() + offset, ((pt.second - minY) * scale).toInt() + offset)
+            map[pt] = Pair(
+                    ((pt.first - minX) * scale).toInt() + offset,
+                    ((pt.second - minY) * scale).toInt() + offset)
         }
 
         val xis = map.values.map { it.first }
         val yis = map.values.map { it.second }
-        maxX = xis.max()!! + offset // TODO: do we want offset here?
+        maxX = xis.max()!! + offset // TODO: do we want offset added here?
         maxY = yis.max()!! + offset
     }
 

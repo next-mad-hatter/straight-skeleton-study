@@ -2,6 +2,8 @@
 2017.08        3:00    bringing sources into buildable configuration
 2017.08        2:30    cpu hog bug hunt & fix
 
+[7:30]
+
 2018.02.07     3:00    source studies
 2018.02.08     5:50    source & theory studies, more bugs/todos, libs search, multievents questions
 2018.02.10     3:10    source studies, first bug enquiries
@@ -16,8 +18,14 @@
 2018.02.22     9:00    history & points comparators experiments, history steps & controls experiments
 2018.02.26     4:30    researching/debugging zoom/transforms for graphics & components
 2018.02.27     4:10    zoom/transforms hacking
+
+[+73:20 => 80:20]
+
 2018.03.09     8:30    input scaling, compressed svg output, large batch experiments
 2018.03.09     2:00    more debugging attempts
+
+[+10:30 => 90:50]
+
 2018.04.15     2:00    kotton experiments started
 2018.04.18     5:00    kotton experiments
 2018.04.19     1:30    more Biedl et al papers reading, campskeleton experiments
@@ -25,4 +33,7 @@
 2018.04.21     3:00    kotton: campskeleton vs straight_skeleton comparison & common processing
 2018.04.22     5:00    batch timeout added, better treecheck, oom initial tests, batch runner & awt event queue cleaning attempts
 2018.04.23     8:30    batch runner: oom fixes, xz writing, jre crash fix, parts runner, large batch run
+2018.04.29     3:40    campskeleton trace (edges at events) collection digging
+
+[+ 37:10 => 128:00 ]
 

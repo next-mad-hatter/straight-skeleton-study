@@ -75,8 +75,13 @@ fun main(args: Array<String>) {
             e.machine = Machine(atan(poly.weights[ind]))
         }
         val skeleton = Skeleton(loop.singleton(), true)
-        skeleton.skeleton()
-
+        val trace = skeleton.skeleton(true)
+        for ((h, es) in trace) {
+            println("At height $h:")
+            for (e in es) {
+                println("  ${e[0][0]} ${e[0][1]} -- ${e[1][0]} ${e[1][1]}")
+            }
+        }
         /*
         for (face in skeleton.output.faces.values) {
             println("  face:")
@@ -86,10 +91,6 @@ fun main(args: Array<String>) {
         }
         */
 
-        for (str in DebugDevice.instance.toDisplay) {
-            println(str)
-        }
-
         if (skeleton.output.edges.map.isEmpty()) return
 
         val edges = skeleton.output.edges.map.values
@@ -97,6 +98,7 @@ fun main(args: Array<String>) {
         val scaler = IntScaler(points)
         var svg = SVGGraphics2D(scaler.maxX!!, scaler.maxY!!)
 
+        println("Result:")
         for (edge in skeleton.output.edges.map.values) {
             val p = scaler[edge.start]!!
             val q = scaler[edge.end]!!
