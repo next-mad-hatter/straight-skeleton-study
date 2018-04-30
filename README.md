@@ -2,7 +2,7 @@
 
 ### Triangulation keeping algorithm -- a Java Implementation
 
-The code found under `straight_skeleton` should be buildable with gradle.
+The code found under `triton` should be buildable with gradle.
 
 Right now, there are three ways to run it:
 
@@ -16,15 +16,19 @@ Right now, there are three ways to run it:
     input and output parameters, and runs the algorithm for every
     such line (see `bin/run_batch.sh` and `data/batches/simple-batch.txt`).
 
-From `straight_skeleton` directory, those can be invoked via `gradle run`
+From `triton` directory, those can be invoked via `gradle run`
 (see `build.gradle` file for details), or (after a successful `gradle
 build`) from the built jar directly, e.g. as
 
 ```
-java -cp build/libs/straight_skeleton.jar at.tugraz.igi.main.SingleRun [-s] in.file out.skel out.stat out.png
+java -cp build/libs/triton-all.jar at.tugraz.igi.main.SingleRun [-s] in.file out.skel out.stat out.png
 ```
 ,
 ```
-java -cp build/libs/straight_skeleton.jar at.tugraz.igi.main.BatchRun [-s] batch.txt
+java -cp build/libs/triton-all.jar at.tugraz.igi.main.BatchRun [-s] batch.txt
+
 ```
 .
+
+To install to user's local maven repository (with extra libs only), run `gradle publishToMavenLocal`.
+

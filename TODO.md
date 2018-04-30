@@ -4,9 +4,10 @@
   - make triton output map of events -> wavefront + partial skel (+ uniquely identified edges for animation?)
   - add a batch/single runner to kotton
 
-* Investigate jre sigbus in libzip crashes (/tmp space related?)
+* Split out triton as a submodule for access / licensing control,
+  split & update docs
 
-* Split out triton as a submodule for access / licensing control
+* Investigate jre sigbus in libzip crashes (/tmp space related?)
 
 * Converge two triton "algorithm" implementations
 
