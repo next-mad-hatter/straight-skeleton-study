@@ -12,9 +12,10 @@ fun main(args: Array<String>) {
     for (filename in args) {
         println("\nReading $filename\n")
 
-        val file = File(filename)
         val input: ParsedPolygon = try {
-            parseFile(file)
+            File(filename).let {
+                parseFile(it)
+            }
         } catch (e: IOException) {
             System.err.println("Error reading file $filename : ${e.localizedMessage}")
             continue
@@ -60,15 +61,18 @@ fun main(args: Array<String>) {
                 }
             }
 
-            val skelname = Paths.get(filename).fileName.toString() + ".skel.gz"
-            writeText(edgesToText(input, result.edges), skelname)
+            Paths.get(filename).fileName.toString() + ".skel.gz".let {
+                writeText(edgesToText(input, result.edges), it)
+            }
 
-            val svgname = Paths.get(filename).fileName.toString() + ".svg.gz"
-            writeSVG(result.svg!!, svgname)
+            Paths.get(filename).fileName.toString() + ".svg.gz".let {
+                writeSVG(result.svg!!, it)
+            }
 
             if (result.misc != null) {
-                val miscname = Paths.get(filename).fileName.toString() + ".stat.gz"
-                writeText(result.misc, miscname)
+                Paths.get(filename).fileName.toString() + ".stat.gz".let {
+                    writeText(result.misc, it)
+                }
             }
 
         } catch (err: Exception) {
