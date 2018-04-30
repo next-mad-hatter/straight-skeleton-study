@@ -79,8 +79,7 @@ class TimeoutComputation <R> (private val call: Callable<R>) {
         executor.shutdown()
         @Suppress("UNCHECKED_CAST")
         try {
-            // FIXME: returning value does not work here
-            return future.get(timeout, TimeUnit.SECONDS) as R
+            return task.get(timeout, TimeUnit.SECONDS) as R
         } catch (ee: ExecutionException) {
             throw Exception(ee.cause)
         } catch (te: TimeoutException) {

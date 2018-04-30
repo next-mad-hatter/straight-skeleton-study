@@ -93,7 +93,7 @@ fun main(args: Array<String>) {
                 }
 
             } catch (err: Exception) {
-                System.err.println("! ERROR : $err")
+                System.err.println("! ERROR : $err\n")
             }
         }
 
