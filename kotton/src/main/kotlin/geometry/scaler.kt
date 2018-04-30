@@ -1,8 +1,8 @@
 package madhat.kotton.geometry
 
-import javax.vecmath.Point3d
-
+import javax.vecmath.*
 import kotlin.math.*
+
 
 /**
  * Given a list of floating-point based points, for rendering purposes we
@@ -13,14 +13,13 @@ import kotlin.math.*
  * This class calculates one such mapping for a given set of points and
  * stores the coordinates for later retrieval.
  */
-class IntScaler {
+class CoorsIntScaler {
 
     private var map: MutableMap<Pair<Double, Double>, Pair<Int, Int>> = HashMap()
     var maxX: Int? = null
     var maxY: Int? = null
 
-    constructor(points: List<Point3d>, minSquaredDist: Double = 12.0, offset: Int = 8) {
-
+    constructor(points: List<Point2d>, minSquaredDist: Double = 12.0, offset: Int = 8) {
         if (points.count() < 2) throw Exception("Not enough points to scale")
 
         var minDist: Double? = null
@@ -28,8 +27,6 @@ class IntScaler {
             for (j in i+1 until points.count()) {
                 val p = points[i]
                 val q = points[j]
-                p.z = 0.0
-                q.z = 0.0
                 val d = p.distanceSquared(q)
                 if ((minDist == null || d < minDist) && d > 0) minDist = d
             }
@@ -52,6 +49,10 @@ class IntScaler {
         val yis = map.values.map { it.second }
         maxX = xis.max()!! + offset // TODO: do we want offset added here?
         maxY = yis.max()!! + offset
+    }
+
+    operator fun get(p: Point2d): Pair<Int, Int>? {
+        return map[Pair(p.x, p.y)]
     }
 
     operator fun get(p: Point3d): Pair<Int, Int>? {

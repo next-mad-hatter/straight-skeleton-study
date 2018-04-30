@@ -4,6 +4,7 @@ import org.tukaani.xz.*
 import java.io.*
 import org.jgrapht.*
 import org.jgrapht.graph.*
+import javax.vecmath.*
 //import org.jgrapht.traverse.*
 
 
@@ -13,18 +14,18 @@ import org.jgrapht.graph.*
  * while weights should apply to edges corresponding to said ordering
  * (starting with edge {sortedIndices[0], sortedIndices[1]}).
  */
-data class ParsedPolygon<T>(
+data class ParsedPolygon(
         val sortedIndices: List<Int>,
         val weights: List<Double>,
-        val indices: Map<Pair<T, T>, Int>,
-        val coordinates: Map<Int, Pair<T, T>>
+        val indices: Map<Point2d, Int>,
+        val coordinates: Map<Int, Point2d>
 )
 
 
 /**
  * Attempts to parse given input.
  */
-fun parseFile(file: File): ParsedPolygon<Double> {
+fun parseFile(file: File): ParsedPolygon {
 
     val lines = try {
         val a = XZInputStream(FileInputStream(file)).reader()
@@ -47,11 +48,11 @@ fun parseFile(file: File): ParsedPolygon<Double> {
 /**
  * Parses the one-edge-per-line format.
  */
-fun parseEdgesFormat(lines: List<String>): ParsedPolygon<Double> {
+fun parseEdgesFormat(lines: List<String>): ParsedPolygon {
 
     var graph: SimpleWeightedGraph<Int, Set<Int>> = SimpleWeightedGraph({ x, y -> setOf(x, y) })
-    var coors: HashMap<Int, Pair<Double, Double>> = HashMap()
-    var inds: HashMap<Pair<Double, Double>, Int> = HashMap()
+    var coors: HashMap<Int, Point2d> = HashMap()
+    var inds: HashMap<Point2d, Int> = HashMap()
 
     for ((lineno, line) in (1..lines.count()) zip lines) {
         val tokens = line.trim().split("-", ";").map{ it.trim() }
@@ -70,17 +71,17 @@ fun parseEdgesFormat(lines: List<String>): ParsedPolygon<Double> {
         for (vertex in listOf(v1, v2)) {
             val (ind, x, y) = vertex
             if (coors.containsKey(ind)) {
-                if (coors[ind] != Pair(x, y))
+                if (coors[ind] != Point2d(x, y))
                     throw IOException("Conflicting definition for point $ind in line $lineno")
             }
             else
-                coors[ind] = Pair(x, y)
-            if (inds.containsKey(Pair(x, y))) {
-                if (inds[Pair(x, y)] != ind)
+                coors[ind] = Point2d(x, y)
+            if (inds.containsKey(Point2d(x, y))) {
+                if (inds[Point2d(x, y)] != ind)
                     throw IOException("Multiple points with coordinates $x , $y")
             }
             else
-                inds[Pair(x, y)] = ind
+                inds[Point2d(x, y)] = ind
             if (!graph.containsVertex(ind))
                 graph.addVertex(ind)
         }
@@ -122,9 +123,9 @@ fun parseEdgesFormat(lines: List<String>): ParsedPolygon<Double> {
 /**
  * Parses one vertex per line format.
  */
-fun parseVertexFormat(lines: List<String>): ParsedPolygon<Double>? {
-    var coors: HashMap<Int, Pair<Double, Double>> = HashMap()
-    var inds: HashMap<Pair<Double, Double>, Int> = HashMap()
+fun parseVertexFormat(lines: List<String>): ParsedPolygon {
+    var coors: HashMap<Int, Point2d> = HashMap()
+    var inds: HashMap<Point2d, Int> = HashMap()
 
     for ((lineno, line) in (1..lines.count()) zip lines) {
         val xy = try {
@@ -139,12 +140,12 @@ fun parseVertexFormat(lines: List<String>): ParsedPolygon<Double>? {
             throw IOException("Bad input line $lineno")
         val x = xy[0]
         val y = xy[1]
-        if (inds.containsKey(Pair(x, y))) {
+        if (inds.containsKey(Point2d(x, y))) {
             if (lineno == lines.count()) continue
             throw IOException("Multiple points with coordinates $x , $y")
         }
-        inds[Pair(x, y)] = lineno
-        coors[lineno] = Pair(x, y)
+        inds[Point2d(x, y)] = lineno
+        coors[lineno] = Point2d(x, y)
 
     }
     if (coors.keys.count() < 3)
