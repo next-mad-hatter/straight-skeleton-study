@@ -5,6 +5,10 @@ import javax.vecmath.*
 import org.jgrapht.*
 import org.jgrapht.graph.*
 
+/**
+ * Check if given set of edges is a tree (we only care for simple holeless polygons)
+ * and if every vertex of the input is a leaf in it (we check only in this one direction).
+ */
 fun checkTree(input: ParsedPolygon,
               edges: Set<Pair<Point2d, Point2d>>) {
 

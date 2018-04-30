@@ -6,10 +6,6 @@ import org.poly2tri.triangulation.delaunay.*
 import javax.vecmath.*
 
 
-/**
- * Given list of vertices
- * Triangulates a polygon
- */
 fun triangulate(edges: List<Point2d>): List<DelaunayTriangle> {
     // We must not have points with same coordinates here.
     // Also, only simple polygons are supported.

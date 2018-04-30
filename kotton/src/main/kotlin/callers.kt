@@ -19,17 +19,29 @@ import org.twak.utils.collections.*
 import kotlin.math.*
 
 
-enum class EdgeType {
-    POLYGON, SKELETON, WAVEFRONT, TRIANGULATION
+/**
+ * The "caller" classes below will run given skeleton computing algorithms,
+ * returning results in common format described above.
+ */
+interface SkeletonComputation {
+    fun computeSkeleton(input: ParsedPolygon,
+                        timeout: Long?,
+                        createTrace: Boolean = false,
+                        createSVG: Boolean = false
+    ): SkeletonResult
 }
 
-data class SkeletonSnapshot(
-        // While campskeleton won't yield uniquely id'ed edges, triton will.
-        // We won't bother implementing Either type just for this.
-        // Both should keep edge orientation between snapshots.
-        val edgesSet: Set<Pair<Point2d, Point2d>>?,
-        val edgesMap: Map<Int, Triple<Point2d, Point2d, EdgeType>>?
+
+/**
+ * Final skeleton computation result.
+ */
+data class SkeletonResult(
+        val edges: Set<Pair<Point2d, Point2d>>,
+        val trace: SkeletonTrace?,
+        val svg: SVGGraphics2D?, // triton already builds svg, hence inclusion here
+        val misc: String? // for e.g. event statistics
 )
+
 
 /**
  * A computation trace shall map time/height of encountered events
@@ -39,37 +51,23 @@ data class SkeletonTrace(
         val events: SortedMap<Double, SkeletonSnapshot>
 )
 
-data class SkeletonResult(
-        val edges: Set<Pair<Point2d, Point2d>>,
-        val trace: SkeletonTrace?,
-        val svg: SVGGraphics2D?, // triton already builds svg, hence inclusion here
-        val misc: String? // for e.g. event statistics
+
+/**
+ * A state of skeleton at any time of computation.
+ */
+data class SkeletonSnapshot(
+        // While campskeleton won't yield uniquely id'ed edges, triton will.
+        // We won't bother implementing an Either type just for this.
+        // Both should keep edge orientation between snapshots.
+        val edgesSet: Set<Pair<Point2d, Point2d>>?,
+        val edgesMap: Map<Int, Triple<Point2d, Point2d, EdgeType>>?
 )
 
 
-interface SkeletonComputation {
-    fun computeSkeleton(input: ParsedPolygon,
-                        timeout: Long?,
-                        createTrace: Boolean = false,
-                        createSVG: Boolean = false
-    ): SkeletonResult
+enum class EdgeType {
+    POLYGON, SKELETON, WAVEFRONT, TRIANGULATION
 }
 
-/*
-// Coroutines need to actively cancel themselves.
-class TimeoutComputation <R> (private val call: () -> R) {
-    fun run(timeout: Long) = runBlocking {
-        try {
-            withTimeout(timeout, TimeUnit.SECONDS) {
-                call()
-            }
-        } catch (err: TimeoutCancellationException) {
-            println("TIMEOUT CAUGHT")
-            throw err
-        }
-    }
-}
-*/
 
 class TimeoutComputation <R> (private val call: Callable<R>) {
     fun run(timeout: Long): R {
@@ -93,6 +91,24 @@ class TimeoutComputation <R> (private val call: Callable<R>) {
     }
 }
 
+
+/*
+// Coroutines would need to actively cancel themselves.
+class TimeoutComputation <R> (private val call: () -> R) {
+    fun run(timeout: Long) = runBlocking {
+        try {
+            withTimeout(timeout, TimeUnit.SECONDS) {
+                call()
+            }
+        } catch (err: TimeoutCancellationException) {
+            println("TIMEOUT CAUGHT")
+            throw err
+        }
+    }
+}
+*/
+
+
 class CampSkeleton : SkeletonComputation {
 
     override fun computeSkeleton(input: ParsedPolygon,
@@ -104,7 +120,7 @@ class CampSkeleton : SkeletonComputation {
         var loop: Loop<Edge> = Loop()
         val corners = input.sortedIndices.map {
             Corner(input.coordinates[it]!!.x,
-                    input.coordinates[it]!!.y)
+                   input.coordinates[it]!!.y)
         }
 
         for (ind in 0 until corners.count()) {
