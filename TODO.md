@@ -1,7 +1,8 @@
 * Kotton:
 
-  - implement triton to svg & plain text pipeline (+batched? +correctness check)
+  - implement triton to svg & plain text pipeline
   - make triton output map of events -> wavefront + partial skel (+ uniquely identified edges for animation?)
+  - add a batch/single runner to kotton
 
 * Investigate jre sigbus in libzip crashes (/tmp space related?)
 

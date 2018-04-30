@@ -38,7 +38,7 @@ fun parseFile(file: File): ParsedPolygon {
         parseEdgesFormat(lines)
     } catch (e: IOException) {
         if (e.message == "Parse error")
-            parseVertexFormat(lines)!!
+            parseVertexFormat(lines)
         else
             throw e
     }
