@@ -61,8 +61,10 @@ public class Run {
             task.cancel(true);
             throw new Exception("Algorithm timed out");
         }
-        if (!executor.isTerminated())
-            executor.shutdownNow();
+        finally {
+            if (!executor.isTerminated())
+                executor.shutdownNow();
+        }
 
         if (!controller.finished) {
             throw new Exception("Algorithm didn't finish");
