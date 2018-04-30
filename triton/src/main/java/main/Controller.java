@@ -702,7 +702,7 @@ public class Controller {
 	public void reset() {
         // JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(view);
 		JFrame frame = (JFrame) SwingUtilities.windowForComponent(view);
-		if(frame != null) frame.setTitle("Triton");
+		if(frame != null) frame.setTitle("Triton Applet");
 
 		history.clear();
 		historyPtr = 0;
