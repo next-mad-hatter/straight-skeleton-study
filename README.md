@@ -30,6 +30,7 @@ Run `gradle publishToMavenLocal` to install it.
 Once you've installed the dependencies, kotton can be built via `gradle build`
 inside `kotton` directory.  You can then run
 `java -jar build/libs/kotton-all.jar --help` to see available runtime options.
+For better performance, consider setting -Xmx4096M or more :).
 
 
 # Triton standalone runners
@@ -44,8 +45,10 @@ You still can run triton standalone:
 
   * BatchRun expects a file where each (non-empty) line contains a list of
     input and output parameters, and runs the algorithm for every
-    such line (see `bin/run_batch.sh` and `data/batches/simple-batch.txt`)
-    -- again, consider using kotton instead.
+    such line (see `bin/run_batch.sh` and `data/batches/simple-batch.txt`).
+    It is advisable to split very large batches into chunks of under 10k items
+    each, as the speed seems to deteriorate steadily here (due to garbage
+    collection and swing issues?).  Again, consider using kotton instead.
 
 From `triton` directory, those can be invoked via `gradle run` (see `build.gradle` file for details),
 or (after a successful `gradle build`) from the built jar (`build/libs/triton-all.jar`) directly.
