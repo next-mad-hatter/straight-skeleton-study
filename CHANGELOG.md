@@ -1,3 +1,4 @@
+* Added kotton wrapper with campskeleton integration
 * Added timeout to runner call
 * Added loaded file name to window title
 * Added optional input scaling for coordinate list inputs & compressed svg output
