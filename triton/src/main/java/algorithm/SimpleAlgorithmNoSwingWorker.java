@@ -1,5 +1,7 @@
 package at.tugraz.igi.algorithm;
 
+
+import lombok.*;
 import java.awt.Color;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
@@ -107,6 +109,8 @@ public class SimpleAlgorithmNoSwingWorker {
 		}
 		calculateEvents();
 
+		if (controller.getTracer() != null) controller.getTracer().accept(0.0);
+
 		boolean eventExists = true;
 
 		while (eventExists) {
@@ -116,6 +120,8 @@ public class SimpleAlgorithmNoSwingWorker {
 			}
 
 			event = events.poll();
+
+			if (controller.getTracer() != null) controller.getTracer().accept(event.getCollapsingTime());
 
 			Event e = events.peek();
 			if (e != null) {

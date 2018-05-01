@@ -103,6 +103,8 @@ public class Controller {
 	private Snapshot lastState;
 	private int historyPtr = 0;
 
+	@Setter @Getter Consumer<Double> tracer;
+
 	private List<StraightSkeleton> straightSkeletons;
 	private StraightSkeleton straightSkeleton;
 

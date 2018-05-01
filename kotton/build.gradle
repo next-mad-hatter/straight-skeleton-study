@@ -15,34 +15,18 @@ plugins {
     id 'maven-publish'
 }
 
-/*
-kotlin {
-    experimental {
-        coroutines 'enable'
-    }
-}
-*/
-
 apply plugin: "com.github.johnrengelman.shadow"
 
 repositories {
     jcenter()
     mavenCentral()
-    /**
-     * For campskeleton and jutils: clone from
-     *   https://github.com/twak/jutils/
-     *   https://github.com/twak/campskeleton/ ,
-     * and do a `mvn compile install` in each.
-     */
     mavenLocal()
 }
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    // compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.+"
     compile 'info.picocli:picocli:3.0.+'
     compile group: 'me.tongfei', name: 'progressbar', version: '0.4.+'
-    // compile 'io.github.microutils:kotlin-logging:1.4.9'
     compile group: 'org.orbisgis', name: 'poly2tri-core', version: '0.1.+'
     compile group: 'org.tukaani', name: 'xz', version: '1.+'
     compile group: 'org.jgrapht', name: 'jgrapht-core', version: '1.1.+'
@@ -101,7 +85,7 @@ jar {
 mainClassName = 'madhat.kotton.Kotton'
 
 // To 'gradle run' with arguments, append app args like this:
-// gradle run -PappArgs="['in.txt']"
+// gradle run -PappArgs="['--help']"
 run {
     if (project.hasProperty("appArgs")) {
         args Eval.me(appArgs)

@@ -16,6 +16,7 @@ import org.twak.utils.collections.*
 import kotlin.math.*
 import java.awt.*
 import java.awt.event.*
+import java.util.function.*
 
 
 class AlgorithmException(override var message:String, override var cause: Throwable): Exception(message, cause)
@@ -149,18 +150,18 @@ class CampSkeleton : SkeletonComputation {
                                  createSVG: Boolean
     ): SkeletonResult {
 
-        var loop: Loop<Edge> = Loop()
         val corners = input.perimeterIndices.map {
             Corner(input.coordinates[it]!!.x,
                    input.coordinates[it]!!.y)
         }
 
+        var loop: Loop<Edge> = Loop()
         for (ind in 0 until corners.count()) {
             val p = corners[ind]
             val q = corners[(ind + 1) % corners.count()]
-            val e = Edge(p, q)
-            loop.append(e)
+            var e = Edge(p, q)
             e.machine = Machine(atan(input.weights[ind]))
+            loop.append(e)
         }
 
         val skeleton = Skeleton(loop.singleton(), true)
@@ -280,6 +281,20 @@ class Triton(
                 panel,
                 controller)
 
+        // TODO: make timeline keys discrete values,
+        //       copy edges from controller
+        //       and event data from algo
+        var timeline: SortedMap<Double, SkeletonSnapshot>? =
+                if (createTrace) TreeMap() else null
+        if (createTrace) {
+            var lastTime = 0.0
+            controller.tracer = Consumer {
+                lastTime += it
+                System.err.println("Event at $lastTime")
+                timeline!![lastTime] = SkeletonSnapshot(HashSet())
+            }
+        }
+
         val error = try {
             if (timeout == null)
                 controller.runAlgorithmNoSwingWorker()
@@ -300,13 +315,13 @@ class Triton(
             }
         }
 
-        // TODO: get trace from triton
-        val trace = null
+        if (createTrace) System.err.println("Total: ${timeline!!.keys.count()}")
+        if (createTrace) System.err.println("At: ${timeline!!.keys.joinToString(", ")}")
 
         if (error != null) return SkeletonResult(
                     error,
                     null,
-                    trace,
+                    if (timeline != null) SkeletonTrace(timeline) else null,
                     null,
                     null,
                     null)
@@ -346,7 +361,7 @@ class Triton(
         return SkeletonResult(
                 null,
                 skelEdges,
-                trace,
+                if (timeline != null) SkeletonTrace(timeline) else null,
                 svg,
                 null,
                 completedIndices)
