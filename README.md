@@ -40,11 +40,12 @@ You still can run triton standalone:
     jar file)
 
   * SingleRun class runs the algorithm for a given data file and writes
-    results to given output file(s).
+    results to given output file(s) -- but consider using kotton instead.
 
   * BatchRun expects a file where each (non-empty) line contains a list of
     input and output parameters, and runs the algorithm for every
-    such line (see `bin/run_batch.sh` and `data/batches/simple-batch.txt`).
+    such line (see `bin/run_batch.sh` and `data/batches/simple-batch.txt`)
+    -- again, consider using kotton instead.
 
 From `triton` directory, those can be invoked via `gradle run` (see `build.gradle` file for details),
 or (after a successful `gradle build`) from the built jar (`build/libs/triton-all.jar`) directly.
