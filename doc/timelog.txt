@@ -34,8 +34,8 @@
 2018.04.22     5:00    batch timeout added, better treecheck, oom initial tests, batch runner & awt event queue cleaning attempts
 2018.04.23     8:30    batch runner: oom fixes, xz writing, jre crash fix, parts runner, large batch run
 2018.04.29     3:40    campskeleton trace (edges at events) collection digging
+2018.04.30    12:00    campskeleton/triton/kotton integration
 
-[+ 37:10 => 128:00 ]
+[+ 49:10 => 140:00 ]
 
-2018.04.30     10:10    campskeleton/triton/kotton integration
 
