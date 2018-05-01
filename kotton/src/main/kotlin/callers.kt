@@ -1,23 +1,17 @@
 package madhat.kotton.callers
 
 import madhat.kotton.utils.*
-import madhat.kotton.geometry.*
 
 import at.tugraz.igi.util.*
 import at.tugraz.igi.main.*
 import at.tugraz.igi.ui.*
 
-import java.util.concurrent.*
-//import kotlinx.coroutines.experimental.*
-//import java.util.concurrent.TimeUnit
-
 import org.jfree.graphics2d.svg.*
-import java.awt.Color
 import java.util.*
+import java.util.concurrent.*
 import javax.vecmath.*
 import org.twak.camp.*
 import org.twak.utils.collections.*
-import java.awt.font.FontRenderContext
 import kotlin.math.*
 
 
@@ -127,7 +121,7 @@ class TimeoutComputation <R> (private val call: Callable<R>) {
         try {
             return task.get(timeout, TimeUnit.SECONDS) as R
         } catch (ee: ExecutionException) {
-            throw Exception(ee.cause)
+            throw ee.cause ?: ee
         } catch (te: TimeoutException) {
             task.cancel(true)
             throw te

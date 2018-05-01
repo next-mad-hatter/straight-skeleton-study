@@ -5,14 +5,16 @@ import javax.vecmath.*
 import org.jgrapht.*
 import org.jgrapht.graph.*
 
+class TreeCheckException(override var message:String): Exception(message)
+
 /**
  * Checks if given set of edges is a tree (we only care for simple holeless polygons)
  * and if every vertex of the input is a leaf in it (we check only in this one direction).
  *
  * Throws exception describing the error if not.
  */
-fun checkTree(input: ParsedPolygon,
-              edges: Set<Pair<Point2d, Point2d>>) {
+fun runTreeCheck(input: ParsedPolygon,
+                 edges: Set<Pair<Point2d, Point2d>>) {
 
     var graph: Pseudograph<Point2d, DefaultEdge> = Pseudograph(DefaultEdge::class.java)
     for (e in edges) {
@@ -26,9 +28,9 @@ fun checkTree(input: ParsedPolygon,
 
     for ((i, v) in input.coordinates)
         if (graph.degreeOf(v) != 1)
-            throw Exception("Bad skeleton: a vertex ($i) is not a leaf (has degree ${graph.degreeOf(v)})")
+            throw TreeCheckException("Bad skeleton: a vertex ($i) is not a leaf (has degree ${graph.degreeOf(v)})")
 
     if(!GraphTests.isTree(graph))
-        throw Exception("Bad skeleton: not a tree")
+        throw TreeCheckException("Bad skeleton: not a tree")
 
 }

@@ -47,7 +47,9 @@ class CoorsIntScaler {
 
         val xis = map.values.map { it.first }
         val yis = map.values.map { it.second }
-        maxX = xis.max()!! + offset // TODO: do we want offset added here?
+        // Note: neither 0s nor maxX/maxY correspond to any points'
+        // coordinates -- this is to keep margin only.
+        maxX = xis.max()!! + offset
         maxY = yis.max()!! + offset
     }
 

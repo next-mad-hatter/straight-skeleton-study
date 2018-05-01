@@ -13,3 +13,12 @@ fun triangulate(edges: List<Point2d>): List<DelaunayTriangle> {
     Poly2Tri.triangulate(polygon)
     return polygon.triangles
 }
+
+/*
+// if needed, we can run above like this:
+val triangles = triangulate(input.perimeterIndices.map { x -> input.coordinates[x]!! })
+println("\n  Triangulation:\n")
+for (t in triangles) {
+    println("  ${t.points.map{ input.indices[Pair(it.x, it.y)] }}")
+}
+*/

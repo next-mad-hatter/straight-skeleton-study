@@ -41,6 +41,8 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     // compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.+"
     compile 'info.picocli:picocli:3.0.+'
+    compile group: 'me.tongfei', name: 'progressbar', version: '0.4.+'
+    // compile 'io.github.microutils:kotlin-logging:1.4.9'
     compile group: 'org.orbisgis', name: 'poly2tri-core', version: '0.1.+'
     compile group: 'org.tukaani', name: 'xz', version: '1.+'
     compile group: 'org.jgrapht', name: 'jgrapht-core', version: '1.1.+'
@@ -75,7 +77,7 @@ jar {
     if (!configurations.compile.isEmpty()) {
       attributes(
           'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
-          'Main-Class': 'madhat.kotton.MainKt'
+          'Main-Class': 'madhat.kotton.Kotton'
           )
     }
   }
@@ -96,7 +98,7 @@ jar {
 
 }
 
-mainClassName = 'madhat.kotton.MainKt'
+mainClassName = 'madhat.kotton.Kotton'
 
 // To 'gradle run' with arguments, append app args like this:
 // gradle run -PappArgs="['in.txt']"

@@ -38,5 +38,5 @@
 
 [+ 49:10 => 140:00 ]
 
-2018.05.01     2:00    kotton: trace to json output
+2018.05.01     4:20    kotton toplevel: arguments parser, progress bar, json output, dir crawling, better error logging
 
