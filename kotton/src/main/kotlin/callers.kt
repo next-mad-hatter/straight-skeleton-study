@@ -51,19 +51,30 @@ data class SkeletonResult(
  * to corresponding computation state.
  */
 data class SkeletonTrace(
-        val events: SortedMap<Double, SkeletonSnapshot>
+        val timeline: SortedMap<Double, SkeletonSnapshot>
 )
 
 
 /**
  * A state of skeleton at any time of computation.
+ *
+ * If we won't carry more data here (event locations/types?),
+ * we should consider removing it.
  */
 data class SkeletonSnapshot(
-        // While campskeleton won't yield uniquely id'ed edges, triton will.
-        // We won't bother implementing an Either type just for this.
-        // Both should keep edge orientation between snapshots.
-        val edgesSet: Set<Pair<Point2d, Point2d>>?,
-        val edgesMap: Map<Int, Triple<Point2d, Point2d, EdgeType>>?
+        val edges: Set<TraceEdge>
+)
+
+
+/**
+ * While campskeleton won't yield unique edge ids or edge types, triton
+ * should.  Both should keep edge orientation between snapshots.
+ */
+data class TraceEdge(
+        val id: Int?,
+        val type: EdgeType?,
+        val start: Point2d,
+        val end: Point2d
 )
 
 
@@ -129,23 +140,6 @@ class TimeoutComputation <R> (private val call: Callable<R>) {
 }
 
 
-/*
-// Coroutines would need to actively cancel themselves.
-class TimeoutComputation <R> (private val call: () -> R) {
-    fun run(timeout: Long) = runBlocking {
-        try {
-            withTimeout(timeout, TimeUnit.SECONDS) {
-                call()
-            }
-        } catch (err: TimeoutCancellationException) {
-            println("TIMEOUT CAUGHT")
-            throw err
-        }
-    }
-}
-*/
-
-
 class CampSkeleton : SkeletonComputation {
 
     override fun computeSkeleton(input: ParsedPolygon,
@@ -207,14 +201,15 @@ class CampSkeleton : SkeletonComputation {
         var traceMap: SortedMap<Double, SkeletonSnapshot> = TreeMap()
         if (createTrace) {
             for ((h, es) in rawTrace) {
-                var edgesSet: MutableSet<Pair<Point2d, Point2d>> = HashSet()
+                var edgesSet: MutableSet<TraceEdge> = HashSet()
                 for (e in es) {
-                    edgesSet.add(Pair(
+                    edgesSet.add(TraceEdge(
+                            null, null,
                             Point2d(e[0][0], e[0][1]),
                             Point2d(e[1][0], e[1][1])
                             ))
                 }
-                traceMap[h] = SkeletonSnapshot(edgesSet, null)
+                traceMap[h] = SkeletonSnapshot(edgesSet)
             }
         }
 
@@ -238,7 +233,6 @@ class CampSkeleton : SkeletonComputation {
     }
 
 }
-
 
 
 class Triton(private val useTritonSVG: Boolean = true) : SkeletonComputation {
@@ -272,6 +266,7 @@ class Triton(private val useTritonSVG: Boolean = true) : SkeletonComputation {
             })).run(timeout)
         if (!controller.finished) throw Exception("Algorithm failed to finish")
 
+        // Triton sometimes yields duplicate edges and loops.
         var skelEdges: MutableSet<Pair<Point2d, Point2d>> = HashSet()
         for (line in controller.straightSkeleton.lines) {
             val p = Point2d(line.p1.originalX, line.p1.originalY)

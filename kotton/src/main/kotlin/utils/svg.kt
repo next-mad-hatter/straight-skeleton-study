@@ -10,12 +10,12 @@ import kotlin.math.*
 
 
 /**
- * Produces an SVG image, given a set of polygon vertices,
+ * Produces an SVG document from given set of polygon vertices,
  * map of all vertices to their labels and a set of edges.
  * Each edge's vertices must be present in given map.
  *
  * TODO: set stroke zoom-appropriately and/or draw faces.
- *       Also: how can we set z-index to bring fonts to the top?
+ *       Also: how can we set z-index to bring fonts to the front?
  */
 fun skeletonToSVG(polygonVertices: Collection<Point2d>,
             completedIndices: Map<Point2d, Int>,

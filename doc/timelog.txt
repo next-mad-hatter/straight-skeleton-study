@@ -38,4 +38,5 @@
 
 [+ 49:10 => 140:00 ]
 
+2018.05.01     2:00    kotton: trace to json output
 

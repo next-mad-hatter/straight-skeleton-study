@@ -63,33 +63,41 @@ fun main(args: Array<String>) {
                     println("\n! Tree check failed: $err")
                 }
 
+                /*
                 if (DEBUG) {
                     if (result.trace != null) {
                         println("\nTrace:\n")
-                        for ((h, es) in result.trace.events) {
+                        for ((h, es) in result.trace.timeline) {
                             println("  At height $h:")
-                            for (e in es.edgesSet!!) {
-                                println("    ${e.first.x} ${e.first.y} -- ${e.second.x} ${e.second.y}")
+                            for (e in es.edges) {
+                                println("    ${e.start.x} ${e.start.y} -- ${e.end.x} ${e.end.y}")
                             }
                         }
                     }
                 }
+                */
 
                 val completedIndices = result.completedIndices ?: input.indices
 
-                (Paths.get(filename).fileName.toString() + ".$methodName.skel.gz").let {
-                    writeText(edgesToText(completedIndices, result.edges), it)
+                (Paths.get(filename).fileName.toString() + ".$methodName.skel.json.gz").let {
+                    writeTextToFile(edgesToText(completedIndices, result.edges), it)
+                }
+
+                if (result.trace != null) {
+                    (Paths.get(filename).fileName.toString() + ".$methodName.trace.json.gz").let {
+                        writeTextToFile(traceToJSON(result.trace), it)
+                    }
                 }
 
                 if (result.svg != null) {
                     (Paths.get(filename).fileName.toString() + ".$methodName.svg.gz").let {
-                        writeSVG(result.svg, it)
+                        writeSVGToFile(result.svg, it)
                     }
                 }
 
                 if (result.misc != null) {
                     (Paths.get(filename).fileName.toString() + ".$methodName.stat.gz").let {
-                        writeText(result.misc, it)
+                        writeTextToFile(result.misc, it)
                     }
                 }
 
