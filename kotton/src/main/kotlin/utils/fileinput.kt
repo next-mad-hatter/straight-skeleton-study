@@ -10,12 +10,12 @@ import javax.vecmath.*
 
 /**
  * Given input polygon, this is the data we want to collect in very first step.
- * sortedIndices should correspond to ordering along edges (not closed, i.e. unique),
+ * perimeterIndices should correspond to ordering along edges (not closed, i.e. unique),
  * while weights should apply to edges corresponding to said ordering
- * (starting with edge {sortedIndices[0], sortedIndices[1]}).
+ * (starting with edge {perimeterIndices[0], perimeterIndices[1]}).
  */
 data class ParsedPolygon(
-        val sortedIndices: List<Int>,
+        val perimeterIndices: List<Int>,
         val weights: List<Double>,
         val indices: Map<Point2d, Int>,
         val coordinates: Map<Int, Point2d>

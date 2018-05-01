@@ -7,14 +7,14 @@ import org.tukaani.xz.*
 import java.util.zip.GZIPOutputStream
 
 
-fun edgesToText(input: ParsedPolygon,
+fun edgesToText(indices: Map<Point2d, Int>,
                 edges: Set<Pair<Point2d, Point2d>>,
                 oldFormat: Boolean = false): String {
-    if (input.coordinates.keys.isEmpty()) return ""
+    if (indices.isEmpty()) return ""
 
     var res = ""
-    var maxInd = input.coordinates.keys.max()!!
-    var newIndices = input.indices.toMutableMap()
+    var maxInd = indices.values.max()!!
+    var newIndices = indices.toMutableMap()
     for (e in edges) {
         val p = e.first
         val q = e.second

@@ -19,7 +19,7 @@ class CoorsIntScaler {
     var maxX: Int? = null
     var maxY: Int? = null
 
-    constructor(points: List<Point2d>, minSquaredDist: Double = 12.0, offset: Int = 8) {
+    constructor(points: List<Point2d>, minSquaredDist: Double = 144.0, offset: Int = 8) {
         if (points.count() < 2) throw Exception("Not enough points to scale")
 
         var minDist: Double? = null
@@ -32,7 +32,7 @@ class CoorsIntScaler {
             }
         }
         if (minDist == null) throw Exception("Cannot scale data with no distinct points")
-        val scale = max(0.1, minSquaredDist / minDist)
+        val scale = max(0.2, sqrt(minSquaredDist / minDist))
 
         val xs: List<Double> = points.map { it.x }
         val ys: List<Double> = points.map { it.y }

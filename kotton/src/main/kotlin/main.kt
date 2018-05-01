@@ -26,13 +26,13 @@ fun main(args: Array<String>) {
 
         if (DEBUG) {
             println("Vertices & Weights:\n")
-            for ((ind, wt) in input.sortedIndices zip input.weights) {
+            for ((ind, wt) in input.perimeterIndices zip input.weights) {
                 println("  $ind : ${input.coordinates[ind]} -- $wt --> ")
             }
         }
 
         /*
-        val triangles = triangulate(input.sortedIndices.map { x -> input.coordinates[x]!! })
+        val triangles = triangulate(input.perimeterIndices.map { x -> input.coordinates[x]!! })
         println("\n  Triangulation:\n")
         for (t in triangles) {
             println("  ${t.points.map{ input.indices[Pair(it.x, it.y)] }}")
@@ -42,7 +42,7 @@ fun main(args: Array<String>) {
         // TODO: remove consecutive collinear edges from input?
 
         for ((methodName, method) in listOf(
-                Pair("Triton", Triton()),
+                Pair("Triton", Triton(false)),
                 Pair("Campskeleton", CampSkeleton())
         )) {
             try {
@@ -75,8 +75,10 @@ fun main(args: Array<String>) {
                     }
                 }
 
+                val completedIndices = result.completedIndices ?: input.indices
+
                 (Paths.get(filename).fileName.toString() + ".$methodName.skel.gz").let {
-                    writeText(edgesToText(input, result.edges), it)
+                    writeText(edgesToText(completedIndices, result.edges), it)
                 }
 
                 if (result.svg != null) {
