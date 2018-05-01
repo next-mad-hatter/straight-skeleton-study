@@ -8,6 +8,9 @@ import javax.vecmath.*
 //import org.jgrapht.traverse.*
 
 
+class ParseException(override var message:String, override var cause: Throwable): Exception(message, cause)
+
+
 /**
  * Given input polygon, this is the data we want to collect in very first step.
  * perimeterIndices should correspond to ordering along edges (not closed, i.e. unique),
@@ -38,7 +41,11 @@ fun parseFile(file: File): ParsedPolygon {
         parseEdgesFormat(lines)
     } catch (e: IOException) {
         if (e.message == "Parse error")
-            parseVertexFormat(lines)
+            try {
+                parseVertexFormat(lines)
+            } catch (e: IOException) {
+                throw ParseException("Failed parsing file", e)
+            }
         else
             throw e
     }
@@ -134,7 +141,7 @@ fun parseVertexFormat(lines: List<String>): ParsedPolygon {
                     .split(Regex("\\s+"))
                     .map { it.trim().toDouble() }
         } catch (e: Exception) {
-            throw IOException("While parsing file: ${e.message} in line $lineno")
+            throw IOException("Error encountered in line $lineno : $e")
         }
         if (xy.count() != 2)
             throw IOException("Bad input line $lineno")

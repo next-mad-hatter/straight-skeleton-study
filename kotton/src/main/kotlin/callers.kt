@@ -15,6 +15,9 @@ import org.twak.utils.collections.*
 import kotlin.math.*
 
 
+class AlgorithmException(override var message:String, override var cause: Throwable): Exception(message, cause)
+
+
 /**
  * The "caller" classes below will run given skeleton computing algorithms,
  * returning results in common format described above.
@@ -32,7 +35,8 @@ interface SkeletonComputation {
  * Final skeleton computation result.
  */
 data class SkeletonResult(
-        val edges: Set<Pair<Point2d, Point2d>>,
+        val error: Exception?, // we might want to return trace even if computation failed
+        val edges: Set<Pair<Point2d, Point2d>>?,
         val trace: SkeletonTrace?,
         val svg: SVGGraphics2D?, // triton already builds svg, hence inclusion here
         val misc: String?, // for e.g. event statistics
@@ -158,31 +162,48 @@ class CampSkeleton : SkeletonComputation {
 
         val skeleton = Skeleton(loop.singleton(), true)
 
-        val rawTrace =
-                if (timeout == null)
-                    skeleton.skeleton(true)
-                else
-                    TimeoutComputation(Callable({
-                        skeleton.skeleton(createTrace)
-                    })).run(timeout)
-
-        /*
-        for (face in skeleton.output.faces.values) {
-            println("  face:")
-            for (lp3 in face.points)
-                for (pt in lp3)
-                    println("  $pt")
+        val (rawTrace, error) = try {
+            if (timeout == null)
+                Pair(skeleton.skeleton(createTrace), null)
+            else
+                Pair(TimeoutComputation(Callable({
+                    skeleton.skeleton(createTrace)
+                })).run(timeout),
+                        null)
+        } catch (e: Exception) {
+            Pair(null, AlgorithmException("Algorithm Error", e.cause ?: e))
         }
-        */
+
+        var traceMap: SortedMap<Double, SkeletonSnapshot> = TreeMap()
+        if (rawTrace != null && createTrace) {
+            for ((h, es) in rawTrace) {
+                var edgesSet: MutableSet<TraceEdge> = HashSet()
+                for (e in es)
+                    edgesSet.add(TraceEdge(
+                            null, null,
+                            Point2d(e[0][0], e[0][1]),
+                            Point2d(e[1][0], e[1][1])))
+                traceMap[h] = SkeletonSnapshot(edgesSet)
+            }
+        }
+
+        if (error != null) return SkeletonResult(
+                error,
+                null,
+                SkeletonTrace(traceMap),
+                null,
+                null,
+                null)
 
         // For now we could only easily get polygon along with skeleton edges
         // from campskeleton, so we'll subtract polygon edges here.
         val polyEdges = HashSet((0 until input.perimeterIndices.count()).map { HashSet(listOf(
-                input.coordinates[input.perimeterIndices[it]],
-                input.coordinates[input.perimeterIndices[(it + 1) % input.perimeterIndices.count()]]
-        )) })
+                    input.coordinates[input.perimeterIndices[it]],
+                    input.coordinates[input.perimeterIndices[(it + 1) % input.perimeterIndices.count()]]
+            )) })
         var skelEdges: MutableSet<Pair<Point2d, Point2d>> = HashSet()
-        for (e in  skeleton.output.edges.map.values) {
+        /*
+        for (e in skeleton.output.edges.map.values) {
             val edge = Pair(
                     Point2d(e.start.x, e.start.y),
                     Point2d(e.end.x, e.end.y)
@@ -191,19 +212,19 @@ class CampSkeleton : SkeletonComputation {
                 skelEdges.add(edge)
             }
         }
-
-        var traceMap: SortedMap<Double, SkeletonSnapshot> = TreeMap()
-        if (createTrace) {
-            for ((h, es) in rawTrace) {
-                var edgesSet: MutableSet<TraceEdge> = HashSet()
-                for (e in es) {
-                    edgesSet.add(TraceEdge(
-                            null, null,
-                            Point2d(e[0][0], e[0][1]),
-                            Point2d(e[1][0], e[1][1])
-                            ))
+        */
+        // Is this any different?
+        for (face in skeleton.output.faces.values) {
+            for (l in face.edges) {
+                for (e in l) {
+                    val edge = Pair(
+                            Point2d(e.start.x, e.start.y),
+                            Point2d(e.end.x, e.end.y)
+                    )
+                    if (!polyEdges.contains(HashSet(listOf(edge.first, edge.second)))) {
+                        skelEdges.add(edge)
+                    }
                 }
-                traceMap[h] = SkeletonSnapshot(edgesSet)
             }
         }
 
@@ -219,6 +240,7 @@ class CampSkeleton : SkeletonComputation {
         else null
 
         return SkeletonResult(
+                null,
                 skelEdges,
                 SkeletonTrace(traceMap),
                 svg,
@@ -252,13 +274,27 @@ class Triton(private val useTritonSVG: Boolean = true) : SkeletonComputation {
                 panel,
                 controller)
 
-        if (timeout == null)
-            controller.runAlgorithmNoSwingWorker()
-        else
-            TimeoutComputation(Callable({
+        val error = try {
+            if (timeout == null)
                 controller.runAlgorithmNoSwingWorker()
-            })).run(timeout)
-        if (!controller.finished) throw Exception("Algorithm failed to finish")
+            else
+                TimeoutComputation(Callable({
+                    controller.runAlgorithmNoSwingWorker()
+                })).run(timeout)
+            if (!controller.finished) throw Exception("Algorithm failed to finish")
+            null
+        } catch (e: Exception) { AlgorithmException("Algorithm Error", e.cause ?: e) }
+
+        // TODO: get trace from triton
+        val trace = null
+
+        if (error != null) return SkeletonResult(
+                    error,
+                    null,
+                    trace,
+                    null,
+                    null,
+                    null)
 
         // Triton sometimes yields duplicate edges and loops.
         var skelEdges: MutableSet<Pair<Point2d, Point2d>> = HashSet()
@@ -272,7 +308,9 @@ class Triton(private val useTritonSVG: Boolean = true) : SkeletonComputation {
                         Pair(q, p))
         }
 
-        val completedIndices = if (createSVG) indexNewVertices(input.indices, skelEdges) else null
+        val completedIndices = if (createSVG)
+            indexNewVertices(input.indices, skelEdges)
+        else null
 
         var svg: SVGGraphics2D? = null
         if (createSVG) {
@@ -282,8 +320,7 @@ class Triton(private val useTritonSVG: Boolean = true) : SkeletonComputation {
             } else {
                 val polyEdges = (0 until input.perimeterIndices.count()).map { Pair(
                         input.coordinates[input.perimeterIndices[it]]!!,
-                        input.coordinates[input.perimeterIndices[(it + 1) % input.perimeterIndices.count()]]!!
-                ) }
+                        input.coordinates[input.perimeterIndices[(it + 1) % input.perimeterIndices.count()]]!!) }
                 svg = skeletonToSVG(
                         input.indices.keys,
                         completedIndices!!,
@@ -291,10 +328,10 @@ class Triton(private val useTritonSVG: Boolean = true) : SkeletonComputation {
             }
         }
 
-        // TODO: get trace from triton
         return SkeletonResult(
-                skelEdges,
                 null,
+                skelEdges,
+                trace,
                 svg,
                 null,
                 completedIndices)

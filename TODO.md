@@ -5,6 +5,10 @@
 * Split out triton as a submodule for access / licensing control,
   split & update docs
 
+* Find a robust (non-weighted) skeleton implementation to add to kotton
+
+* Make campskeleton more robust?
+
 * Spread currentthread interruped checks through campskeleton & triton
 
 * Investigate jre sigbus in libzip crashes (/tmp space related?)

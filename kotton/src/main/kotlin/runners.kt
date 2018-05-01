@@ -50,14 +50,16 @@ fun runSkeletonMethodOnFile(
             Paths.get(filename).fileName.toString() + ".$methodName.$kind$ext"
     ).toString()
 
-    out("skel.json").let {
-        writeTextToFile(edgesToText(completedIndices, result.edges), it)
-    }
-
     if (result.trace == null && createTrace)
         System.err.println("WARNING: method failed to yield trace")
     if (result.trace != null && !result.trace.timeline.isEmpty())
         out("trace.json").let { writeTextToFile(traceToJSON(result.trace), it) }
+
+    if (result.error != null) throw result.error
+
+    out("skel.json").let {
+        writeTextToFile(edgesToText(completedIndices, result.edges!!), it)
+    }
 
     if (result.svg == null && createSVG)
         System.err.println("WARNING: method failed to yield SVG object")
@@ -67,6 +69,6 @@ fun runSkeletonMethodOnFile(
     if (result.misc != null)
         out("misc").let { writeTextToFile(result.misc, it) }
 
-    if(checkTree) runTreeCheck(input, result.edges)
+    if(checkTree) runTreeCheck(input, result.edges!!)
 
 }

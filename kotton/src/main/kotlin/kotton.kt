@@ -1,7 +1,9 @@
 package madhat.kotton
 
+import madhat.kotton.callers.AlgorithmException
 import madhat.kotton.geometry.TreeCheckException
-import  madhat.kotton.runners.*
+import madhat.kotton.runners.*
+import madhat.kotton.utils.ParseException
 
 import picocli.*
 import picocli.CommandLine.*
@@ -91,14 +93,21 @@ class Kotton : Runnable {
                     )
                     passed += 1
                 } catch (e: Exception) {
-                    val err = e.cause ?: e
-                    log.print("While running $skeletonMethod on $filename : ")
-                    if (!(err is TreeCheckException || err is TimeoutException))
-                        err.printStackTrace(log)
-                    else
-                        log.println(err)
-                    log.println()
-                    failed += 1
+                    when (e) {
+                        is ParseException,
+                        is TreeCheckException,
+                        is AlgorithmException -> {
+                            val err = e.cause ?: e
+                            log.print("While running $skeletonMethod on $filename : ")
+                            if (!(err is TreeCheckException || err is TimeoutException))
+                                err.printStackTrace(log)
+                            else
+                                log.println(err)
+                            log.println()
+                            failed += 1
+                        }
+                        else -> throw e
+                    }
                 }
                 bar.step()
                 bar.setExtraMessage("Ran: ${passed + failed}; passed: $passed, failed: $failed.")
