@@ -15,6 +15,10 @@ Clone
   * https://github.com/next-mad-hatter/campskeleton
 
 and run `mvn compile install` in each to install to local maven repo.
+For some theory on these, see
+  http://www.twak.co.uk/2009/05/engineering-weighted-straight-skeleton.html
+and
+  http://www.twak.co.uk/2011/01/degeneracy-in-weighted-straight.html .
 
 ### Triton (a triangulation keeping algorithm)
 
