@@ -130,9 +130,12 @@ fun parseEdgesFormat(lines: List<String>): ParsedPolygon {
 /**
  * Parses one vertex per line format.
  */
-fun parseVertexFormat(lines: List<String>): ParsedPolygon {
+fun parseVertexFormat(rawLines: List<String>): ParsedPolygon {
     var coors: HashMap<Int, Point2d> = HashMap()
     var inds: HashMap<Point2d, Int> = HashMap()
+
+    // Our big dataset contains lots of repeating points.
+    val lines = rawLines.distinct()
 
     for ((lineno, line) in (1..lines.count()) zip lines) {
         val xy = try {
@@ -148,6 +151,7 @@ fun parseVertexFormat(lines: List<String>): ParsedPolygon {
         val x = xy[0]
         val y = xy[1]
         if (inds.containsKey(Point2d(x, y))) {
+            // we don't care for closed polygon input
             if (lineno == lines.count()) continue
             throw IOException("Multiple points with coordinates $x , $y")
         }

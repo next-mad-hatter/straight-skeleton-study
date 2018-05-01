@@ -1,11 +1,14 @@
 * Kotton:
 
   - triton: get trace to kotton
+  - triton: get stats to kotton
+  - triton: make more responsive to timeout
 
 * Split out triton as a submodule for access / licensing control,
   split & update docs
 
 * Find a robust (non-weighted) skeleton implementation to add to kotton
+  e.g. CGAL: https://github.com/CGAL/cgal-swig-bindings/wiki/Installation
 
 * Make campskeleton more robust?
 

@@ -47,8 +47,8 @@ class Kotton : Runnable {
     private var outputDirectory: String = "."
 
     @Option(names = arrayOf("-l", "--l"),
-            description = arrayOf("log file (default: ./kotton.log)"))
-    private var logFile: String = "./kotton.log"
+            description = arrayOf("log file (default: ./kotton.method.log)"))
+    private var logFile: String? = null
 
     @Option(names = arrayOf("-z", "--compression"),
             description = arrayOf("compress output via given method (GZ|XZ|NONE)"))
@@ -78,6 +78,11 @@ class Kotton : Runnable {
         var bar = ProgressBar("Kotton", filenames.count(), 400)
         var passed = 0
         var failed = 0
+        logFile = logFile ?: "./kotton.${skeletonMethod.toString().toLowerCase()}.log"
+        System.err.println()
+        System.err.println("Logging to $logFile")
+        System.err.println("Writing output to $outputDirectory")
+        System.err.println()
         bar.start()
         File(logFile).printWriter().use { log ->
             for (filename in filenames) {
@@ -104,6 +109,7 @@ class Kotton : Runnable {
                             else
                                 log.println(err)
                             log.println()
+                            log.flush()
                             failed += 1
                         }
                         else -> throw e
@@ -113,6 +119,7 @@ class Kotton : Runnable {
                 bar.setExtraMessage("Ran: ${passed + failed}; passed: $passed, failed: $failed.")
             }
             log.println("Ran: ${passed + failed}; passed: $passed, failed: $failed.")
+            log.flush()
         }
         bar.stop()
         System.exit(0)

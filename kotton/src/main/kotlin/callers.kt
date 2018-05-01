@@ -5,6 +5,7 @@ import madhat.kotton.utils.*
 import at.tugraz.igi.util.*
 import at.tugraz.igi.main.*
 import at.tugraz.igi.ui.*
+import at.tugraz.igi.util.Point
 
 import org.jfree.graphics2d.svg.*
 import java.util.*
@@ -13,6 +14,8 @@ import javax.vecmath.*
 import org.twak.camp.*
 import org.twak.utils.collections.*
 import kotlin.math.*
+import java.awt.*
+import java.awt.event.*
 
 
 class AlgorithmException(override var message:String, override var cause: Throwable): Exception(message, cause)
@@ -202,7 +205,6 @@ class CampSkeleton : SkeletonComputation {
                     input.coordinates[input.perimeterIndices[(it + 1) % input.perimeterIndices.count()]]
             )) })
         var skelEdges: MutableSet<Pair<Point2d, Point2d>> = HashSet()
-        /*
         for (e in skeleton.output.edges.map.values) {
             val edge = Pair(
                     Point2d(e.start.x, e.start.y),
@@ -212,8 +214,8 @@ class CampSkeleton : SkeletonComputation {
                 skelEdges.add(edge)
             }
         }
-        */
-        // Is this any different?
+        // Is this any different from the above?
+        /*
         for (face in skeleton.output.faces.values) {
             for (l in face.edges) {
                 for (e in l) {
@@ -227,6 +229,7 @@ class CampSkeleton : SkeletonComputation {
                 }
             }
         }
+        */
 
         val completedIndices = if (createSVG) indexNewVertices(input.indices, skelEdges) else null
 
@@ -251,7 +254,10 @@ class CampSkeleton : SkeletonComputation {
 }
 
 
-class Triton(private val useTritonSVG: Boolean = true) : SkeletonComputation {
+class Triton(
+        private val useTritonSVG: Boolean = true,
+        private val runGC: Boolean = true
+) : SkeletonComputation {
 
     override fun computeSkeleton(input: ParsedPolygon,
                                  timeout: Long?,
@@ -284,6 +290,15 @@ class Triton(private val useTritonSVG: Boolean = true) : SkeletonComputation {
             if (!controller.finished) throw Exception("Algorithm failed to finish")
             null
         } catch (e: Exception) { AlgorithmException("Algorithm Error", e.cause ?: e) }
+
+        // Java's GC seems to struggle with lots of Swing applications being created and destroyed :)
+        if (runGC) {
+            for (w in Window.getWindows()) {
+                w.setVisible(false)
+                w.dispatchEvent(WindowEvent(w, WindowEvent.WINDOW_CLOSING))
+                w.dispose()
+            }
+        }
 
         // TODO: get trace from triton
         val trace = null
