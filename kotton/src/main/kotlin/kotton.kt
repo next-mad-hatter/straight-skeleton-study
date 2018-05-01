@@ -52,7 +52,7 @@ class Kotton : Runnable {
             description = arrayOf("compress output via given method (GZ|XZ|NONE)"))
     private var compressionMethod: CompressionMethod = CompressionMethod.GZ
 
-    @Parameters(paramLabel = "FILE")
+    @Parameters(paramLabel = "FILE|DIR")
     private var filenames: MutableList<String> = mutableListOf()
 
     override fun run() {
