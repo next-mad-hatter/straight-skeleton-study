@@ -39,6 +39,7 @@ import at.tugraz.igi.ui.ConfigurationTable;
 import at.tugraz.igi.ui.CustomTextField;
 import at.tugraz.igi.ui.GraphicPanel;
 import at.tugraz.igi.util.*;
+import at.tugraz.igi.events.*;
 import data.Graph;
 
 public class Controller {
@@ -103,7 +104,7 @@ public class Controller {
 	private Snapshot lastState;
 	private int historyPtr = 0;
 
-	@Setter @Getter Consumer<Double> tracer;
+	@Setter @Getter Consumer<Pair<Event, List<Triangle>>> tracer;
 
 	private List<StraightSkeleton> straightSkeletons;
 	private StraightSkeleton straightSkeleton;

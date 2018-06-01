@@ -1,5 +1,6 @@
 package at.tugraz.igi.algorithm;
 
+import org.apache.commons.lang3.tuple.*;
 
 import lombok.*;
 import java.awt.Color;
@@ -15,21 +16,9 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import at.tugraz.igi.events.ConcaveEvent;
-import at.tugraz.igi.events.EdgeEvent;
-import at.tugraz.igi.events.Event;
-import at.tugraz.igi.events.EventComparator;
-import at.tugraz.igi.events.FlipEvent;
-import at.tugraz.igi.events.SplitEvent;
+import at.tugraz.igi.events.*;
 import at.tugraz.igi.main.Controller;
-import at.tugraz.igi.util.EventCalculation;
-import at.tugraz.igi.util.Line;
-import at.tugraz.igi.util.Point;
-import at.tugraz.igi.util.PolygonMeasureData;
-import at.tugraz.igi.util.StraightSkeleton;
-import at.tugraz.igi.util.Triangle;
-import at.tugraz.igi.util.Util;
-import at.tugraz.igi.util.Vector;
+import at.tugraz.igi.util.*;
 
 public class SimpleAlgorithmNoSwingWorker {
 	private Color[] colors = { Color.BLUE, new Color(135, 206, 255), new Color(50, 205, 50), new Color(0, 100, 0),
@@ -98,10 +87,9 @@ public class SimpleAlgorithmNoSwingWorker {
 
 		ArrayList<Point> copyPoints = new ArrayList<Point>(points);
 		if (convex) {
-      triangles = Util.triangulate2(new ArrayList<Point>(copyPoints), lines);
+			triangles = Util.triangulate2(new ArrayList<Point>(copyPoints), lines);
 		} else {
-
-      ArrayList<Point> pts = new ArrayList<Point>(copyPoints);
+			ArrayList<Point> pts = new ArrayList<Point>(copyPoints);
 			if (!Controller.isCounterClockwise) {
 				Collections.reverse(pts);
 			}
@@ -109,7 +97,10 @@ public class SimpleAlgorithmNoSwingWorker {
 		}
 		calculateEvents();
 
-		if (controller.getTracer() != null) controller.getTracer().accept(0.0);
+		// System.err.println("TRIANGLES: " + triangles.size());
+		if (controller.getTracer() != null) {
+			controller.getTracer().accept(new ImmutablePair<>(null, triangles));
+		}
 
 		boolean eventExists = true;
 
@@ -121,7 +112,7 @@ public class SimpleAlgorithmNoSwingWorker {
 
 			event = events.poll();
 
-			if (controller.getTracer() != null) controller.getTracer().accept(event.getCollapsingTime());
+			if (controller.getTracer() != null) controller.getTracer().accept(new ImmutablePair<>(event, triangles));
 
 			Event e = events.peek();
 			if (e != null) {
@@ -182,14 +173,20 @@ public class SimpleAlgorithmNoSwingWorker {
 			eventExists = true;
 			event = null;
 		}
+
+		// FIXME: is this needed?  If so, at which time?  And why don't we get called?
+		System.err.println("SOMEHOW WE NEVER GET HERE");
+		if (controller.getTracer() != null) controller.getTracer().accept(new ImmutablePair<>(null, triangles));
+
 		controller.finished = true;
 		controller.polyMeasureData = Util.calculatePolygArea(points, straightSkeleton);
 		controller.polyMeasureData.addNumberOfEvents(numberOfFlip, numberOfEdge, numberOfSplit);
-	
+
 //		cpu = thread.getCurrentThreadCpuTime() - cpu;
 		time = System.currentTimeMillis() - time;
 //		System.out.println(TimeUnit.MILLISECONDS.convert(cpu, TimeUnit.NANOSECONDS));
 		controller.polyMeasureData.runningTime = time;
+
 		return true;
 	}
 
@@ -403,7 +400,7 @@ public class SimpleAlgorithmNoSwingWorker {
 		return det == 0.0;
 	}
 
-	private void collapseEdge() throws CloneNotSupportedException {
+	private void collapseEdge() throws CloneNotSupportedException, TritonException {
 		Line l1 = Util.getOtherAdjacentLine(line, p1);
 		Line l2 = Util.getOtherAdjacentLine(line, p2);
 

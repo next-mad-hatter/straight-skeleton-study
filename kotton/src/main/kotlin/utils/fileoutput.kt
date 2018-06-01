@@ -17,21 +17,23 @@ import java.util.zip.GZIPOutputStream
 fun traceToJSON(trace: SkeletonTrace): String {
 
     fun snapshotToJSON(snapshot: SkeletonSnapshot): String {
-        return "[\n" +
-                (snapshot.edges.joinToString(",\n") {
-                    "{\n" +
-                    (if (it.id == null) "" else "  \"id\": ${it.id},\n") +
-                    (if (it.type == null) "" else "  \"type\": \"${it.type}\",\n") +
-                    "  \"start\": { \"x\": ${it.start.x}, \"y\": ${it.start.y} }\n" +
-                    "  \"end\": { \"x\": ${it.end.x}, \"y\": ${it.end.y} }\n" +
-                    "}"
-                }).prependIndent("  ") + "\n]"
+        return (if (snapshot.location != null) "\"location\": { \"x\": ${snapshot.location.x}, \"y\": ${snapshot.location.y} },\n" else "") +
+               (if (snapshot.eventType != null) "\"event type\": { \"${snapshot.eventType}\" },\n" else "") +
+               "\"edges\": [\n" +
+               (snapshot.edges.joinToString(",\n") {
+                   "{\n" +
+                   (if (it.id == null) "" else "  \"id\": ${it.id},\n") +
+                   (if (it.type == null) "" else "  \"type\": \"${it.type}\",\n") +
+                   "  \"start\": { \"x\": ${it.start.x}, \"y\": ${it.start.y} }\n" +
+                   "  \"end\": { \"x\": ${it.end.x}, \"y\": ${it.end.y} }\n" +
+                   "}"
+               }).prependIndent("  ") + "\n]"
     }
 
-    return "[\n" + trace.timeline.map {
+    return "[\n" + trace.map {
         (time, tr) ->
             "{\n  \"time\": $time,\n" +
-            "  \"edges\": ${snapshotToJSON(tr).prependIndent("  ")}\n}"
+            "${snapshotToJSON(tr).prependIndent("  ")}\n}"
     }.joinToString(",\n").prependIndent("  ") + "\n]\n"
 
 }

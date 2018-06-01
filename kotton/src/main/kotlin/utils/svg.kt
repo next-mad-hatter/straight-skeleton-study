@@ -21,6 +21,7 @@ fun skeletonToSVG(polygonVertices: Collection<Point2d>,
             completedIndices: Map<Point2d, Int>,
             edges: Collection<Pair<Point2d, Point2d>>): SVGGraphics2D {
     var rad = 24
+    // TODO: scale using only polygon vertices?
     val scaler = CoorsIntScaler(completedIndices.keys.toList(), (rad * 1.6).pow(2.0), rad)
     var svg = SVGGraphics2D(scaler.maxX!!, scaler.maxY!!)
     svg.stroke = BasicStroke(max(
@@ -31,6 +32,10 @@ fun skeletonToSVG(polygonVertices: Collection<Point2d>,
     for (edge in edges) {
         val p = scaler[edge.first]!!
         val q = scaler[edge.second]!!
+        if (polygonVertices.contains(edge.first) and polygonVertices.contains(edge.second))
+            svg.paint = Color.BLACK
+        else
+            svg.paint = Color.DARK_GRAY
         svg.drawLine(p.first, p.second, q.first, q.second)
     }
     for ((pt, ind) in completedIndices) {

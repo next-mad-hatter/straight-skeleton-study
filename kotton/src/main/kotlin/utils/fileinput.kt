@@ -44,10 +44,10 @@ fun parseFile(file: File): ParsedPolygon {
             try {
                 parseVertexFormat(lines)
             } catch (e: IOException) {
-                throw ParseException("Failed parsing file", e)
+                throw ParseException("Failed to read file", e)
             }
         else
-            throw e
+            throw ParseException("Failed to read file", e)
     }
 }
 

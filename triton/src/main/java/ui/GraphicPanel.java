@@ -27,7 +27,7 @@ public class GraphicPanel extends JPanel {
 	private Image image;
 	private Graphics2D graphics;
 	@Getter @Setter private Double min_x, min_y, max_x, max_y; //coors_scale;
-	private JPopupMenu popup;
+	// private JPopupMenu popup;
 
 	@Getter private List<Triangle> screenTriangles;
 	private List<Line> lines;
@@ -62,9 +62,7 @@ public class GraphicPanel extends JPanel {
 
 	}
 
-	public void showPopUp(MouseEvent e) {
-		popup.show(this, e.getX(), e.getY());
-	}
+	// public void showPopUp(MouseEvent e) { popup.show(this, e.getX(), e.getY()); }
 
 	public void update(Graphics g) {
 		if (image == null) {

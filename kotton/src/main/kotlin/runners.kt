@@ -51,8 +51,8 @@ fun runSkeletonMethodOnFile(
     ).toString()
 
     if (result.trace == null && createTrace)
-        System.err.println("WARNING: method failed to yield trace")
-    if (result.trace != null && !result.trace.timeline.isEmpty())
+        System.err.println("WARNING: method failed to yield execution trace")
+    if (result.trace != null && !result.trace.isEmpty())
         out("trace.json").let { writeTextToFile(traceToJSON(result.trace), it) }
 
     if (result.error != null) throw result.error

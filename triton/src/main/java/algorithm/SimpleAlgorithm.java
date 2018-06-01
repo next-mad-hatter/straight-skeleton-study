@@ -16,20 +16,9 @@ import java.util.concurrent.ExecutionException;
 
 import javax.swing.SwingWorker;
 
-import at.tugraz.igi.events.ConcaveEvent;
-import at.tugraz.igi.events.EdgeEvent;
-import at.tugraz.igi.events.Event;
-import at.tugraz.igi.events.EventComparator;
-import at.tugraz.igi.events.FlipEvent;
-import at.tugraz.igi.events.SplitEvent;
+import at.tugraz.igi.events.*;
 import at.tugraz.igi.main.Controller;
-import at.tugraz.igi.util.EventCalculation;
-import at.tugraz.igi.util.Line;
-import at.tugraz.igi.util.Point;
-import at.tugraz.igi.util.StraightSkeleton;
-import at.tugraz.igi.util.Triangle;
-import at.tugraz.igi.util.Util;
-import at.tugraz.igi.util.Vector;
+import at.tugraz.igi.util.*;
 
 public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>> {
 	private Color[] colors = { Color.BLUE, new Color(135, 206, 255), new Color(50, 205, 50), new Color(0, 100, 0),
@@ -440,7 +429,7 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 		return det == 0.0;
 	}
 
-	private void collapseEdge() throws CloneNotSupportedException {
+	private void collapseEdge() throws CloneNotSupportedException, TritonException {
 		Line l1 = Util.getOtherAdjacentLine(line, p1);
 		Line l2 = Util.getOtherAdjacentLine(line, p2);
 

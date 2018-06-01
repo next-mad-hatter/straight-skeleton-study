@@ -108,7 +108,7 @@ public class Run {
                     } else {
                         // NOTE: apparently invokeLater here fills up the awt event queue
                         //       which makes our vm crash with oom error.
-                        //       All my attempts to fix it had been fruitless,
+                        //       All my attempts to fix it had been fruitless so far,
                         //       so we won't be calling it.
                         // FileHandler.svgfile = outputfile;
                         // FileHandler.saveSVG(controller.view, false);

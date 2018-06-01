@@ -37,6 +37,7 @@ dependencies {
     compile group: 'org.twak.campskeleton', name: 'campskeleton', version: '0.+'
     compile group: 'org.twak.utils', name: 'utils', version: '0.+'
     compile group: 'at.tugraz.igi', name: 'triton', version: '0.+'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.+'
     runtime fileTree(dir: '../triton/lib', include: '*.jar')
 }
 

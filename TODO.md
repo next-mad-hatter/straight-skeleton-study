@@ -2,7 +2,18 @@
 
   - triton: get trace to kotton
   - triton: get stats to kotton
+  - can we always get stack trace from a cause?
   - triton: make more responsive to timeout
+  - svg output: scale using only polygon vertices?
+
+* Compare test results with Salzburg
+
+* Sim. events: do we have to prioritize flips (e.g. flip edge = edge to be split)?
+
+* At edge events resulting in parallel edges:
+
+  - keep dead vertices for attached triangulation edges
+  - check if there are more adjacent parallel edges to avoid adding superfluous partial arcs to skeleton
 
 * Split out triton as a submodule for access / licensing control,
   split & update docs

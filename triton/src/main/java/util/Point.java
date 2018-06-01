@@ -10,6 +10,15 @@ public class Point implements Cloneable {
 	protected int number;
 	protected double original_x;
 	protected double original_y;
+	// FIXME: it seems current_x and current_y never get modified
+	//        without original_x and original_y being modified as well;
+	//        also, the only place where their value is needed
+	//        seems to be Line::getLineVector(), which probably gets
+	//        called from calculateMovementInfo() for every point,
+	//        when their values are equal to original_x and original_y
+	//        (and if it ever gets called later, shouldn't we use
+	//        "current" values stored in original_x and original_y anyway?);
+	//        hence we should try and remove these.
 	public double current_x;
 	public double current_y;
 	public List<Line> adjacentLines;
@@ -51,7 +60,7 @@ public class Point implements Cloneable {
 		return current_y;
 	}
 
-	public void calculateMovementInfo() {
+	public void calculateMovementInfo() throws TritonException {
 		this.movement_vector = null;
 		this.convex = null;
 		
@@ -95,17 +104,10 @@ public class Point implements Cloneable {
 			double u = (dy * l2_vector.getX() - dx * l2_vector.getY()) / det;
 			this.movement_vector = l1_mov_vec.addVector(l1_vector.multiply(u));
 		}
-
-//		else {
-//			System.out.println("Cant calculate point movement info for this case");
-//			System.out.println("det " + det);
-//			System.out.println(this.adjacentLines);
-//			System.out.println("l1 mov " + l1_mov_vec.toString());
-//			System.out.println("l2 mov " + l2_mov_vec.toString());
-//			System.out.println("l2 vec " + l1_vector.toString());
-//			System.out.println("l2 vec " + l2_vector.toString());
-//			System.out.println("d_vec  " + d_vec.toString());
-//		}
+		else {
+		    // Note: apparently, this is normal in some states.
+		    // throw new TritonException("Cannot calculate movement vector at (" + String.valueOf(current_x) + "; " + String.valueOf(current_y) + ")");
+		}
 
 	}
 

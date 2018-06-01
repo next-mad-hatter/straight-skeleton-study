@@ -18,13 +18,18 @@ import java.awt.*
 import java.awt.event.*
 import java.util.function.*
 
+import at.tugraz.igi.events.*
+import at.tugraz.igi.events.Event
+
+import org.apache.commons.lang3.tuple.Pair as APair
+
 
 class AlgorithmException(override var message:String, override var cause: Throwable): Exception(message, cause)
 
 
 /**
  * The "caller" classes below will run given skeleton computing algorithms,
- * returning results in common format described above.
+ * returning results in common format described below.
  */
 interface SkeletonComputation {
     fun computeSkeleton(input: ParsedPolygon,
@@ -49,22 +54,18 @@ data class SkeletonResult(
 
 
 /**
- * A computation trace shall map time/height of encountered events
- * to corresponding computation state.
+ * A sequence of time/height of encountered events and corresponding computation states
  */
-data class SkeletonTrace(
-        val timeline: SortedMap<Double, SkeletonSnapshot>
-)
+typealias SkeletonTrace = List<Pair<Double, SkeletonSnapshot>>
 
 
 /**
  * A state of skeleton at any time of computation.
- *
- * If we won't carry more data here (event locations/types?),
- * we should consider removing it.
  */
 data class SkeletonSnapshot(
-        val edges: Set<TraceEdge>
+        val edges: Set<TraceEdge>,
+        val location: Point2d? = null,
+        val eventType: EventType? = null
 )
 
 
@@ -73,11 +74,16 @@ data class SkeletonSnapshot(
  * should.  Both should keep edge orientation between snapshots.
  */
 data class TraceEdge(
-        val id: Int?,
+        val id: List<Int>?,
         val type: EdgeType?,
         val start: Point2d,
         val end: Point2d
 )
+
+
+enum class EventType {
+    FLIP, SPLIT, EDGE
+}
 
 
 enum class EdgeType {
@@ -178,23 +184,32 @@ class CampSkeleton : SkeletonComputation {
             Pair(null, AlgorithmException("Algorithm Error", e.cause ?: e))
         }
 
-        var traceMap: SortedMap<Double, SkeletonSnapshot> = TreeMap()
+        var trace: MutableList<Pair<Double, SkeletonSnapshot>> = mutableListOf()
         if (rawTrace != null && createTrace) {
+            val polyEdges: Set<Pair<Point2d, Point2d>>? = if (rawTrace.firstKey() != null)
+                rawTrace[rawTrace.firstKey()]!!.map{
+                    Pair(Point2d(it[0][0], it[0][1]),
+                         Point2d(it[1][0], it[1][1]))
+                }.toHashSet()
+            else null
             for ((h, es) in rawTrace) {
                 var edgesSet: MutableSet<TraceEdge> = HashSet()
-                for (e in es)
+                for (e in es) {
+                    val p = Point2d(e[0][0], e[0][1])
+                    val q = Point2d(e[1][0], e[1][1])
                     edgesSet.add(TraceEdge(
-                            null, null,
-                            Point2d(e[0][0], e[0][1]),
-                            Point2d(e[1][0], e[1][1])))
-                traceMap[h] = SkeletonSnapshot(edgesSet)
+                            null,
+                            if (polyEdges!!.contains(Pair(p, q)) or polyEdges.contains(Pair(q, p))) EdgeType.POLYGON else EdgeType.SKELETON,
+                            p, q))
+                }
+                trace.add(Pair(h, SkeletonSnapshot(edges = edgesSet)))
             }
         }
 
         if (error != null) return SkeletonResult(
                 error,
                 null,
-                SkeletonTrace(traceMap),
+                trace,
                 null,
                 null,
                 null)
@@ -246,7 +261,7 @@ class CampSkeleton : SkeletonComputation {
         return SkeletonResult(
                 null,
                 skelEdges,
-                SkeletonTrace(traceMap),
+                trace,
                 svg,
                 null,
                 completedIndices)
@@ -281,17 +296,39 @@ class Triton(
                 panel,
                 controller)
 
-        // TODO: make timeline keys discrete values,
-        //       copy edges from controller
-        //       and event data from algo
-        var timeline: SortedMap<Double, SkeletonSnapshot>? =
-                if (createTrace) TreeMap() else null
+        // TODO: copy all edges from controller
+        var timeline: MutableList<Pair<Double, SkeletonSnapshot>>? =
+                if (createTrace) mutableListOf() else null
         if (createTrace) {
             var lastTime = 0.0
-            controller.tracer = Consumer {
-                lastTime += it
+            controller.tracer = Consumer<APair<Event?, List<Triangle>>> {
+                lastTime += it.left?.collapsingTime ?: 0.0
                 System.err.println("Event at $lastTime")
-                timeline!![lastTime] = SkeletonSnapshot(HashSet())
+
+                val triEdges = it.right.flatMap {
+                    it.strokes.map {
+                        val (p, q) = if (it.p1.number <= it.p2.number) Pair(it.p1, it.p2) else Pair(it.p2, it.p1)
+                        println("TRI LINE ${p.currentX} ${p.currentY} -- ${q.currentX} ${q.currentY}")
+                        TraceEdge(
+                                id = listOf(0, p.number, q.number),
+                                type = EdgeType.TRIANGULATION,
+                                start = Point2d(p.currentX, p.currentY),
+                                end = Point2d(q.currentX, q.currentY))
+
+                } }.toHashSet()
+
+                timeline!!.add(Pair(lastTime, SkeletonSnapshot(
+                        location = if (it.left != null) Point2d(it.left!!.intersection.currentX, it.left!!.intersection.currentY) else null,
+                        eventType = if (it.left != null) {
+                           when (it) {
+                               is FlipEvent -> EventType.FLIP
+                               is SplitEvent -> EventType.SPLIT
+                               is EdgeEvent -> EventType.EDGE
+                               else -> null
+                           }
+                        } else null,
+                        edges = triEdges)))
+
             }
         }
 
@@ -315,13 +352,13 @@ class Triton(
             }
         }
 
-        if (createTrace) System.err.println("Total: ${timeline!!.keys.count()}")
-        if (createTrace) System.err.println("At: ${timeline!!.keys.joinToString(", ")}")
+        if (createTrace) System.err.println("Total: ${timeline!!.count()}")
+        if (createTrace) System.err.println("At: ${timeline!!.map{ it.first }.joinToString(", ")}")
 
         if (error != null) return SkeletonResult(
                     error,
                     null,
-                    if (timeline != null) SkeletonTrace(timeline) else null,
+                    timeline,
                     null,
                     null,
                     null)
@@ -361,7 +398,7 @@ class Triton(
         return SkeletonResult(
                 null,
                 skelEdges,
-                if (timeline != null) SkeletonTrace(timeline) else null,
+                timeline,
                 svg,
                 null,
                 completedIndices)
