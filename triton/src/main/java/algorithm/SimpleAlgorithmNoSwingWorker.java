@@ -112,8 +112,6 @@ public class SimpleAlgorithmNoSwingWorker {
 
 			event = events.poll();
 
-			if (controller.getTracer() != null) controller.getTracer().accept(new ImmutablePair<>(event, triangles));
-
 			Event e = events.peek();
 			if (e != null) {
 				if (e.getCollapsingTime() - event.getCollapsingTime() <= 1e-12) {
@@ -159,6 +157,8 @@ public class SimpleAlgorithmNoSwingWorker {
 
 			}
 
+			if (controller.getTracer() != null) controller.getTracer().accept(new ImmutablePair<>(event, triangles));
+
 			calculateEvents();
 
 			for (Set<Point> points : controller.getPolygons()) {
@@ -170,6 +170,7 @@ public class SimpleAlgorithmNoSwingWorker {
 					break;
 				}
 			}
+
 			eventExists = true;
 			event = null;
 		}

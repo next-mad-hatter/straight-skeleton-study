@@ -308,7 +308,6 @@ class Triton(
                 val triEdges = it.right.flatMap {
                     it.strokes.map {
                         val (p, q) = if (it.p1.number <= it.p2.number) Pair(it.p1, it.p2) else Pair(it.p2, it.p1)
-                        println("TRI LINE ${p.currentX} ${p.currentY} -- ${q.currentX} ${q.currentY}")
                         TraceEdge(
                                 id = listOf(0, p.number, q.number),
                                 type = EdgeType.TRIANGULATION,
