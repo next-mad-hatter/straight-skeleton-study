@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2009, Oracle and/or its affiliates. All rights reserved.
  *
+ * Modifications copyright Gerhild Grinschgl and M. Deineko.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:

@@ -302,7 +302,8 @@ class Triton(
             var lastTime = 0.0
             controller.tracer = Consumer<APair<Event?, List<Triangle>>> {
                 lastTime += it.left?.collapsingTime ?: 0.0
-                System.err.println("Event at $lastTime")
+
+                // the whole extraction thing would probably fit better as part of triton, but java is just a bit tideous
 
                 val triEdges = it.right.flatMap {
                     it.strokes.map {
@@ -332,7 +333,7 @@ class Triton(
                             end = Point2d(q.originalX, q.originalY))
                 }.toHashSet()
 
-                // incomplete skeleton arcs and wavefront -- see GraphicPanel::paintMovedPoints() in triton
+                // wavefront and not yet complete skeleton arcs -- see GraphicPanel::paintMovedPoints() in triton
                 val auxEdges = controller.polygons.flatMap {
                     it.flatMap {
                         val pt = it
@@ -387,9 +388,6 @@ class Triton(
                 w.dispose()
             }
         }
-
-        if (createTrace) System.err.println("Total: ${timeline!!.count()}")
-        if (createTrace) System.err.println("At: ${timeline!!.map{ it.first }.joinToString(", ")}")
 
         if (error != null) return SkeletonResult(
                     error,
