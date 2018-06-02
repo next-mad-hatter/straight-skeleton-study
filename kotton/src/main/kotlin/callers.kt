@@ -318,7 +318,7 @@ class Triton(
 
                 val skelEdges = controller.straightSkeleton.lines.map {
                     TraceEdge(
-                            id = listOf(it.p1.number),
+                            id = listOf(it.p1.number, it.p2.number),
                             type = EdgeType.SKELETON,
                             start = Point2d(it.p1.originalX, it.p1.originalY),
                             end = Point2d(it.p2.originalX, it.p2.originalY))
@@ -352,7 +352,7 @@ class Triton(
                                         end = Point2d(l.p2.currentX, l.p2.currentY))
                         )
                     }
-                }
+                }.toSet()
 
                 timeline!!.add(Pair(lastTime, SkeletonSnapshot(
                         location = if (it.left != null) Point2d(it.left!!.intersection.currentX, it.left!!.intersection.currentY) else null,
