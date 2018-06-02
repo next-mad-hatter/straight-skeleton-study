@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 
 ##
-# A shortcut to create batches from file lists.
+# A shortcut to create triton batches from file lists.
 #
 
 PREFIX="/tmp/straight_skeleton/out/"
