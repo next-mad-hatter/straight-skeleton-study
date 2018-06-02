@@ -1,11 +1,12 @@
 # Kotton -- Weighted Straight Skeleton Algorithms
 
-Note: this probably will be refactored soon
-(triton to its own repo, dependencies to submodules).
+Here you'll find source code for kotton -- a wrapper to run algorithms computing
+weighted straight skeletons.  Currently it can call two particular implementations --
+campskeleton and triton (currently also contained in this repository).
 
 ## Building
 
-To build kotton, you'll need to build campskeleton and triton first.
+To build kotton, you'll need to build (patched) campskeleton and triton first.
 
 ### Campskeleton
 
@@ -20,10 +21,13 @@ For some theory on these, see
 and
   http://www.twak.co.uk/2011/01/degeneracy-in-weighted-straight.html .
 
+
 ### Triton (a triangulation keeping algorithm)
 
 The code found under `triton` should be buildable with gradle.
+It requires manual download of two libraries -- see `triton/lib/EXTRA_LIBS`.
 Run `gradle publishToMavenLocal` to install it.
+
 
 ### Kotton
 
@@ -38,7 +42,7 @@ For better performance, consider setting -Xmx4096M or more :).
 You still can run triton standalone:
 
   * Main class starts the interactive swing applet (default in the built
-    jar file)
+    jar file).
 
   * SingleRun class runs the algorithm for a given data file and writes
     results to given output file(s) -- but consider using kotton instead.

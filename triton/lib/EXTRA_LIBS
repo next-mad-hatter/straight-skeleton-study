@@ -7,10 +7,10 @@ repositories:
     (which today redirects to a github repo containing C++ code), contemporary
     versions of which seem to have significantly different API.
 
-  * randomPoly : ?
-
-    It is not clear to me yet where this comes from, nor distribution
-    conditions of the jar file found in the archives.
+  * randomPoly : written by R. Purgstaller, it is currently only available to
+    us in binary form and terms of redistribution are not quite clear.  It
+    either will be made available under appropriate license when this repo goes
+    public or the functionality in question purged.
 
 Added both to bitbucket downloads section for now.
 
