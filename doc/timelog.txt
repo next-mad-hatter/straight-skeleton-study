@@ -42,5 +42,5 @@
 2018.05.31     1:00    salzburg data cleaning, salzburg test runs
 
 2018.06.01     5:00    triton -> kotton trace export, triton structures digging
-2018.06.02     1:00    triton -> kotton trace export
+2018.06.02     2:30    triton -> kotton trace export, licenses & docs
 
