@@ -157,8 +157,6 @@ public class SimpleAlgorithmNoSwingWorker {
 
 			}
 
-			if (controller.getTracer() != null) controller.getTracer().accept(new ImmutablePair<>(event, triangles));
-
 			calculateEvents();
 
 			for (Set<Point> points : controller.getPolygons()) {
@@ -171,13 +169,11 @@ public class SimpleAlgorithmNoSwingWorker {
 				}
 			}
 
+			if (controller.getTracer() != null) controller.getTracer().accept(new ImmutablePair<>(event, triangles));
+
 			eventExists = true;
 			event = null;
 		}
-
-		// FIXME: is this needed?  If so, at which time?  And why don't we get called?
-		System.err.println("SOMEHOW WE NEVER GET HERE");
-		if (controller.getTracer() != null) controller.getTracer().accept(new ImmutablePair<>(null, triangles));
 
 		controller.finished = true;
 		controller.polyMeasureData = Util.calculatePolygArea(points, straightSkeleton);

@@ -296,7 +296,6 @@ class Triton(
                 panel,
                 controller)
 
-        // TODO: copy all edges from controller
         var timeline: MutableList<Pair<Double, SkeletonSnapshot>>? =
                 if (createTrace) mutableListOf() else null
         if (createTrace) {
@@ -309,24 +308,62 @@ class Triton(
                     it.strokes.map {
                         val (p, q) = if (it.p1.number <= it.p2.number) Pair(it.p1, it.p2) else Pair(it.p2, it.p1)
                         TraceEdge(
-                                id = listOf(0, p.number, q.number),
+                                id = listOf(p.number, q.number),
                                 type = EdgeType.TRIANGULATION,
                                 start = Point2d(p.currentX, p.currentY),
                                 end = Point2d(q.currentX, q.currentY))
 
                 } }.toHashSet()
 
+                val skelEdges = controller.straightSkeleton.lines.map {
+                    TraceEdge(
+                            id = listOf(it.p1.number),
+                            type = EdgeType.SKELETON,
+                            start = Point2d(it.p1.originalX, it.p1.originalY),
+                            end = Point2d(it.p2.originalX, it.p2.originalY))
+                }.toHashSet()
+
+                val polyEdges = controller.straightSkeleton.polyLines.map {
+                    val (p, q) = if (it.p1.number <= it.p2.number) Pair(it.p1, it.p2) else Pair(it.p2, it.p1)
+                    TraceEdge(
+                            id = listOf(p.number, q.number),
+                            type = EdgeType.POLYGON,
+                            start = Point2d(p.originalX, p.originalY),
+                            end = Point2d(q.originalX, q.originalY))
+                }.toHashSet()
+
+                // incomplete skeleton arcs and wavefront -- see GraphicPanel::paintMovedPoints() in triton
+                val auxEdges = controller.polygons.flatMap {
+                    it.flatMap {
+                        val pt = it
+                        // is this equivalent to finding a line where p1.number == p2.number?
+                        val l = it.adjacentLines.find { it.p2.equals(pt) }
+                        if (l == null) listOf<TraceEdge>() else listOf(
+                                TraceEdge(
+                                        id = listOf(l.p1.number),
+                                        type = EdgeType.SKELETON,
+                                        start = Point2d(l.p1.originalX, l.p1.originalY),
+                                        end = Point2d(l.p1.currentX, l.p1.currentY)),
+                                TraceEdge(
+                                        id = listOf(l.p1.number, l.p2.number),
+                                        type = EdgeType.WAVEFRONT,
+                                        start = Point2d(l.p1.currentX, l.p1.currentY),
+                                        end = Point2d(l.p2.currentX, l.p2.currentY))
+                        )
+                    }
+                }
+
                 timeline!!.add(Pair(lastTime, SkeletonSnapshot(
                         location = if (it.left != null) Point2d(it.left!!.intersection.currentX, it.left!!.intersection.currentY) else null,
                         eventType = if (it.left != null) {
-                           when (it) {
+                           when (it.left) {
                                is FlipEvent -> EventType.FLIP
                                is SplitEvent -> EventType.SPLIT
                                is EdgeEvent -> EventType.EDGE
                                else -> null
                            }
                         } else null,
-                        edges = triEdges)))
+                        edges = listOf(triEdges, skelEdges, polyEdges, auxEdges).reduce { x,y -> x.union(y) }.toSet())))
 
             }
         }

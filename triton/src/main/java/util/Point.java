@@ -10,15 +10,6 @@ public class Point implements Cloneable {
 	protected int number;
 	protected double original_x;
 	protected double original_y;
-	// FIXME: it seems current_x and current_y never get modified
-	//        without original_x and original_y being modified as well;
-	//        also, the only place where their value is needed
-	//        seems to be Line::getLineVector(), which probably gets
-	//        called from calculateMovementInfo() for every point,
-	//        when their values are equal to original_x and original_y
-	//        (and if it ever gets called later, shouldn't we use
-	//        "current" values stored in original_x and original_y anyway?);
-	//        hence we should try and remove these.
 	public double current_x;
 	public double current_y;
 	public List<Line> adjacentLines;

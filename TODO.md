@@ -1,6 +1,5 @@
 * Kotton:
 
-  - triton: get trace to kotton
   - triton: get stats to kotton
   - can we always get stack trace from a cause?
   - triton: make more responsive to timeout
@@ -39,6 +38,8 @@
     - scaling range setting
     - input scaling setting for applet
     - per entry setting in batch run
+
+* Small salzburg examples fail to render in app
 
 * Debug + test + cleanup zoom & history
 

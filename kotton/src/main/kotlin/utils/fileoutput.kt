@@ -18,7 +18,7 @@ fun traceToJSON(trace: SkeletonTrace): String {
 
     fun snapshotToJSON(snapshot: SkeletonSnapshot): String {
         return (if (snapshot.location != null) "\"location\": { \"x\": ${snapshot.location.x}, \"y\": ${snapshot.location.y} },\n" else "") +
-               (if (snapshot.eventType != null) "\"event type\": { \"${snapshot.eventType}\" },\n" else "") +
+               (if (snapshot.eventType != null) "\"event type\": \"${snapshot.eventType}\",\n" else "") +
                "\"edges\": [\n" +
                (snapshot.edges.joinToString(",\n") {
                    "{\n" +
