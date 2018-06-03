@@ -1,3 +1,8 @@
+* How do we want to handle changing geometry / weights at intermediate steps
+  and what do we do with resulting skeletons?
+
+* Triton: factor out history & multiple skeletons handling
+
 * Kotton:
 
   - triton: get stats to kotton
@@ -5,7 +10,7 @@
   - triton: make more responsive to timeout
   - svg output: scale using only polygon vertices?
 
-* Compare test results with Salzburg
+* Compare test results with Salzburg, debug failing salzburg tests (currently over 60%).
 
 * Sim. events: do we have to prioritize flips (e.g. flip edge = edge to be split)?
 

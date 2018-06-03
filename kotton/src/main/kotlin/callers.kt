@@ -303,7 +303,8 @@ class Triton(
             controller.tracer = Consumer<APair<Event?, List<Triangle>>> {
                 lastTime += it.left?.collapsingTime ?: 0.0
 
-                // the whole extraction thing would probably fit better as part of triton, but java is just a bit tideous
+                // the whole extraction routine would probably fit better as part of triton,
+                // but java is just a bit too tideous
 
                 val triEdges = it.right.flatMap {
                     it.strokes.map {
@@ -316,6 +317,7 @@ class Triton(
 
                 } }.toHashSet()
 
+                // we won't remove duplicate edges or loops for now
                 val skelEdges = controller.straightSkeleton.lines.map {
                     TraceEdge(
                             id = listOf(it.p1.number, it.p2.number),

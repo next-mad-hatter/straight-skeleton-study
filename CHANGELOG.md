@@ -1,3 +1,4 @@
+* Added kotton trace export from triton & campskeleton
 * Added kotton wrapper with campskeleton integration
 * Added timeout to runner call
 * Added loaded file name to window title
