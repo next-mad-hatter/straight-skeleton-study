@@ -90,20 +90,31 @@ public class Controller {
 	 * try and keep a history of corresponding states, i.e. data relevant to
 	 * rendering those, plus one more snapshot (lastState below) for whenever
 	 * we want to go back from non-event point.
-	 * Below, historyPtr should be either zero or 1-based index of currently
-	 * shown history event.
 	 */
 	@Data private class Snapshot {
 	    private final StraightSkeleton straightSkeleton;
 		private final List<Set<Point>> polygons;
 		private final List<Line> polyLines;
+		private final List<Line> lines;
 		private final List<Triangle> triangles;
 		private final JLabel label;
 	}
-	private List<Snapshot> history = new ArrayList<>();
-	private Snapshot lastState;
-	private int historyPtr = 0;
 
+	/**
+	 * We want to keep the history for each skeleton.
+	 * Below, historyPtr should be either zero or 1-based index of currently
+	 * shown (for given skeleton) history event.
+	 */
+	@Data private class HistoryState {
+		private List<Snapshot> snapshots = new ArrayList<>();
+		private Snapshot lastState = null;
+		private int historyPtr = 0;
+	}
+	private Map<StraightSkeleton, HistoryState> history = new HashMap<>();
+
+	/**
+	 * To be called for kotton trace export.
+	 */
 	@Setter @Getter Consumer<Pair<Event, List<Triangle>>> tracer;
 
 	private List<StraightSkeleton> straightSkeletons;
@@ -119,7 +130,6 @@ public class Controller {
 
 	private Random randomGenerator = new Random();
 
-	private Map<Point, List<StraightSkeleton>> movedPoints;
 	private List<Line> lines;
 	private List<Line> polyLines;
 	@Getter private Set<Point> points;
@@ -129,7 +139,6 @@ public class Controller {
 		this.lines = new ArrayList<Line>();
 		this.points = new LinkedHashSet<Point>();
 		this.polyLines = new ArrayList<Line>();
-		this.movedPoints = new HashMap<Point, List<StraightSkeleton>>();
 		delete_icon = getImage("delete");
 		play_icon = getImage("play");
 		color_icon = getImage("color");
@@ -190,7 +199,7 @@ public class Controller {
 		step = false;
 		makeSnapshot(straightSkeleton, polygons, view.getScreenTriangles(), null, true);
 		// makeSnapshot(straightSkeleton, polygons, view.getScreenTriangles(), null, false);
-		historyPtr = history.size();
+		getHistory().historyPtr = getHistory().snapshots.size();
 		nextStep = true;
 		table.setValueAt(new Boolean(true), straightSkeletons.indexOf(straightSkeleton), 0);
 	}
@@ -210,6 +219,16 @@ public class Controller {
 			makeSnapshot(straightSkeleton, polygons, triangles, label, true);
 		}
 		view.repaint();
+	}
+
+	/**
+	 * For now, we'll only need history of currently selected skeleton.
+	 */
+	private HistoryState getHistory() {
+		if (history.get(straightSkeleton) == null) {
+			history.put(straightSkeleton, new HistoryState());
+		}
+		return history.get(straightSkeleton);
 	}
 
 	/**
@@ -280,6 +299,7 @@ public class Controller {
 		}
 
 		val snapPolyLines = cloneLineList.apply(polyLines);
+		val snapLines = cloneLineList.apply(lines);
 
 		val snapPolygons = new ArrayList<Set<Point>>();
 		for (val pts : getPolygons()) {
@@ -328,11 +348,11 @@ public class Controller {
 		}
 		*/
 
-		val state = new Snapshot(snapSkeleton, snapPolygons, snapPolyLines, snapTriangles, label);
+		val state = new Snapshot(snapSkeleton, snapPolygons, snapPolyLines, snapLines, snapTriangles, label);
 		if (toHistory)
-			history.add(state);
+			getHistory().snapshots.add(state);
 		else
-			lastState = state;
+			getHistory().lastState = state;
 
 		/*
 		Function<Point, String> pointDetails = (pt) ->
@@ -340,7 +360,7 @@ public class Controller {
 						                       pt.getCurrentX() + ", " + pt.getCurrentY() + ")";
 
 		if (toHistory)
-            System.err.println("SAVING " + history.size());
+            System.err.println("SAVING " + getHistory().snapshots.size());
 		else
 			System.err.println("SAVING LAST");
 		for (val e: clonedPointsMap.entrySet())
@@ -354,39 +374,35 @@ public class Controller {
 		HISTORY_MODE = true;
 
 		Snapshot state;
-		/*
-		if (fromHistory)
-            System.out.println("LOADING " + historyPtr + "/" + history.size());
-		else
-            System.out.println("LOADING LAST");
-		*/
 	    if (fromHistory)
-	    	state = history.get(historyPtr-1);
+	    	state = getHistory().snapshots.get(getHistory().historyPtr-1);
 		else
-		    state = lastState;
+		    state = getHistory().lastState;
+
 		/*
-		straightSkeleton = state.getLeft().getLeft();
-		polygons = state.getLeft().getMiddle();
-		polyLines = state.getLeft().getRight();
+		straightSkeleton = state.getStraightSkeleton();
+		polygons = state.getPolygons();
+		polyLines = state.getPolyLines();
+		lines = state.getLines();
 		*/
 		view.setCurrentData(null, null, state.getTriangles());
 		setCurrentEvent(state.getLabel());
 		if (!fromHistory)
-			lastState = null;
+			getHistory().lastState = null;
 		view.repaint();
 
 		HISTORY_MODE = false;
 	}
 
 	private void truncateHistory() {
-	    if (historyPtr == 0)
+	    if (getHistory().historyPtr == 0)
 	    	return;
-	    history.subList(historyPtr, history.size()).clear();
-	    lastState = null;
+	    getHistory().snapshots.subList(getHistory().historyPtr, getHistory().snapshots.size()).clear();
+	    getHistory().lastState = null;
 	}
 
 	public boolean isBrowsingHistory() {
-	    return historyPtr > 0;
+	    return getHistory().historyPtr > 0;
 	}
 
 	public boolean wantsUpdates() {
@@ -707,8 +723,8 @@ public class Controller {
 		JFrame frame = (JFrame) SwingUtilities.windowForComponent(view);
 		if(frame != null) frame.setTitle("Triton Applet");
 
-		history.clear();
-		historyPtr = 0;
+		history = new HashMap<>();
+		getHistory().historyPtr = 0;
 		if (algo != null && algo.getState().equals(StateValue.STARTED)) {
 			algo.cancel(true);
 		}
@@ -740,24 +756,25 @@ public class Controller {
 
 	}
 
+	public StraightSkeleton getStraightSkeleton() {
+		if (getHistory().historyPtr > 0 && getHistory().historyPtr <= getHistory().snapshots.size())
+			return getHistory().snapshots.get(getHistory().historyPtr-1).getStraightSkeleton();
+		return straightSkeleton;
+	}
+
 	public List<StraightSkeleton> getStraightSkeletons() {
-		if (straightSkeletons == null) {
-			straightSkeletons = new ArrayList<StraightSkeleton>();
-		}
+		if (straightSkeletons == null) straightSkeletons = new ArrayList<StraightSkeleton>();
         if (isBrowsingHistory()) {
-			if (straightSkeletons.size() != 1 && straightSkeletons.get(0) != straightSkeleton)
-                System.err.println("TODO " + straightSkeletons.size());
             List<StraightSkeleton> res = new ArrayList<>();
-            res.add(getStraightSkeleton());
+            for (val s : straightSkeletons) {
+            	if (s == straightSkeleton)
+            		res.add(getStraightSkeleton());
+				else
+					res.add(s);
+			}
             return res;
 		}
 		return straightSkeletons;
-	}
-
-	public StraightSkeleton getStraightSkeleton() {
-		if (historyPtr > 0 && historyPtr <= history.size())
-			return history.get(historyPtr-1).getStraightSkeleton();
-		return straightSkeleton;
 	}
 
 	public boolean isMove() {
@@ -781,14 +798,14 @@ public class Controller {
 	}
 
 	public List<Set<Point>> getPolygons() {
-	    if (historyPtr > 0 && historyPtr <= history.size())
-	    	return history.get(historyPtr-1).getPolygons();
+	    if (getHistory().historyPtr > 0 && getHistory().historyPtr <= getHistory().snapshots.size())
+	    	return getHistory().snapshots.get(getHistory().historyPtr-1).getPolygons();
 		return polygons;
 	}
 
 	public List<Line> getPolyLines() {
-		if (historyPtr > 0 && historyPtr <= history.size())
-			return history.get(historyPtr-1).getPolyLines();
+		if (getHistory().historyPtr > 0 && getHistory().historyPtr <= getHistory().snapshots.size())
+			return getHistory().snapshots.get(getHistory().historyPtr-1).getPolyLines();
 		return polyLines;
 	}
 	public boolean isAnimation() {
@@ -857,22 +874,23 @@ public class Controller {
 		}
 
 		private void play() {
-            historyPtr = history.size();
-			if (historyPtr != 0) {
+            getHistory().historyPtr = getHistory().snapshots.size();
+			if (getHistory().historyPtr != 0) {
 				// loadSnapshot(false);
                 loadSnapshot(true);
                 // truncateHistory();
 				step = false;
 				nextStep = true;
-				historyPtr = 0;
+				getHistory().historyPtr = 0;
 			}
 			if (step) {
 				step = false;
 				nextStep = true;
 			}
 			if (restart) {
-				history.clear();
-				historyPtr = 0;
+				getHistory().snapshots.clear();
+				getHistory().lastState = null;
+				getHistory().historyPtr = 0;
 				step = false;
 				nextStep = true;
 				restart(null);
@@ -890,33 +908,33 @@ public class Controller {
 		}
 
         private void back() {
-		    if (!finished && (nextStep || history.isEmpty() || historyPtr == 1)) {
+		    if (!finished && (nextStep || getHistory().snapshots.isEmpty() || getHistory().historyPtr == 1)) {
                 step = true;
 		    	return;
             }
-		    if (historyPtr == 0) {
-				historyPtr = history.size();
+		    if (getHistory().historyPtr == 0) {
+				getHistory().historyPtr = getHistory().snapshots.size();
 				// makeSnapshot(straightSkeleton, polygons, view.getScreenTriangles(), null, false);
-				if (!nextStep && historyPtr > 1) {
-					historyPtr--;
+				if (!nextStep && getHistory().historyPtr > 1) {
+					getHistory().historyPtr--;
                     loadSnapshot(true);
 				}
 				nextStep = false;
 			} else {
-				historyPtr--;
+				getHistory().historyPtr--;
 				loadSnapshot(true);
 			}
         }
 
 		private void step() {
-		    if (historyPtr != 0 && !history.isEmpty()) {
-		        historyPtr++;
-		        if (historyPtr > history.size()) {
+		    if (getHistory().historyPtr != 0 && !getHistory().snapshots.isEmpty()) {
+		        getHistory().historyPtr++;
+		        if (getHistory().historyPtr > getHistory().snapshots.size()) {
 		            if (finished)
-		            	historyPtr = history.size();
+		            	getHistory().historyPtr = getHistory().snapshots.size();
 		            else {
 						// loadSnapshot(false);
-						historyPtr = 0;
+						getHistory().historyPtr = 0;
 					}
 				} else {
 					loadSnapshot(true);
@@ -924,8 +942,9 @@ public class Controller {
 				}
 			}
 			if (restart) {
-		    	history.clear();
-		    	historyPtr = 0;
+		    	getHistory().snapshots.clear();
+		    	getHistory().historyPtr = 0;
+		    	getHistory().lastState = null;
 				EventCalculation.vertex_counter = view.getPoints().size();
 				nextStep = true;
 				restart(null);
