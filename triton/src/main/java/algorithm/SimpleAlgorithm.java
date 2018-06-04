@@ -70,9 +70,9 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 	@Override
 	protected Boolean doInBackground() throws Exception {
 		Map<Line, Event> simultaneousEvents = new HashMap<Line, Event>();
-        // FIXME: Is this what we want?!
-        // EventCalculation.vertex_counter = points.get(points.size() - 1).getNumber() + 1;
-        EventCalculation.vertex_counter.put(context, new Integer(points.size() + 1));
+		// FIXME: Is this what we want?!
+		// EventCalculation.vertex_counter = points.get(points.size() - 1).getNumber() + 1;
+		EventCalculation.vertex_counter.put(context, new Integer(points.size() + 1));
 		boolean convex = true;
 		controller.addPolygon(context, new HashSet<Point>(points));
 		for (Point p : points) {
@@ -85,10 +85,10 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 
 		ArrayList<Point> copyPoints = new ArrayList<Point>(points);
 		if (convex) {
-      triangles = Util.triangulate2(new ArrayList<Point>(copyPoints), lines);
+			triangles = Util.triangulate2(new ArrayList<Point>(copyPoints), lines);
 		} else {
 
-      ArrayList<Point> pts = new ArrayList<Point>(copyPoints);
+			ArrayList<Point> pts = new ArrayList<Point>(copyPoints);
 			if (!Controller.isCounterClockwise) {
 				Collections.reverse(pts);
 			}
@@ -99,14 +99,12 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 
 		boolean eventExists = true;
 
-		if (!isCancelled())
-			publish(new ImmutablePair<>("Triangulated", true));
+		// if (!isCancelled()) publish(new ImmutablePair<>("Triangulated", true));
 		// FIXME: Can we not block the calculations here or
 		//        at least have a callback from the controller?
 		while (!controller.wantsUpdates(context) && !isCancelled()) {
 			Thread.sleep(100);
 		}
-        context.step = false;
 
 		while (eventExists && !isCancelled()) {
 			if (events.size() == 0) {
@@ -119,8 +117,8 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 			Event e = events.peek();
 			if (e != null) {
 				if (e.getCollapsingTime() - event.getCollapsingTime() <= 1e-12) {
-				    // FIXME: Shouldn't we check where two events happen before throwing out one of them?
-                    //        And what about involved entities?  Should those be processed somehow?
+					// FIXME: Shouldn't we check where two events happen before throwing out one of them?
+					//        And what about involved entities?  Should those be processed somehow?
 					if (event instanceof ConcaveEvent && e instanceof EdgeEvent) {
 						event = e;
 					} else if (event instanceof FlipEvent) {
@@ -160,13 +158,13 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 			calculateEvents();
 
 			if (events.size() > 0) {
-				if (!isCancelled()) publish(new ImmutablePair<>(event.getName(), true));
+				if (!isCancelled())
+					publish(new ImmutablePair<>(event.getName(), true));
 				// FIXME: Can we not block the calculations here or
 				//        at least have a callback from the controller?
 				while (!controller.wantsUpdates(context) && !isCancelled()) {
 					Thread.sleep(100);
 				}
-                context.step = false;
 			}
 
 			for (Set<Point> points : context.getPolygons(false)) {
@@ -185,7 +183,7 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 		if (animation) {
 			publish();
 		}
-		
+
 //		Util.calculatePolygArea(points, straightSkeleton);
 		return true;
 	}

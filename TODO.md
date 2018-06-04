@@ -1,17 +1,11 @@
-* Triton: factor out history & multiple skeletons handling
+* Triton: context switching history & multiple skeletons
 
-  -> How do we want to handle changing geometry / weights at intermediate steps
-     and what do we do with resulting skeletons?
-
-  - keep an algo for each skeleton/polygon? (since algos wait for controller in the middle of their computations, other solutions would be even more messy),
-    get rid of events calculations skeleton counter,
-    update algo triangles when switching skeletons
-  - make controller reaction dependent on selected skeleton/polygon
-  - make history snapshots non-editable?
-  - deleting last skeleton from list leaves stuff hanging around
-  - it seems visibility & editmode toggles don't work as they were meant to be
+  - Step forward does not yet work here
+  - Published events have their coordinate points off by one event
+  - Finalize context switching
   - toggle visibility of polylines (and triangulations?) along with skeletons
-  - why does switching between skeletons sometimes leave us with concurrent modification exception?
+  - it seems visibility & editmode toggles don't work as they were meant to be
+  -> How do we want to handle changing geometry / weights at intermediate steps and what do we do with resulting skeletons?
 
 * Bug: sometimes weight fields' values cannot be deleted, only concatenated upon
 

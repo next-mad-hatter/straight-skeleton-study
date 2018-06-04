@@ -104,8 +104,7 @@ public class Controller {
 	 * As the design mixes computations, rendering and state quite intricately,
 	 * for purpose of providing means of navigating back through events we'll
 	 * try and keep a history of corresponding states, i.e. (cloned) data relevant to
-	 * rendering those, plus one more snapshot (lastState below) for whenever
-	 * we want to go back from non-event point.
+	 * rendering those.
 	 */
 	@Data public class Snapshot {
 	    private final StraightSkeleton skeleton;
@@ -201,16 +200,17 @@ public class Controller {
         }
 
 		val snapTriangles = new ArrayList<Triangle>();
-		for (val tri: triangles) {
-			val nt = new Triangle(
-					clonePoint.apply(tri.p1),
-					clonePoint.apply(tri.p2),
-					clonePoint.apply(tri.p3));
+        if (triangles != null)
+            for (val tri: triangles) {
+                val nt = new Triangle(
+                        clonePoint.apply(tri.p1),
+                        clonePoint.apply(tri.p2),
+                        clonePoint.apply(tri.p3));
 
-			nt.polyLines = cloneLineList.apply(tri.polyLines);
-			nt.strokes = cloneLineList.apply(tri.strokes);
-			snapTriangles.add(nt);
-		}
+                nt.polyLines = cloneLineList.apply(tri.polyLines);
+                nt.strokes = cloneLineList.apply(tri.strokes);
+                snapTriangles.add(nt);
+            }
 
 		// What lines did we forget here?
 		boolean rescan = false;
@@ -243,7 +243,8 @@ public class Controller {
 	}
 
 	public Snapshot buildSnapshot(Context context) {
-		return buildSnapshot(
+		context.makingSnapshot = true;
+		val res = buildSnapshot(
 				context.getSkeleton(false),
 				context.getPoints(false),
 				context.getPolygons(false),
@@ -251,6 +252,8 @@ public class Controller {
 				context.getLines(false),
 				context.getTriangles(false),
 				context.getCurrentEvent(false));
+		context.makingSnapshot = false;
+		return res;
 	}
 
 	/**
@@ -258,10 +261,10 @@ public class Controller {
 	 * Below, historyPtr should be either zero or 1-based index of currently
 	 * shown (for given skeleton) history event.
 	 */
-	@Data private class History {
+	@RequiredArgsConstructor
+	private class History {
 		@Getter private final List<Snapshot> snapshots = new ArrayList<>();
 		@Getter private int historyPtr = 0;
-		private Snapshot lastState = null;
 
 		public Snapshot getCurrentSnapshot() {
 		    if (historyPtr == 0 || historyPtr > snapshots.size()) return null;
@@ -310,20 +313,20 @@ public class Controller {
 	 * things which are dependent on the polygon into a list of contexts
 	 * and switch between those.
 	 */
-	@EqualsAndHashCode @RequiredArgsConstructor
+	@RequiredArgsConstructor
 	public class Context {
         // All these flags determine the system behaviour in ways I'll never comprehend :).
 		public boolean isRunning = false;
 		public boolean restart = false;
 		public boolean move = false;
 		public boolean nextStep = true;
-		public boolean step = false;
 		public boolean animation = false;
 		public boolean enabled = true;
 		public boolean closed = false;
 		public boolean editMode = false;
 		public boolean finished = false;
 		public boolean initialize = false;
+		public boolean makingSnapshot = false;
 
 		@Setter private StraightSkeleton skeleton = new StraightSkeleton();
 		@Setter private List<Line> lines = new ArrayList<>();
@@ -372,12 +375,10 @@ public class Controller {
 			return history.getCurrentSnapshot().getCurrentEvent();
 		}
 
-		public void saveSnapshot(boolean toHistory) {
+		@Synchronized
+		public void saveSnapshot() {
 			Snapshot state = buildSnapshot(this);
-			if (toHistory)
-				history.snapshots.add(state);
-			else
-				history.lastState = state;
+            history.snapshots.add(state);
 		}
 
 		public boolean isBrowsingHistory() {
@@ -417,7 +418,11 @@ public class Controller {
 		val context = getContext();
 		view.init(context.getLines(true), context.getPoints(true));
 		view.setTriangles(context.getTriangles(true));
-		view.setCurrentEvent(context.getCurrentEvent(true));
+		if (context.isBrowsingHistory() || !context.finished && !context.nextStep)
+			view.setCurrentEvent(context.getCurrentEvent(true));
+        else
+        	view.setCurrentEvent(null);
+		view.repaint();
 	}
 
 	@Synchronized("contextLock")
@@ -462,13 +467,12 @@ public class Controller {
 	public void removeContext(int ptr) {
 		table.removeRow(ptr);
 		contexts.remove(ptr);
-		if(contexts.isEmpty()) initContexts(table);
+		if (contexts.isEmpty()) reset();
+		if (contextPtr + 1 > contexts.size()) contextPtr = contexts.size() - 1;
 		refreshContext();
-		view.repaint();
 	}
 
 	public void runAlgorithm(Context context) {
-		context.finished = false;
 		context.isRunning = true;
 		ArrayList<Point> points = new ArrayList<>(context.getPoints(false));
 		if (points.size() > 2) {
@@ -477,19 +481,19 @@ public class Controller {
 			isCounterClockwise = Util.isCounterClockwise(points);
 			context.getSkeleton(false).clear();
 			context.move = false;
-			try {
-				val algo = new SimpleAlgorithm(points, context.getLines(false), context.animation, this, context);
-				context.setAlgorithm(algo);
-				context.setPolygons(new ArrayList<>());
-				context.getAlgorithm().execute();
-			} catch (CloneNotSupportedException e) {
-				e.printStackTrace();
-			}
+			if (context.getAlgorithm() == null || context.finished)
+                try {
+                    val algo = new SimpleAlgorithm(points, context.getLines(false), context.animation, this, context);
+                    context.setAlgorithm(algo);
+                    context.setPolygons(new ArrayList<>());
+                } catch (CloneNotSupportedException e) {
+                    e.printStackTrace();
+                }
+			context.getAlgorithm().execute();
 		}
 	}
 
 	public void runAlgorithmNoSwingWorker(Context context) throws Exception {
-		context.finished = false;
 		context.isRunning = true;
 		ArrayList<Point> points = new ArrayList<>(context.getPoints(false));
 		if (points.size() > 2) {
@@ -504,32 +508,35 @@ public class Controller {
 	}
 
 	public void publish(Context context, final List<Pair<String, Boolean>> chunks, Point i, List<Triangle> triangles) {
-		JLabel label = null;
-		if (!chunks.isEmpty() && chunks.get(0).getLeft() != "Triangulated") {
-			Graphics2D g2 = (Graphics2D) view.getGraphics();
-			int width = g2.getFontMetrics().stringWidth(chunks.get(0).getLeft());
-			label = new JLabel(chunks.get(0).getLeft());
-			label.setLocation((int) (i.current_x - width / 2), (int) (i.current_y + 20));
-			if (!context.nextStep) context.setCurrentEvent(label);
+		JLabel label;
+		if (chunks.isEmpty()) {
+			refreshContext();
+			return;
 		}
-		// view.setTriangles(context.getTriangles(true));
-		if (!chunks.isEmpty() && chunks.get(0).getRight()) {
-			context.saveSnapshot(true);
+		for (val ch: chunks) {
+			if (ch.getLeft() != "Triangulated") {
+				Graphics2D g2 = (Graphics2D) view.getGraphics();
+				int width = g2.getFontMetrics().stringWidth(chunks.get(0).getLeft());
+				label = new JLabel(ch.getLeft());
+				label.setLocation((int) (i.current_x - width / 2), (int) (i.current_y + 20));
+				context.setCurrentEvent(label);
+			}
+			if (ch.getLeft() == "Triangulated") context.setCurrentEvent(null);
+			// view.setTriangles(context.getTriangles(true));
+			if (ch.getRight()) context.saveSnapshot();
 		}
-		view.repaint();
+		refreshContext();
 	}
 
 	public boolean wantsUpdates(Context context) {
-		return context.nextStep && !context.isBrowsingHistory() && !context.finished;
+		return !context.makingSnapshot && context.nextStep && !context.isBrowsingHistory(); // && !context.finished;
 	}
 
-	public void playSelected(boolean animate, boolean recreate) {
+	public void showReweighted() {
 		val context = getContext();
 		context.restart = true;
-		context.animation = animate;
-		if (recreate) {
-			restart(context, null);
-		}
+		context.animation = false;
+        restart(context, null);
 		runAlgorithm(context);
 	}
 
@@ -547,7 +554,6 @@ public class Controller {
 		initContexts(table);
 		view.reset();
 		refreshContext();
-		view.repaint();
 
 		EventCalculation.vertex_counter.clear();
 		EventCalculation.skeleton_counter = 0;
@@ -558,20 +564,17 @@ public class Controller {
 	public void finished(Context context) {
 		// straightSkeleton.add(lines);
 		// polygons = null;
-		repaint();
 		context.finished = true;
 		context.restart = true;
 		context.isRunning = false;
 		context.animation = false;
-		context.step = false;
-		context.saveSnapshot(true);
 		context.nextStep = true;
-		// context.getHistory().historyPtr = getHistory().snapshots.size();
+		context.saveSnapshot();
+		context.history.setToLast();
 		table.setValueAt(new Boolean(true), contextPtr, 0);
 	}
 
 	public void restart(Context context, List<Line> polyLines) {
-		context.finished = false;
 		context.history = new History();
 		val points = context.getPoints(false);
 		val lines = context.getLines(false);
@@ -592,9 +595,6 @@ public class Controller {
 		p1 = new Point(l1.getP1().getNumber(), l1.getP1().getOriginalX(), l1.getP1().getOriginalY());
 		points.add(p1);
 		int i = 0;
-		// FIXME: why the concurrent modification exception?  is this because algo keeps working or
-		// because snapshot conflates lines and polylines and we should make them separate clones here?
-		// Seems to work if we let algo run in between the switches...
 		for (Line l : polyLines) {
 			if (l.getP2().getNumber() != first.getNumber()) {
 				p2 = new Point(l.getP2().getNumber(), l.getP2().getOriginalX(), l.getP2().getOriginalY());
@@ -632,41 +632,29 @@ public class Controller {
 	}
 
 	@Synchronized("contextLock")
+	private void roll(Context context, boolean restart) {
+		if (restart) {
+			this.restart(context, null);
+			EventCalculation.setVertexCounter(context, context.getPoints(false).size());
+			context.restart = false;
+			context.nextStep = true;
+			context.getSkeleton(false).polygon = null;
+		}
+		refreshContext();
+		if (!context.isRunning && !context.isBrowsingHistory()) {
+			context.animation = true;
+			view.setEnabled(false);
+			runAlgorithm(context);
+		}
+    }
+
+	@Synchronized("contextLock")
 	private void play() {
 		val context = getContext();
 		val history = context.getHistory();
 		history.unbrowse();
-        context.step = false;
         context.nextStep = true;
-		if (context.restart) {
-			restart(context, null);
-			context.restart = false;
-			EventCalculation.setVertexCounter(context, view.getPoints().size());
-            context.getSkeleton(false).polygon = null;
-		}
-		if (!context.isRunning) {
-			context.animation = true;
-			runAlgorithm(context);
-			view.setEnabled(false);
-		}
-	}
-
-	@Synchronized("contextLock")
-	private void back() {
-	    val context = getContext();
-	    val history = context.getHistory();
-		if (!context.finished && (context.nextStep || history.isEmpty() || history.atFirst())) {
-			context.step = true;
-			return;
-		}
-		if (!history.isBrowsing()) {
-			history.setToLast();
-			// saveSnapshot(false);
-			if (!context.nextStep) history.back();
-			context.nextStep = false;
-		} else {
-		    history.back();
-		}
+        roll(context, context.restart);
 	}
 
 	@Synchronized("contextLock")
@@ -675,27 +663,26 @@ public class Controller {
 		val history = context.getHistory();
 		if (history.isBrowsing()) {
 			if (history.atLast()) {
-				if (!context.finished) history.unbrowse();
+				history.unbrowse();
+				context.nextStep = !context.nextStep;
 			} else {
 				history.forward();
 			}
 		}
-		/*
-		if (context.restart) {
-			restart(null);
-			EventCalculation.setVertexCounter(context, view.getPoints().size());
-			context.restart = false;
-			context.nextStep = true;
-			context.getSkeleton(false).polygon = null;
+		roll(context, context.restart && !context.isBrowsingHistory());
+	}
+
+	@Synchronized("contextLock")
+	private void back() {
+	    val context = getContext();
+	    val history = context.getHistory();
+		if (history.isEmpty() || history.atFirst()) return;
+		if (!history.isBrowsing()) {
+			history.setToLast();
+		} else {
+		    history.back();
 		}
-		*/
-		if (!context.isRunning) {
-			context.animation = true;
-			runAlgorithm(context);
-			view.setEnabled(false);
-		}
-		context.step = true;
-		context.nextStep = !context.nextStep;
+		refreshContext();
 	}
 
 	public void setCurrentEvent(JLabel l) {
@@ -727,10 +714,6 @@ public class Controller {
 
 			}
 		};
-	}
-
-	public void repaint() {
-		view.repaint();
 	}
 
 	private ImageIcon getImage(String name) {
@@ -908,7 +891,7 @@ public class Controller {
 	class CommonMouseMotionListener implements MouseMotionListener {
 		@Override
 		public void mouseDragged(MouseEvent e) {
-			if (!getContext().closed) {
+			if (!getContext().closed || !getContext().enabled) {
 				return;
 			}
 			getContext().move = true;
@@ -949,8 +932,7 @@ public class Controller {
 				return;
 			}
 			view.p2 = e.getPoint();
-			repaint();
-
+			view.repaint();
 		}
 
 	}
@@ -1017,7 +999,6 @@ public class Controller {
 						view.remove(view.getComponentCount() - 1);
 						point1 = prevPoint;
 						screenPoint1 = sprevPoint;
-
 					}
 				}
 				
