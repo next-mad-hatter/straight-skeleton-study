@@ -10,7 +10,8 @@
   - make history snapshots non-editable?
   - deleting last skeleton from list leaves stuff hanging around
   - it seems visibility & editmode toggles don't work as they were meant to be
-  - why does switching between skeletons sometimes leave us with empty polyLines?
+  - toggle visibility of polylines (and triangulations?) along with skeletons
+  - why does switching between skeletons sometimes leave us with concurrent modification exception?
 
 * Bug: sometimes weight fields' values cannot be deleted, only concatenated upon
 

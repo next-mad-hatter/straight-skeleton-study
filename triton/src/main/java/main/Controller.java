@@ -90,7 +90,8 @@ public class Controller {
 	 * for purpose of providing means of navigating back through events we'll
 	 * try and keep a history of corresponding states, i.e. data relevant to
 	 * rendering those, plus one more snapshot (lastState below) for whenever
-	 * we want to go back from non-event point.
+	 * we want to go back from non-event point or switch between skeletons
+	 * (is this conflation wise?)
 	 */
 	@Data public class Snapshot {
 	    private final StraightSkeleton straightSkeleton;
@@ -356,6 +357,8 @@ public class Controller {
 
 		HISTORY_MODE = false;
 
+		// FIXME: shouldn't there be a difference between lines and polylines?!
+		System.err.println("SNAPSHOT BUILT: " + polyLines.size() + "/" + lines.size() + " -> " + snapPolyLines.size() + "/" + snapLines.size() );
 		return new Snapshot(snapSkeleton, snapPoints, snapPolygons, snapPolyLines, snapLines, snapTriangles, label);
 	}
 
@@ -393,7 +396,7 @@ public class Controller {
 	 * Loads a snapshot from history without changing currently considered skeleton,
      * i.e. makes said snapshot currently viewed point in history.
 	 */
-	private void loadSnapshot(boolean fromHistory) {
+	private Snapshot loadSnapshot(boolean fromHistory) {
 		HISTORY_MODE = true;
 		Snapshot state;
 	    if (fromHistory)
@@ -406,13 +409,13 @@ public class Controller {
 		setCurrentEvent(state.getLabel());
 		view.repaint();
 		HISTORY_MODE = false;
+		return state;
 	}
 
 	private void truncateHistory() {
 	    if (getHistory().historyPtr == 0)
 	    	return;
 	    getHistory().snapshots.subList(getHistory().historyPtr, getHistory().snapshots.size()).clear();
-	    getHistory().lastState = null;
 	}
 
 	public boolean isBrowsingHistory() {
@@ -488,9 +491,10 @@ public class Controller {
 		if (!straightSkeletons.get(skeleton).equals(straightSkeleton)) {
 			saveSnapshot(null, false);
 			straightSkeleton = straightSkeletons.get(skeleton);
-			loadSnapshot(false);
-			restart(null);
+			val snapshot = loadSnapshot(false);
+			restart(snapshot.getPolyLines());
 		}
+
 		this.editMode = editMode;
 	}
 
@@ -580,11 +584,11 @@ public class Controller {
 	public void restart(List<Line> polyLines) {
 		// finished = false;
 		points.clear();
-		lines.clear();
+	    if (!lines.equals(polyLines)) lines.clear();
 
 		getHistory().snapshots.clear();
 		getHistory().historyPtr = 0;
-		getHistory().lastState = null;
+
 
 		// alreadyMovedPts.clear();
 		Point p1;
@@ -592,7 +596,7 @@ public class Controller {
 		// boolean add = false;
 		if (polyLines == null) {
 			polyLines = this.polyLines;
-		} else {
+		} else if (!polyLines.equals(this.polyLines)) {
 			this.polyLines.clear();
 			this.polyLines.addAll(polyLines);
 		}
@@ -601,6 +605,9 @@ public class Controller {
 		p1 = new Point(l1.getP1().getNumber(), l1.getP1().getOriginalX(), l1.getP1().getOriginalY());
 		points.add(p1);
 		int i = 0;
+		// FIXME: why the concurrent modification exception?  is this because algo keeps working or
+		// because snapshot conflates lines and polylines and we should make them separate clones here?
+		// Seems to work if we let algo run in between the switches...
 		for (Line l : polyLines) {
 			if (l.getP2().getNumber() != first.getNumber()) {
 				p2 = new Point(l.getP2().getNumber(), l.getP2().getOriginalX(), l.getP2().getOriginalY());
@@ -882,7 +889,6 @@ public class Controller {
 			if (restart) {
 				getHistory().snapshots.clear();
 				getHistory().historyPtr = 0;
-				getHistory().lastState = null;
 				step = false;
 				nextStep = true;
 				restart(null);
@@ -936,7 +942,6 @@ public class Controller {
 			if (restart) {
 		    	getHistory().snapshots.clear();
 		    	getHistory().historyPtr = 0;
-		    	getHistory().lastState = null;
 				EventCalculation.vertex_counter = view.getPoints().size();
 				nextStep = true;
 				restart(null);
