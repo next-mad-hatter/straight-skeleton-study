@@ -1,7 +1,18 @@
-* How do we want to handle changing geometry / weights at intermediate steps
-  and what do we do with resulting skeletons?
-
 * Triton: factor out history & multiple skeletons handling
+
+  -> How do we want to handle changing geometry / weights at intermediate steps
+     and what do we do with resulting skeletons?
+
+  - keep an algo for each skeleton/polygon? (since algos wait for controller in the middle of their computations, other solutions would be even more messy),
+    get rid of events calculations skeleton counter,
+    update algo triangles when switching skeletons
+  - make controller reaction dependent on selected skeleton/polygon
+  - make history snapshots non-editable?
+  - deleting last skeleton from list leaves stuff hanging around
+  - it seems visibility & editmode toggles don't work as they were meant to be
+  - why does switching between skeletons sometimes leave us with empty polyLines?
+
+* Bug: sometimes weight fields' values cannot be deleted, only concatenated upon
 
 * Kotton:
 

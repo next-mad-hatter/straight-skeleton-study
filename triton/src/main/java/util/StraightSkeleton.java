@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+
 public class StraightSkeleton {
 	public Map<List<Line>, MeasuringData> polygon;
 	@Getter @Setter private List<Line>lines;
@@ -32,5 +33,6 @@ public class StraightSkeleton {
 	public boolean contains(Line l){
 		return lines.contains(l);
 	}
+
 }
 

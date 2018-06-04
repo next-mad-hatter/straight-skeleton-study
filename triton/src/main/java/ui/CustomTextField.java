@@ -130,9 +130,7 @@ public class CustomTextField extends JTextField implements DocumentListener, Mou
 		line.setWeight(weight);
 		screenLine.setWeight(weight);
 		if (controller.getStraightSkeletons().size() != 0 && !controller.isMove()) {
-			int row = controller.getSelectedIndex();
-			// controller.playCurrent();
-			controller.playSelected(row, false, false);
+			controller.playSelected(false, true);
 		}
 		// this.getInputVerifier().shouldYieldFocus(this);
 		// graphicPanel.setFinished(false);

@@ -1,5 +1,7 @@
 package at.tugraz.igi.ui;
 
+import lombok.*;
+
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
@@ -13,6 +15,8 @@ import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.JToggleButton;
 import javax.swing.event.CellEditorListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
@@ -30,37 +34,30 @@ public class ConfigurationTable extends JTable {
 
 		this.setTableHeader(null);
 		this.setShowGrid(false);
-		this.getColumn(this.getColumnName(1)).setCellRenderer(new JLabelRenderer(controller));
+		this.getColumn(this.getColumnName(1)).setCellRenderer(new JButtonRenderer());
+		this.getColumn(this.getColumnName(1)).setCellEditor(new JButtonEditor(controller));
 		this.getColumn(this.getColumnName(2)).setCellRenderer(new JButtonRenderer());
 		this.getColumn(this.getColumnName(2)).setCellEditor(new JButtonEditor(controller));
 		this.getColumn(this.getColumnName(3)).setCellRenderer(new JButtonRenderer());
 		this.getColumn(this.getColumnName(3)).setCellEditor(new JButtonEditor(controller));
 		this.getColumn(this.getColumnName(4)).setCellRenderer(new JButtonRenderer());
 		this.getColumn(this.getColumnName(4)).setCellEditor(new JButtonEditor(controller));
-		this.getColumn(this.getColumnName(5)).setCellRenderer(new JButtonRenderer());
-		this.getColumn(this.getColumnName(5)).setCellEditor(new JButtonEditor(controller));
 
-		TableColumn column = null;
-		for (int i = 0; i < 6; i++) {
-			column = this.getColumnModel().getColumn(i);
-			if (i == 1) {
-				column.setPreferredWidth(100);
-
-			} else {
-				column.setPreferredWidth(20);
-			}
+		for (int i = 0; i < 5; i++) {
+			TableColumn column = this.getColumnModel().getColumn(i);
+			column.setPreferredWidth(28);
 		}
 
-		this.setRowHeight(20);
+		this.setRowHeight(28);
 	}
 
 	public static JButton getButton(JButton button, String name, JTable table) {
 		if (name == "delete") {
 			button.setIcon(Controller.delete_icon);
 			button.setToolTipText("Delete Straight Skeleton");
-		} else if (name == "play") {
-			button.setIcon(Controller.play_icon);
-			button.setToolTipText("Play");
+		} else if (name == "copy") {
+            button.setIcon(Controller.copy_icon);
+            button.setToolTipText("Copy Straight Skeleton");
 		} else if (name == "color") {
 			button.setIcon(Controller.color_icon);
 			button.setToolTipText("Change color");
@@ -85,7 +82,7 @@ public class ConfigurationTable extends JTable {
 
 	public void addRow() {
 		TableModel model = (TableModel) this.getModel();
-		model.addRow(new Object[] { new Boolean(false), "Straight Skeleton ",  "visible", "delete", "play", "color",});
+		model.addRow(new Object[] { new Boolean(false), "visible", "delete", "copy", "color",});
 	}
 
 	public void removeRow(int rowIndex) {
@@ -101,7 +98,7 @@ public class ConfigurationTable extends JTable {
 
 @SuppressWarnings("serial")
 class TableModel extends DefaultTableModel {
-	private String columnNames[] = { "1", "2", "3", "4", "5", "6" };
+	private String columnNames[] = { "1", "2", "3", "4", "5", };
 	private Controller controller;
 
 	public TableModel(Controller controller) {
@@ -121,9 +118,6 @@ class TableModel extends DefaultTableModel {
 	}
 
 	public boolean isCellEditable(int row, int column) {
-		if (column == 1) {
-			return false;
-		}
 		return true;
 	}
 
@@ -131,7 +125,7 @@ class TableModel extends DefaultTableModel {
 		super.setValueAt(obj, row, column);
 		if (column == 0) {
 			Boolean value = ((Boolean) obj).booleanValue();
-			controller.updateSkeleton(row, value);
+			controller.switchToSkeleton(row, value);
 			if (value) {
 				for (int i = 0; i < getRowCount(); i++) {
 					if (i != row) {
@@ -186,13 +180,15 @@ class JButtonEditor extends AbstractCellEditor implements TableCellEditor {
 			public void actionPerformed(ActionEvent e) {
 				if (action == "delete") {
 					controller.removeStraightSkeleton(row);
-				} else if (action == "play") {
-					controller.playSelected(row, true, true);
+				} else if (action == "copy") {
+					controller.switchToSkeleton(row, false);
+					controller.saveSnapshot(null, false);
+				    val mirror = controller.buildSnapshot(null);
+				    controller.initFromSnapshot(mirror);
 				} else if (action == "color") {
 					controller.showColorChooser(row);
 				} else if (action == "visible") {
 					JButton button = (JButton) e.getSource();
-					boolean visible;
 					if (button.getIcon().equals(Controller.visible_icon)) {
 						button.setIcon(Controller.not_visible_icon);
 					} else {
