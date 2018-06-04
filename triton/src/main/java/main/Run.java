@@ -31,7 +31,7 @@ public class Run {
         Controller controller = new Controller();
         GraphicPanel panel = new GraphicPanel(controller);
         controller.setView(panel);
-        controller.setTable(new ConfigurationTable(controller));
+        controller.initContexts(new ConfigurationTable(controller));
 
         val scalingData = FileHandler.open(panel, controller, new File(in_file), scaleInput);
         // FIXME: add autozoom
@@ -40,7 +40,7 @@ public class Run {
         class Call implements Callable<Boolean> {
             @Override
             public Boolean call() throws Exception {
-                controller.runAlgorithmNoSwingWorker();
+                controller.runAlgorithmNoSwingWorker(controller.getContext());
                 return true;
             }
         }
@@ -66,14 +66,14 @@ public class Run {
                 executor.shutdownNow();
         }
 
-        if (!controller.finished) {
+        if (!controller.getContext().finished) {
             throw new Exception("Algorithm didn't finish");
         }
 
         // FIXME: currently the algorithm includes some skeleton arcs/edges more than once in the result;
         //        also, sometimes it yields loops;
         //        we'll try and repair those cases here for now.
-        List<Line> skeleton = controller.getStraightSkeleton().getLines()
+        List<Line> skeleton = controller.getStraightSkeleton(controller.getContext(), false).getLines()
             .stream()
             .map((l) -> l.getP1().getNumber() < l.getP2().getNumber() ? l : new Line(l.getP2(), l.getP1(), l.getWeight()))
             .filter((l) -> l.getP1().getOriginalX() != l.getP2().getOriginalX() || l.getP1().getOriginalY() != l.getP2().getOriginalY() )
@@ -120,7 +120,7 @@ public class Run {
             }
         }
 
-        TreeCheck.checkTree(new ArrayList<>(controller.getPoints()), skeleton);
+        TreeCheck.checkTree(new ArrayList<>(controller.getContext().getPoints(false)), skeleton);
 
         if(runGC) {
             for (val w : Window.getWindows()) {

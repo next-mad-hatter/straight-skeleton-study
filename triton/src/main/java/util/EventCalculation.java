@@ -1,10 +1,29 @@
 package at.tugraz.igi.util;
 
+import at.tugraz.igi.main.Controller;
+
+import java.util.Map;
+import java.util.HashMap;
 
 public class EventCalculation {
-	public static int vertex_counter = 1;
+
 	public static int skeleton_counter = 0;
-	
+
+	public static Map<Controller.Context, Integer> vertex_counter = new HashMap<>();
+
+	public static Integer getVertexCounter(Controller.Context context) {
+	    return vertex_counter.getOrDefault(context, new Integer(1));
+	}
+
+	public static void setVertexCounter(Controller.Context context, Integer val) {
+		vertex_counter.put(context, val);
+	}
+
+	public static void incVertexCounter(Controller.Context context) {
+		Integer vc = vertex_counter.getOrDefault(context, new Integer(1));
+		vertex_counter.put(context, vc + 1);
+	}
+
 	public static double findEvent(Line line, Triangle t) {
 
 		Point p1 = line.getP1();

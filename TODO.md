@@ -62,6 +62,8 @@
 
 * History: test back steps, better controls (usability/stability)
 
+* It seems random weights generation never worked
+
 * Zoom: autozoom & autopan at load / manually triggered apart from that?
 
 * Zoom in on area

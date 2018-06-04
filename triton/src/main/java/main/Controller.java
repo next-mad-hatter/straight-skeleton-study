@@ -2,14 +2,6 @@ package at.tugraz.igi.main;
 
 import lombok.*;
 
-/*
-import org.apache.batik.util.*;
-import org.apache.batik.dom.svg.SVGDOMImplementation;
-import org.apache.batik.transcoder.*;
-import org.apache.batik.transcoder.image.*;
-import org.apache.batik.transcoder.image.ImageTranscoder;
-*/
-
 import org.apache.commons.lang3.tuple.*;
 import java.util.function.*;
 import java.util.stream.*;
@@ -44,17 +36,9 @@ import data.Graph;
 
 public class Controller {
 
-	/**
-	 * We want to globally change weird point comparison logic while making history snapshots.
-	 * See saveSnapshot() and Point.equals().
-	 */
-	public static boolean HISTORY_MODE = false;
-
 	public static enum TYPES {
 		OPEN, SAVE, SAVE_AS, PLAY, STEP, BACK, RESET, OPEN_POLY, SVG
 	}
-
-	public static CoordinatesScaler.ScalingData inputScalingData;
 
 	public static boolean isCounterClockwise;
 	public static ImageIcon delete_icon;
@@ -67,81 +51,24 @@ public class Controller {
 	public static ImageIcon edit_icon;
 	public static ImageIcon visible_icon;
 	public static ImageIcon not_visible_icon;
-	private boolean isRunning;
-	private boolean restart;
-	private boolean move;
 
-	private boolean nextStep = true;
-	private boolean step;
-	private boolean animation;
-	private boolean enabled = true;
-	@Getter private boolean closed;
-	private boolean editMode;
-	public boolean randomWeights;
-	public boolean finished = true;
+	public boolean randomWeights = false;
+
 	public PolygonMeasureData polyMeasureData;
 
 	public GraphicPanel view;
-	private SimpleAlgorithm algo;
 	private ConfigurationTable table;
-
-	/**
-	 * As the design mixes computations, rendering and state quite intricately,
-	 * for purpose of providing means of navigating back through events we'll
-	 * try and keep a history of corresponding states, i.e. data relevant to
-	 * rendering those, plus one more snapshot (lastState below) for whenever
-	 * we want to go back from non-event point or switch between skeletons
-	 * (is this conflation wise?)
-	 */
-	@Data public class Snapshot {
-	    private final StraightSkeleton straightSkeleton;
-		private final Set<Point> points;
-		private final List<Set<Point>> polygons;
-		private final List<Line> polyLines;
-		private final List<Line> lines;
-		private final List<Triangle> triangles;
-		private final JLabel label;
-	}
-
-	/**
-	 * We want to keep the history for each skeleton.
-	 * Below, historyPtr should be either zero or 1-based index of currently
-	 * shown (for given skeleton) history event.
-	 */
-	@Data private class HistoryState {
-		private List<Snapshot> snapshots = new ArrayList<>();
-		private Snapshot lastState = null;
-		private int historyPtr = 0;
-	}
-	private Map<StraightSkeleton, HistoryState> history = new HashMap<>();
-
-	/**
-	 * To be called for kotton trace export.
-	 */
-	@Setter @Getter Consumer<Pair<Event, List<Triangle>>> tracer;
-
-	private List<StraightSkeleton> straightSkeletons;
-	private StraightSkeleton straightSkeleton;
 
 	private Point point1;
 	private Point point2;
 	private Point screenPoint1;
-	private boolean initialize;
 	private boolean init_drag;
 
 	private Point sdragPoint;
 
 	private Random randomGenerator = new Random();
 
-	private List<Line> lines;
-	private List<Line> polyLines;
-	@Getter private Set<Point> points;
-	private List<Set<Point>> polygons;
-
 	public Controller() {
-		this.lines = new ArrayList<Line>();
-		this.points = new LinkedHashSet<Point>();
-		this.polyLines = new ArrayList<Line>();
 		delete_icon = getImage("edit-delete");
 		copy_icon = getImage("edit-copy");
 		play_icon = getImage("play");
@@ -154,91 +81,46 @@ public class Controller {
 		not_visible_icon = getImage("eye_blocked");
 	}
 
-	public CommonListener createActionListener(TYPES type) {
-		return new CommonListener(type, this);
-	}
-
-	public CommonMouseMotionListener createMMListener() {
-		return new CommonMouseMotionListener();
-	}
-
-	public CommonMouseListener createMouseListener() {
-		return new CommonMouseListener(this);
-	}
-
-	public ItemListener createItemListener() {
-		return new ItemListener() {
-
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if (e.getStateChange() == ItemEvent.SELECTED) {
-					randomWeights = true;
-				} else {
-					randomWeights = false;
-				}
-
-			}
-		};
-	}
-
-	public void repaint() {
-		view.repaint();
-	}
-
-	public void setLoadedData(List<Line> lines, List<Line> screenLines, Set<Point> points) {
-		this.lines = lines;
-		this.polyLines = screenLines;
-		this.points = points;
-		view.init(lines, points);
-	}
-
-	public void finished() {
-		// straightSkeleton.add(lines);
-		// polygons = null;
-		repaint();
-		finished = true;
-		restart = true;
-		isRunning = false;
-		animation = false;
-		step = false;
-		saveSnapshot(null, true);
-		getHistory().historyPtr = getHistory().snapshots.size();
-		nextStep = true;
-		table.setValueAt(new Boolean(true), straightSkeletons.indexOf(straightSkeleton), 0);
-	}
-
-	public void publish(final List<Pair<String, Boolean>> chunks, Point i, List<Triangle> triangles) {
-		JLabel label = null;
-		if (!chunks.isEmpty() && chunks.get(0).getLeft() != "Triangulated") {
-			Graphics2D g2 = (Graphics2D) view.getGraphics();
-			int width = g2.getFontMetrics().stringWidth(chunks.get(0).getLeft());
-			label = new JLabel(chunks.get(0).getLeft());
-			label.setLocation((int) (i.current_x - width / 2), (int) (i.current_y + 20));
-			if (!nextStep)
-                setCurrentEvent(label);
-		}
-		view.setCurrentData(straightSkeletons, straightSkeleton, triangles);
-		if (!chunks.isEmpty() && chunks.get(0).getRight()) {
-			saveSnapshot(null, true);
-		}
-		view.repaint();
-	}
+	/**
+	 * To be called for kotton trace export.
+	 */
+	@Setter @Getter Consumer<Pair<Event, List<Triangle>>> tracer;
 
 	/**
-	 * For now, we'll only need history of currently selected skeleton.
+	 * For small differences between coordinates, affine transform offered by the swing
+	 * canvas seems to break.  This is an attempt to help with that at input stage.
+	 * The scaling we do here is for now implemented for one input format and is lossless
+	 * (operates on rationals).
 	 */
-	private HistoryState getHistory() {
-		if (history.get(straightSkeleton) == null) {
-			history.put(straightSkeleton, new HistoryState());
-		}
-		return history.get(straightSkeleton);
+	public static CoordinatesScaler.ScalingData inputScalingData;
+
+	/**
+	 * We have to globally change point comparison logic while making history snapshots.
+	 * See buildSnapshot() and Point.equals().
+	 */
+	public static boolean HISTORY_MODE = false;
+
+	/**
+	 * As the design mixes computations, rendering and state quite intricately,
+	 * for purpose of providing means of navigating back through events we'll
+	 * try and keep a history of corresponding states, i.e. (cloned) data relevant to
+	 * rendering those, plus one more snapshot (lastState below) for whenever
+	 * we want to go back from non-event point.
+	 */
+	@Data public class Snapshot {
+	    private final StraightSkeleton skeleton;
+		private final Set<Point> points;
+		private final List<Set<Point>> polygons;
+		private final List<Line> polyLines;
+		private final List<Line> lines;
+		private final List<Triangle> triangles;
+		private final JLabel currentEvent;
 	}
 
 	/**
 	 * As the classes' clone logic seems to vary or involve changing global counters,
 	 * we'll resort to making a deep copy of what we want manually.
 	 */
-	@Synchronized
 	private Snapshot buildSnapshot(
 			StraightSkeleton straightSkeleton,
 			Set<Point> points,
@@ -246,7 +128,7 @@ public class Controller {
 			List<Line> polyLines,
 			List<Line> lines,
 			List<Triangle> triangles,
-			JLabel label) {
+			JLabel currentEvent) {
 
 		// A hack to make point comparison work with maps herein.  See Point.equals().
 		HISTORY_MODE = true;
@@ -279,9 +161,9 @@ public class Controller {
 
 		val clonedLineListsMap = new LinkedHashMap<List<Line>, List<Line>>();
 		Function<List<Line>, List<Line>> cloneLineList = (ls) -> {
-		    if (!clonedLineListsMap.containsKey(ls))
+			if (!clonedLineListsMap.containsKey(ls))
 				clonedLineListsMap.put(ls, ls.stream().map(cloneLine).collect(Collectors.toList()));
-		    return clonedLineListsMap.get(ls);
+			return clonedLineListsMap.get(ls);
 		};
 
 		StraightSkeleton snapSkeleton;
@@ -310,13 +192,13 @@ public class Controller {
 		val snapLines = cloneLineList.apply(lines);
 
 		val snapPolygons = new ArrayList<Set<Point>>();
-		for (val pts : polygons) {
-			val newPoly = new LinkedHashSet<Point>();
-			for (val p : pts) {
-			    newPoly.add(clonePoint.apply(p));
-			}
-			snapPolygons.add(newPoly);
-		}
+        for (val pts : polygons) {
+            val newPoly = new LinkedHashSet<Point>();
+            for (val p : pts) {
+                newPoly.add(clonePoint.apply(p));
+            }
+            snapPolygons.add(newPoly);
+        }
 
 		val snapTriangles = new ArrayList<Triangle>();
 		for (val tri: triangles) {
@@ -337,7 +219,7 @@ public class Controller {
 				for (val line : pt.adjacentLines) {
 					if (clonedLinesMap.get(line) == null) {
 						rescan = !clonedPointsMap.containsKey(line.getP1()) ||
-								 !clonedPointsMap.containsKey(line.getP2());
+								!clonedPointsMap.containsKey(line.getP2());
 						cloneLine.apply(line);
 					}
 				}
@@ -349,257 +231,362 @@ public class Controller {
 			snapPoints.add(clonePoint.apply(pt));
 		}
 
-        for (val pt: clonedPointsMap.values()) {
-		    pt.adjacentLines = pt.adjacentLines.stream().map((x) -> clonedLinesMap.get(x)).collect(Collectors.toList());
-		    if (pt.adjacentLines.contains(null))
+		for (val pt: clonedPointsMap.values()) {
+			pt.adjacentLines = pt.adjacentLines.stream().map((x) -> clonedLinesMap.get(x)).collect(Collectors.toList());
+			if (pt.adjacentLines.contains(null))
 				System.err.println("History forgot a line");
 		}
 
 		HISTORY_MODE = false;
 
-		// FIXME: shouldn't there be a difference between lines and polylines?!
-		System.err.println("SNAPSHOT BUILT: " + polyLines.size() + "/" + lines.size() + " -> " + snapPolyLines.size() + "/" + snapLines.size() );
-		return new Snapshot(snapSkeleton, snapPoints, snapPolygons, snapPolyLines, snapLines, snapTriangles, label);
+		return new Snapshot(snapSkeleton, snapPoints, snapPolygons, snapPolyLines, snapLines, snapTriangles, currentEvent);
 	}
 
-	public Snapshot buildSnapshot(JLabel label) {
-		return buildSnapshot(straightSkeleton, points, polygons, polyLines, lines, view.getScreenTriangles(), label);
-	}
-
-	/**
-	 * Saves snapshot of currently seen data to history or lastState.
-	 */
-	public Snapshot saveSnapshot(JLabel label, boolean toHistory) {
-		Snapshot state = buildSnapshot(label);
-		if (toHistory)
-			getHistory().snapshots.add(state);
-		else
-			getHistory().lastState = state;
-		return state;
+	public Snapshot buildSnapshot(Context context) {
+		return buildSnapshot(
+				context.getSkeleton(false),
+				context.getPoints(false),
+				context.getPolygons(false),
+				context.getPolyLines(false),
+				context.getLines(false),
+				context.getTriangles(false),
+				context.getCurrentEvent(false));
 	}
 
 	/**
-	 * Init from a snapshot (i.e. copy of a skeleton).
+	 * We want to keep the history for each skeleton.
+	 * Below, historyPtr should be either zero or 1-based index of currently
+	 * shown (for given skeleton) history event.
 	 */
-	public void initFromSnapshot(Snapshot snapshot) {
-		HISTORY_MODE = true;
-		addStraightSkeleton(snapshot.getStraightSkeleton());
-		setLoadedData(snapshot.getLines(), snapshot.getPolyLines(), snapshot.getPoints());
-		setPolygons(snapshot.getPolygons());
-		view.setCurrentData(null, null, snapshot.getTriangles());
-		setCurrentEvent(null);
-		// view.repaint();
-		HISTORY_MODE = false;
+	@Data private class History {
+		@Getter private final List<Snapshot> snapshots = new ArrayList<>();
+		@Getter private int historyPtr = 0;
+		private Snapshot lastState = null;
+
+		public Snapshot getCurrentSnapshot() {
+		    if (historyPtr == 0 || historyPtr > snapshots.size()) return null;
+		    return snapshots.get(historyPtr-1);
+		}
+
+		public void back() {
+		    if (historyPtr < 2) return;
+		    historyPtr--;
+		}
+
+		public void forward() {
+			historyPtr++;
+			if (historyPtr > snapshots.size()) historyPtr = 0;
+		}
+
+		public boolean isEmpty() {
+			return snapshots.isEmpty();
+		}
+
+		public boolean atFirst() {
+		    return historyPtr == 1;
+		}
+
+		public boolean atLast() {
+			return historyPtr == snapshots.size();
+		}
+
+		public boolean isBrowsing() {
+			return historyPtr > 0;
+		}
+
+		public void setToLast() {
+		    historyPtr = snapshots.size();
+		}
+
+		public void unbrowse() {
+			historyPtr = 0;
+		}
+
 	}
 
 	/**
-	 * Loads a snapshot from history without changing currently considered skeleton,
-     * i.e. makes said snapshot currently viewed point in history.
+	 * We want to keep a number of polygons (with differing geometry and/or
+	 * edge weighting) for comparison purposes.  For this, we'll try and stick
+	 * things which are dependent on the polygon into a list of contexts
+	 * and switch between those.
 	 */
-	private Snapshot loadSnapshot(boolean fromHistory) {
-		HISTORY_MODE = true;
-		Snapshot state;
-	    if (fromHistory)
-	    	state = getHistory().snapshots.get(getHistory().historyPtr-1);
-		else
-		    state = getHistory().lastState;
-		setLoadedData(state.getLines(), state.getPolyLines(), state.getPoints());
-		setPolygons(state.getPolygons());
-		view.setCurrentData(null, null, state.getTriangles());
-		setCurrentEvent(state.getLabel());
+	@EqualsAndHashCode @RequiredArgsConstructor
+	public class Context {
+        // All these flags determine the system behaviour in ways I'll never comprehend :).
+		public boolean isRunning = false;
+		public boolean restart = false;
+		public boolean move = false;
+		public boolean nextStep = true;
+		public boolean step = false;
+		public boolean animation = false;
+		public boolean enabled = true;
+		public boolean closed = false;
+		public boolean editMode = false;
+		public boolean finished = false;
+		public boolean initialize = false;
+
+		@Setter private StraightSkeleton skeleton = new StraightSkeleton();
+		@Setter private List<Line> lines = new ArrayList<>();
+		@Setter private List<Line> polyLines = new ArrayList<>();
+		@Setter private Set<Point> points = new LinkedHashSet<>();
+		@Setter private List<Set<Point>> polygons = new ArrayList<>();
+		@Setter private JLabel currentEvent = null;
+		@Getter private History history = new History();
+		@Getter @Setter private SimpleAlgorithm algorithm = null;
+
+		public StraightSkeleton getSkeleton(Boolean throughHistory) {
+		    if (!throughHistory || history.historyPtr == 0) return skeleton;
+		    return history.getCurrentSnapshot().getSkeleton();
+		}
+
+		public List<Line> getLines(Boolean throughHistory) {
+			if (!throughHistory || history.historyPtr == 0) return lines;
+			return history.getCurrentSnapshot().getLines();
+		}
+
+		public List<Line> getPolyLines(Boolean throughHistory) {
+			if (!throughHistory || history.historyPtr == 0) return polyLines;
+			return history.getCurrentSnapshot().getPolyLines();
+		}
+
+		public Set<Point> getPoints(Boolean throughHistory) {
+			if (!throughHistory || history.historyPtr == 0) return points;
+			return history.getCurrentSnapshot().getPoints();
+		}
+
+		public List<Set<Point>> getPolygons(Boolean throughHistory) {
+			if (!throughHistory || history.historyPtr == 0) return polygons;
+			return history.getCurrentSnapshot().getPolygons();
+		}
+
+		public List<Triangle> getTriangles(Boolean throughHistory) {
+			if (!throughHistory || history.historyPtr == 0) {
+				if (algorithm == null) return null;
+				return algorithm.getTriangles();
+			}
+			return history.getCurrentSnapshot().getTriangles();
+		}
+
+		public JLabel getCurrentEvent(Boolean throughHistory) {
+			if (!throughHistory || history.historyPtr == 0) return currentEvent;
+			return history.getCurrentSnapshot().getCurrentEvent();
+		}
+
+		public void saveSnapshot(boolean toHistory) {
+			Snapshot state = buildSnapshot(this);
+			if (toHistory)
+				history.snapshots.add(state);
+			else
+				history.lastState = state;
+		}
+
+		public boolean isBrowsingHistory() {
+			return history.isBrowsing();
+		}
+
+	}
+	private List<Context> contexts;
+	private int contextPtr;
+	// TODO: synchronize view methods where necessary
+	@Getter private final Object contextLock = new Object();
+
+	/**
+	 * We cannot do this inside our constructor since we need table here,
+	 * and table constructor needs controller.
+	 */
+	public void initContexts(ConfigurationTable table) {
+		this.contexts = new ArrayList<Context>();
+		this.contexts.add(new Context());
+		this.contextPtr = 0;
+		this.table = table;
+		table.addRow();
+		table.setRowSelectionInterval(table.getRowCount()-1, table.getRowCount()-1);
+	}
+
+	public Context getContext(int ptr) {
+		return contexts.get(ptr);
+	}
+
+	public Context getContext() {
+		return getContext(contextPtr);
+	}
+
+	@Synchronized("contextLock")
+	public void switchContext(int contextPtr) {
+		this.contextPtr = contextPtr;
+		val context = getContext();
+		view.init(context.getLines(true), context.getPoints(true));
+		view.setTriangles(context.getTriangles(true));
+		view.setCurrentEvent(context.getCurrentEvent(true));
+	}
+
+	@Synchronized("contextLock")
+	public void refreshContext() {
+		switchContext(contextPtr);
+	}
+
+	public void setView(GraphicPanel view) {
+		this.view = view;
+		refreshContext();
+	}
+
+	@Synchronized("contextLock")
+	public void setLoadedData(List<Line> lines, List<Line> screenLines, Set<Point> points) {
+		val context = getContext();
+		context.setLines(lines);
+		context.setPolyLines(screenLines);
+		context.setPoints(points);
+	}
+
+	public void addContext(Snapshot snapshot) {
+		val context = new Context();
+		context.setSkeleton(snapshot.getSkeleton());
+		context.setPoints(snapshot.getPoints());
+		context.setPolygons(snapshot.getPolygons());
+		context.setPolyLines(snapshot.getPolyLines());
+		context.setLines(snapshot.getLines());
+		context.setCurrentEvent(snapshot.getCurrentEvent());
+		contexts.add(context);
+		table.addRow();
+		table.setRowSelectionInterval(table.getRowCount()-1, table.getRowCount()-1);
+	}
+
+	@Synchronized("contextLock")
+	public void cloneContext(int ptr) {
+		val snapshot = buildSnapshot(contexts.get(ptr));
+		addContext(snapshot);
+		switchContext(contexts.size()-1);
+	}
+
+	@Synchronized("contextLock")
+	public void removeContext(int ptr) {
+		table.removeRow(ptr);
+		contexts.remove(ptr);
+		if(contexts.isEmpty()) initContexts(table);
+		refreshContext();
 		view.repaint();
-		HISTORY_MODE = false;
-		return state;
 	}
 
-	private void truncateHistory() {
-	    if (getHistory().historyPtr == 0)
-	    	return;
-	    getHistory().snapshots.subList(getHistory().historyPtr, getHistory().snapshots.size()).clear();
-	}
-
-	public boolean isBrowsingHistory() {
-	    return getHistory().historyPtr > 0;
-	}
-
-	public boolean wantsUpdates() {
-		return isNextStep() && !isBrowsingHistory() && !finished;
-	}
-
-	private ImageIcon getImage(String name) {
-		InputStream imgStream = getClass().getClassLoader().getResourceAsStream(name + ".png");
-        if (imgStream == null)
-            imgStream = getClass().getClassLoader().getResourceAsStream("tango/" + name + ".png");
-        if (imgStream != null) {
-            ImageIcon icon = null;
-            try {
-                icon = new ImageIcon(ImageIO.read(imgStream));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return icon;
-        }
-        return null;
-        /*
-        imgStream = getClass().getClassLoader().getResourceAsStream("tango/" + name + ".svg");
-        if (imgStream == null) return null;
-
-        SVGTranscoder transcoder = new SVGTranscoder();
-        TranscodingHints hints = new TranscodingHints();
-        hints.put(ImageTranscoder.KEY_WIDTH, new Float(64));
-        hints.put(ImageTranscoder.KEY_HEIGHT, new Float(64));
-        hints.put(ImageTranscoder.KEY_DOM_IMPLEMENTATION, SVGDOMImplementation.getDOMImplementation());
-        hints.put(ImageTranscoder.KEY_DOCUMENT_ELEMENT_NAMESPACE_URI, SVGConstants.SVG_NAMESPACE_URI);
-        hints.put(ImageTranscoder.KEY_DOCUMENT_ELEMENT, SVGConstants.SVG_SVG_TAG);
-        hints.put(ImageTranscoder.KEY_XML_PARSER_VALIDATING, false);
-        transcoder.setTranscodingHints(hints);
-
-        try {
-            transcoder.transcode(new TranscoderInput(imgStream), null);
-        } catch (TranscoderException e) {
-            e.printStackTrace();
-            return null;
-        }
-        // FIXME: why do we get null here?
-        if (transcoder.getImage() == null) return null;
-        return new ImageIcon(transcoder.getImage());
-        */
-    }
-
-	public int getSelectedIndex() {
-		for (int i = 0; i < table.getRowCount(); i++) {
-			boolean value = (boolean) table.getModel().getValueAt(i, 0);
-			if (value) {
-				return i;
-			}
-
-		}
-		return -1;
-	}
-
-	public void playSelected(boolean animate, boolean recreate) {
-		restart = true;
-		animation = animate;
-		if (recreate) {
-			restart(null);
-		}
-		runAlgorithm();
-	}
-
-	public void switchToSkeleton(int skeleton, boolean editMode) {
-		System.err.println("LOADING SKELETON " + skeleton);
-		if (!straightSkeletons.get(skeleton).equals(straightSkeleton)) {
-			saveSnapshot(null, false);
-			straightSkeleton = straightSkeletons.get(skeleton);
-			val snapshot = loadSnapshot(false);
-			restart(snapshot.getPolyLines());
-		}
-
-		this.editMode = editMode;
-	}
-
-	public List<Line> createPolyLines() {
-		Point p1;
-		Point p2;
-		List<Line> polyLines = new ArrayList<Line>();
-
-		Line l1 = lines.get(0);
-		Point first = l1.getP1();
-		p1 = new Point(l1.getP1().getNumber(), l1.getP1().getOriginalX(), l1.getP1().getOriginalY());
-		for (Line li : lines) {
-			if (li.getP2().getNumber() != first.getNumber()) {
-				p2 = new Point(li.getP2().getNumber(), li.getP2().getOriginalX(), li.getP2().getOriginalY());
-			} else {
-				p2 = polyLines.get(0).getP1();
-			}
-			Line line = new Line(p1, p2, li.getWeight());
-			p1.adjacentLines.add(line);
-			p2.adjacentLines.add(line);
-
-			p1 = p2;
-
-			line.polyLine = true;
-			polyLines.add(line);
-		}
-		return polyLines;
-	}
-
-	public void createPolygon(Graph graph) {
-		FileHandler.createPoly(view, this, graph);
-
-	}
-
-	public int generateWeight() {
-		int weight = randomGenerator.nextInt(10);
-		return weight == 0 ? 1 : weight;
-	}
-
-	public void runAlgorithm() {
-		finished = false;
-		isRunning = true;
-		ArrayList<Point> points = new ArrayList<>(this.points);
+	public void runAlgorithm(Context context) {
+		context.finished = false;
+		context.isRunning = true;
+		ArrayList<Point> points = new ArrayList<>(context.getPoints(false));
 		if (points.size() > 2) {
-			Util.closePolygon(points, lines);
-			closed = true;
+			Util.closePolygon(points, context.getLines(false));
+			context.closed = true;
 			isCounterClockwise = Util.isCounterClockwise(points);
-			if (algo == null) straightSkeletons = getStraightSkeletons();
-            if (straightSkeleton != null) straightSkeleton.clear();
-			move = false;
+			context.getSkeleton(false).clear();
+			context.move = false;
 			try {
-				algo = new SimpleAlgorithm(points, lines, animation, this);
+				val algo = new SimpleAlgorithm(points, context.getLines(false), context.animation, this, context);
+				context.setAlgorithm(algo);
+				context.setPolygons(new ArrayList<>());
+				context.getAlgorithm().execute();
 			} catch (CloneNotSupportedException e) {
 				e.printStackTrace();
 			}
-			polygons = new ArrayList<Set<Point>>();
-			algo.execute();
 		}
 	}
 
-	public void runAlgorithmNoSwingWorker() throws Exception {
-		finished = false;
-		isRunning = true;
-		ArrayList<Point> points = new ArrayList<>(this.points);
+	public void runAlgorithmNoSwingWorker(Context context) throws Exception {
+		context.finished = false;
+		context.isRunning = true;
+		ArrayList<Point> points = new ArrayList<>(context.getPoints(false));
 		if (points.size() > 2) {
-
-			Util.closePolygon(points, lines);
-			closed = true;
+			Util.closePolygon(points, context.getLines(false));
+			context.closed = true;
 			isCounterClockwise = Util.isCounterClockwise(points);
-			straightSkeleton = null;
-			straightSkeletons = new ArrayList<StraightSkeleton>();
 			polyMeasureData = null;
-//			try {
-				SimpleAlgorithmNoSwingWorker algoNoSwing = new SimpleAlgorithmNoSwingWorker(points, lines, this);
-				polygons = new ArrayList<Set<Point>>();
-				algoNoSwing.execute();	
-//			} catch (CloneNotSupportedException e) {
-//				throw new Exception();
-//			} catch (Exception e) {
-//				throw new Exception();
-//				
-//			}
-
+			SimpleAlgorithmNoSwingWorker algoNoSwing = new SimpleAlgorithmNoSwingWorker(points, context.getLines(false), this, context);
+			context.setPolygons(new ArrayList<>());
+			algoNoSwing.execute();
 		}
 	}
 
-	public void restart(List<Line> polyLines) {
-		// finished = false;
+	public void publish(Context context, final List<Pair<String, Boolean>> chunks, Point i, List<Triangle> triangles) {
+		JLabel label = null;
+		if (!chunks.isEmpty() && chunks.get(0).getLeft() != "Triangulated") {
+			Graphics2D g2 = (Graphics2D) view.getGraphics();
+			int width = g2.getFontMetrics().stringWidth(chunks.get(0).getLeft());
+			label = new JLabel(chunks.get(0).getLeft());
+			label.setLocation((int) (i.current_x - width / 2), (int) (i.current_y + 20));
+			if (!context.nextStep) context.setCurrentEvent(label);
+		}
+		// view.setTriangles(context.getTriangles(true));
+		if (!chunks.isEmpty() && chunks.get(0).getRight()) {
+			context.saveSnapshot(true);
+		}
+		view.repaint();
+	}
+
+	public boolean wantsUpdates(Context context) {
+		return context.nextStep && !context.isBrowsingHistory() && !context.finished;
+	}
+
+	public void playSelected(boolean animate, boolean recreate) {
+		val context = getContext();
+		context.restart = true;
+		context.animation = animate;
+		if (recreate) {
+			restart(context, null);
+		}
+		runAlgorithm(context);
+	}
+
+	public void reset() {
+		JFrame frame = (JFrame) SwingUtilities.windowForComponent(view);
+		if(frame != null) frame.setTitle("Triton Applet");
+
+		for (val c: contexts) {
+			if (c.getAlgorithm() != null && c.getAlgorithm().getState().equals(StateValue.STARTED)) {
+				c.getAlgorithm().cancel(true);
+			}
+		}
+
+		table.removeAllRows();
+		initContexts(table);
+		view.reset();
+		refreshContext();
+		view.repaint();
+
+		EventCalculation.vertex_counter.clear();
+		EventCalculation.skeleton_counter = 0;
+
+		FileHandler.file = null;
+	}
+
+	public void finished(Context context) {
+		// straightSkeleton.add(lines);
+		// polygons = null;
+		repaint();
+		context.finished = true;
+		context.restart = true;
+		context.isRunning = false;
+		context.animation = false;
+		context.step = false;
+		context.saveSnapshot(true);
+		context.nextStep = true;
+		// context.getHistory().historyPtr = getHistory().snapshots.size();
+		table.setValueAt(new Boolean(true), contextPtr, 0);
+	}
+
+	public void restart(Context context, List<Line> polyLines) {
+		context.finished = false;
+		context.history = new History();
+		val points = context.getPoints(false);
+		val lines = context.getLines(false);
 		points.clear();
-	    if (!lines.equals(polyLines)) lines.clear();
+		if (!lines.equals(polyLines)) lines.clear();
 
-		getHistory().snapshots.clear();
-		getHistory().historyPtr = 0;
+		if (polyLines == null) {
+			polyLines = context.getPolyLines(false);
+		} else if (!polyLines.equals(context.getPolyLines(false))) {
+			context.getPolyLines(false).clear();
+			context.getPolyLines(false).addAll(polyLines);
+		}
 
-
-		// alreadyMovedPts.clear();
 		Point p1;
 		Point p2;
-		// boolean add = false;
-		if (polyLines == null) {
-			polyLines = this.polyLines;
-		} else if (!polyLines.equals(this.polyLines)) {
-			this.polyLines.clear();
-			this.polyLines.addAll(polyLines);
-		}
 		Line l1 = polyLines.get(0);
 		Point first = l1.getP1();
 		p1 = new Point(l1.getP1().getNumber(), l1.getP1().getOriginalX(), l1.getP1().getOriginalY());
@@ -642,60 +629,183 @@ public class Controller {
 
 		view.init(lines, points);
 		view.repaint();
+	}
 
+	@Synchronized("contextLock")
+	private void play() {
+		val context = getContext();
+		val history = context.getHistory();
+		history.unbrowse();
+        context.step = false;
+        context.nextStep = true;
+		if (context.restart) {
+			restart(context, null);
+			context.restart = false;
+			EventCalculation.setVertexCounter(context, view.getPoints().size());
+            context.getSkeleton(false).polygon = null;
+		}
+		if (!context.isRunning) {
+			context.animation = true;
+			runAlgorithm(context);
+			view.setEnabled(false);
+		}
+	}
+
+	@Synchronized("contextLock")
+	private void back() {
+	    val context = getContext();
+	    val history = context.getHistory();
+		if (!context.finished && (context.nextStep || history.isEmpty() || history.atFirst())) {
+			context.step = true;
+			return;
+		}
+		if (!history.isBrowsing()) {
+			history.setToLast();
+			// saveSnapshot(false);
+			if (!context.nextStep) history.back();
+			context.nextStep = false;
+		} else {
+		    history.back();
+		}
+	}
+
+	@Synchronized("contextLock")
+	private void step() {
+		val context = getContext();
+		val history = context.getHistory();
+		if (history.isBrowsing()) {
+			if (history.atLast()) {
+				if (!context.finished) history.unbrowse();
+			} else {
+				history.forward();
+			}
+		}
+		/*
+		if (context.restart) {
+			restart(null);
+			EventCalculation.setVertexCounter(context, view.getPoints().size());
+			context.restart = false;
+			context.nextStep = true;
+			context.getSkeleton(false).polygon = null;
+		}
+		*/
+		if (!context.isRunning) {
+			context.animation = true;
+			runAlgorithm(context);
+			view.setEnabled(false);
+		}
+		context.step = true;
+		context.nextStep = !context.nextStep;
 	}
 
 	public void setCurrentEvent(JLabel l) {
 		view.setCurrentEvent(l);
 	}
 
-	public double getAverage_weight() {
-		int sum = 0;
-		for (Line l : this.polyLines) {
-			sum += l.getWeight();
-		}
-		return sum / this.polyLines.size();
+	public CommonListener createActionListener(TYPES type) {
+		return new CommonListener(type, this);
 	}
 
-	public void addStraightSkeleton(StraightSkeleton skeleton) {
-		this.straightSkeleton = skeleton;
-		straightSkeletons.add(skeleton);
-		table.addRow();
-		table.setRowSelectionInterval(table.getRowCount()-1, table.getRowCount()-1);
+	public CommonMouseMotionListener createMMListener() {
+		return new CommonMouseMotionListener();
 	}
 
-	public void removeStraightSkeleton(int skeleton) {
-		StraightSkeleton selectedSk = straightSkeletons.get(skeleton);
-		history.remove(selectedSk);
-		straightSkeletons.remove(skeleton);
-		table.removeRow(skeleton);
-		if (selectedSk.equals(straightSkeleton)) {
-			int next = skeleton;
-			if (straightSkeletons.size() == skeleton) {
-				next = next - 1;
-			}
-			if (!straightSkeletons.isEmpty()) {
-				StraightSkeleton nextSkeleton = straightSkeletons.get(next);
-				if (nextSkeleton != null) {
-					table.setValueAt(new Boolean(true), straightSkeletons.indexOf(nextSkeleton), 0);
+	public CommonMouseListener createMouseListener() {
+		return new CommonMouseListener(this);
+	}
+
+	public ItemListener createItemListener() {
+		return new ItemListener() {
+
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					randomWeights = true;
+				} else {
+					randomWeights = false;
 				}
+
 			}
-		}
+		};
+	}
+
+	public void repaint() {
 		view.repaint();
 	}
 
-	public void addPolygon(Set<Point> pts) {
-		if (polygons != null) {
-			polygons.add(pts);
+	private ImageIcon getImage(String name) {
+		InputStream imgStream = getClass().getClassLoader().getResourceAsStream(name + ".png");
+        if (imgStream == null)
+            imgStream = getClass().getClassLoader().getResourceAsStream("tango/" + name + ".png");
+        if (imgStream != null) {
+            ImageIcon icon = null;
+            try {
+                icon = new ImageIcon(ImageIO.read(imgStream));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return icon;
+        }
+        return null;
+    }
+
+	public List<Line> createPolyLines(Context context) {
+		Point p1;
+		Point p2;
+		List<Line> polyLines = new ArrayList<Line>();
+
+		val lines = context.getLines(false);
+
+		Line l1 = lines.get(0);
+		Point first = l1.getP1();
+		p1 = new Point(l1.getP1().getNumber(), l1.getP1().getOriginalX(), l1.getP1().getOriginalY());
+		for (Line li : lines) {
+			if (li.getP2().getNumber() != first.getNumber()) {
+				p2 = new Point(li.getP2().getNumber(), li.getP2().getOriginalX(), li.getP2().getOriginalY());
+			} else {
+				p2 = polyLines.get(0).getP1();
+			}
+			Line line = new Line(p1, p2, li.getWeight());
+			p1.adjacentLines.add(line);
+			p2.adjacentLines.add(line);
+
+			p1 = p2;
+
+			line.polyLine = true;
+			polyLines.add(line);
 		}
+		return polyLines;
 	}
 
-	public void removePolygon(Set<Point> pts) {
-		polygons.remove(pts);
+	public void createPolygon(Graph graph) {
+		FileHandler.createPoly(view, this, graph);
+	}
+
+	public int generateWeight() {
+		int weight = randomGenerator.nextInt(10);
+		return weight == 0 ? 1 : weight;
+	}
+
+	public double getAverage_weight(Context context) {
+		int sum = 0;
+		for (Line l : context.getPolyLines(false)) {
+			sum += l.getWeight();
+		}
+		return sum / context.getPolyLines(false).size();
+	}
+
+	public void addPolygon(Context context, Set<Point> pts) {
+		val p = context.getPolygons(false);
+		if (p != null) p.add(pts);
+	}
+
+	public void removePolygon(Context context, Set<Point> pts) {
+		val p = context.getPolygons(false);
+		if (p != null) p.remove(pts);
 	}
 
 	public void showColorChooser(int index) {
-		StraightSkeleton skeleton = straightSkeletons.get(index);
+		StraightSkeleton skeleton = contexts.get(index).getSkeleton(false);
 		Color newColor = JColorChooser.showDialog(view, "Choose Background Color", skeleton.getColor());
 		if (newColor != null) {
 			skeleton.setColor(newColor);
@@ -703,112 +813,35 @@ public class Controller {
 	}
 
 	public void toggleVisibility(int index, boolean visible) {
-		StraightSkeleton skeleton = straightSkeletons.get(index);
+		StraightSkeleton skeleton = contexts.get(index).getSkeleton(false);
 		skeleton.setVisible(visible);
 		view.repaint();
 	}
 
-	public void setTable(ConfigurationTable table) {
-		this.table = table;
-	}
-
-	public void setView(GraphicPanel view) {
-		this.view = view;
-		view.init(lines, points);
-	}
-
-	public void reset() {
-        // JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(view);
-		JFrame frame = (JFrame) SwingUtilities.windowForComponent(view);
-		if(frame != null) frame.setTitle("Triton Applet");
-
-		history = new HashMap<>();
-		getHistory().historyPtr = 0;
-		if (algo != null && algo.getState().equals(StateValue.STARTED)) {
-			algo.cancel(true);
-		}
-		straightSkeleton = null;
-		if (straightSkeletons != null) {
-			straightSkeletons.clear();
-		}
-		lines.clear();
-		polyLines.clear();
-		points.clear();
-		view.reset();
-		view.init(lines, points);
-		view.repaint();
-		table.removeAllRows();
-		EventCalculation.vertex_counter = 1;
-		EventCalculation.skeleton_counter = 0;
-		isRunning = false;
-		restart = false;
-		move = false;
-		nextStep = true;
-		step = false;
-		animation = false;
-		enabled = true;
-		closed = false;
-		initialize = false;
-		init_drag = false;
-		editMode = false;
-		FileHandler.file = null;
-
-	}
-
+	/*
+	// disabled until safe
 	public StraightSkeleton getStraightSkeleton() {
-		if (getHistory().historyPtr > 0 && getHistory().historyPtr <= getHistory().snapshots.size())
-			return getHistory().snapshots.get(getHistory().historyPtr-1).getStraightSkeleton();
-		return straightSkeleton;
+	    return getContext().getSkeleton(true);
+	}
+	*/
+
+	public StraightSkeleton getStraightSkeleton(boolean fromHistory) {
+		return getContext().getSkeleton(fromHistory);
 	}
 
+	public StraightSkeleton getStraightSkeleton(Context context, boolean fromHistory) {
+		return context.getSkeleton(fromHistory);
+	}
+
+	/*
+	// disabled until safe
 	public List<StraightSkeleton> getStraightSkeletons() {
-		if (straightSkeletons == null) straightSkeletons = new ArrayList<StraightSkeleton>();
-        if (isBrowsingHistory()) {
-            List<StraightSkeleton> res = new ArrayList<>();
-            for (val s : straightSkeletons) {
-            	if (s == straightSkeleton)
-            		res.add(getStraightSkeleton());
-				else
-					res.add(s);
-			}
-            return res;
-		}
-		return straightSkeletons;
+		return contexts.stream().map(c -> c.getSkeleton(true)).collect(Collectors.toList());
 	}
+	*/
 
-	public boolean isMove() {
-		return move;
-	}
-
-	public boolean isNextStep() {
-		return nextStep;
-	}
-
-	public void setNextStep(boolean nextStep) {
-		this.nextStep = nextStep;
-	}
-
-	public boolean isStep() {
-		return step;
-	}
-
-	public void setPolygons(List<Set<Point>> polygons) {
-		this.polygons = polygons;
-	}
-
-	public List<Set<Point>> getPolygons() {
-	    if (getHistory().historyPtr > 0 && getHistory().historyPtr <= getHistory().snapshots.size())
-	    	return getHistory().snapshots.get(getHistory().historyPtr-1).getPolygons();
-		return polygons;
-	}
-
-	public List<Line> getPolyLines() {
-		if (getHistory().historyPtr > 0 && getHistory().historyPtr <= getHistory().snapshots.size())
-			return getHistory().snapshots.get(getHistory().historyPtr-1).getPolyLines();
-		return polyLines;
-	}
-	public boolean isAnimation() {
-		return animation;
+	public List<StraightSkeleton> getStraightSkeletons(boolean fromHistory) {
+		return contexts.stream().map(c -> c.getSkeleton(fromHistory)).collect(Collectors.toList());
 	}
 
 	class CommonListener implements ActionListener {
@@ -823,40 +856,39 @@ public class Controller {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			switch (type) {
-			case OPEN:
-				open();
-				break;
-			case SAVE:
-				save(false);
-				break;
-			case SAVE_AS:
-				save(true);
-				break;
-			case PLAY:
-				play();
-				break;
-			case BACK:
-				back();
-				break;
-			case STEP:
-				step();
-				break;
-			case RESET:
-				reset();
-				break;
-			case SVG:
-				saveSVG();
-				// case OPEN_POLY:
-				// openPoly();
-				// break;
+				case OPEN:
+					open();
+					break;
+				case SAVE:
+					save(false);
+					break;
+				case SAVE_AS:
+					save(true);
+					break;
+				case PLAY:
+					play();
+					break;
+				case BACK:
+					back();
+					break;
+				case STEP:
+					step();
+					break;
+				case RESET:
+					reset();
+					break;
+				case SVG:
+					saveSVG();
+					// case OPEN_POLY:
+					// openPoly();
+					// break;
 			}
 
 		}
 
 		private void open() {
 			FileHandler.open(view, controller);
-			closed = true;
-
+			getContext().closed = true;
 		}
 
 		// private void openPoly() {
@@ -864,100 +896,11 @@ public class Controller {
 
 		// }
 		private void save(boolean saveAs) {
-			FileHandler.save(controller.polyLines, saveAs, inputScalingData);
+			FileHandler.save(controller.getContext().getPolyLines(false), saveAs, inputScalingData);
 		}
 
 		private void saveSVG() {
 			FileHandler.saveSVG(view, true);
-
-		}
-
-		private void play() {
-            getHistory().historyPtr = getHistory().snapshots.size();
-			if (getHistory().historyPtr != 0) {
-				// loadSnapshot(false);
-                loadSnapshot(true);
-                // truncateHistory();
-				step = false;
-				nextStep = true;
-				getHistory().historyPtr = 0;
-			}
-			if (step) {
-				step = false;
-				nextStep = true;
-			}
-			if (restart) {
-				getHistory().snapshots.clear();
-				getHistory().historyPtr = 0;
-				step = false;
-				nextStep = true;
-				restart(null);
-                restart = false;
-				EventCalculation.vertex_counter = view.getPoints().size();
-				if(controller.getStraightSkeleton()!= null){
-					controller.getStraightSkeleton().polygon = null;
-				}
-			}
-			if (!isRunning) {
-				animation = true;
-				runAlgorithm();
-				view.setEnabled(false);
-			}
-		}
-
-        private void back() {
-		    if (!finished && (nextStep || getHistory().snapshots.isEmpty() || getHistory().historyPtr == 1)) {
-                step = true;
-		    	return;
-            }
-		    if (getHistory().historyPtr == 0) {
-				getHistory().historyPtr = getHistory().snapshots.size();
-				// saveSnapshot(false);
-				if (!nextStep && getHistory().historyPtr > 1) {
-					getHistory().historyPtr--;
-                    loadSnapshot(true);
-				}
-				nextStep = false;
-			} else {
-				getHistory().historyPtr--;
-				loadSnapshot(true);
-			}
-        }
-
-		private void step() {
-		    if (getHistory().historyPtr != 0 && !getHistory().snapshots.isEmpty()) {
-		        getHistory().historyPtr++;
-		        if (getHistory().historyPtr > getHistory().snapshots.size()) {
-		            if (finished)
-		            	getHistory().historyPtr = getHistory().snapshots.size();
-		            else {
-						// loadSnapshot(false);
-						getHistory().historyPtr = 0;
-					}
-				} else {
-					loadSnapshot(true);
-					return;
-				}
-			}
-			if (restart) {
-		    	getHistory().snapshots.clear();
-		    	getHistory().historyPtr = 0;
-				EventCalculation.vertex_counter = view.getPoints().size();
-				nextStep = true;
-				restart(null);
-				restart = false;
-				EventCalculation.vertex_counter = view.getPoints().size();
-				if(controller.getStraightSkeleton()!= null){
-					controller.getStraightSkeleton().polygon = null;
-				}
-			}
-			if (!isRunning) {
-				animation = true;
-				runAlgorithm();
-				view.setEnabled(false);
-			}
-			step = true;
-			nextStep = !nextStep;
 		}
 
 	}
@@ -965,14 +908,12 @@ public class Controller {
 	class CommonMouseMotionListener implements MouseMotionListener {
 		@Override
 		public void mouseDragged(MouseEvent e) {
-			if (!closed) {
+			if (!getContext().closed) {
 				return;
 			}
-			move = true;
+			getContext().move = true;
 			// if (sdragPoint != null) {
-			if (!enabled) {
-				enabled = true;
-			}
+            getContext().enabled = true;
 			val loc = view.transformCoordinates(
 					e.getPoint().getX(),
 					e.getPoint().getY(), false);
@@ -992,19 +933,19 @@ public class Controller {
 			for (int j = 0; j < view.getComponentCount(); j++) {
 				CustomTextField field = ((CustomTextField) view.getComponents()[j]);
 				if (field.getScreenLine().contains(sdragPoint)) {
-					field.updatePosition(closed ? Util.isCounterClockwise(new ArrayList<Point>(points)) : false);
+					field.updatePosition(getContext().closed ? Util.isCounterClockwise(new ArrayList<Point>(getContext().getPoints(false))) : false);
 				}
 			}
 			if (!init_drag) {
-				move = false;
-				restart = true;
+				getContext().move = false;
+				getContext().restart = true;
 			}
-			restart(null);
+			restart(getContext(), null);
 		}
 
 		@Override
 		public void mouseMoved(MouseEvent e) {
-			if (!enabled) {
+			if (!getContext().enabled) {
 				return;
 			}
 			view.p2 = e.getPoint();
@@ -1022,15 +963,18 @@ public class Controller {
 		}
 
 		public void mouseClicked(MouseEvent e) {
-			if (!enabled || closed) {
+		    Context context = getContext();
+
+			if (!context.enabled || context.closed) {
 				return;
 			}
 			view.p1 = e.getPoint();
-			if (!initialize) {
-				point1 = new Point(EventCalculation.vertex_counter++, e.getPoint().getX(), e.getPoint().getY());
+			if (!context.initialize) {
+				point1 = new Point(EventCalculation.getVertexCounter(context), e.getPoint().getX(), e.getPoint().getY());
+				EventCalculation.incVertexCounter(context);
 				screenPoint1 = new Point(point1.getNumber(), point1.getOriginalX(), point1.getOriginalY());
-				points.add(point1);
-				initialize = true;
+				context.getPoints(false).add(point1);
+				context.initialize = true;
 				view.point1 = point1;
 				view.revalidate();
 				view.repaint();
@@ -1038,15 +982,16 @@ public class Controller {
 			} else {
 				double x = e.getPoint().getX();
 				double y = e.getPoint().getY();
-				point2 = checkIfPointExists(x, y);
+				point2 = checkIfPointExists(context, x, y);
 
 				Point screenPoint2 = null;
 				if (point2 == null) {
-					point2 = new Point(EventCalculation.vertex_counter++, x, y);
+					point2 = new Point(EventCalculation.getVertexCounter(context), x, y);
+					EventCalculation.incVertexCounter(context);
 					screenPoint2 = new Point(point2.getNumber(), point2.getOriginalX(), point2.getOriginalY());
 				} else {
-					closed = true;
-					screenPoint2 = polyLines.get(0).getP1();
+					context.closed = true;
+					screenPoint2 = context.getPolyLines(false).get(0).getP1();
 					view.p1 = null;
 					view.p2 = null;
 				}
@@ -1055,8 +1000,10 @@ public class Controller {
 				if (randomWeights) {
 					weight = generateWeight();
 				}
-				
 
+				val polyLines = context.getPolyLines(false);
+				val lines = context.getLines(false);
+				val points = context.getPoints(false);
 				if (point1.adjacentLines.size() > 0) {
 					Point prevPoint = Util.getOtherPointOfLine(point1, point1.adjacentLines.get(0));
 					if (collinear(prevPoint, point1, point2)) {
@@ -1104,8 +1051,8 @@ public class Controller {
 
 		}
 
-		private Point checkIfPointExists(double x, double y) {
-			for (Line line : lines) {
+		private Point checkIfPointExists(Context context, double x, double y) {
+			for (Line line : context.getLines(false)) {
 				Point p1 = line.getP1();
 				Point p2 = line.getP2();
 				if (Point2D.distance(p1.getOriginalX(), p1.getOriginalY(), x, y) < 10) {
@@ -1137,13 +1084,13 @@ public class Controller {
 
 		@SuppressWarnings("unchecked")
 		public void mousePressed(MouseEvent e) {
-			if (!closed) {
+			if (!getContext().closed) {
 				return;
 			}
 
 			java.awt.Point ep = e.getPoint();
 
-			for (Line l : polyLines) {
+			for (Line l : getContext().getPolyLines(false)) {
 				Point p = l.getP1();
 				val loc = view.transformCoordinates(
 						p.getOriginalX(),
@@ -1161,8 +1108,8 @@ public class Controller {
 		@Override
 		public void mouseReleased(MouseEvent e) {
 		    if (!init_drag) return;
-			if (straightSkeleton != null) {
-				runAlgorithm();
+			if (getContext().finished) {
+				runAlgorithm(getContext());
 			}
 			init_drag = false;
 		}

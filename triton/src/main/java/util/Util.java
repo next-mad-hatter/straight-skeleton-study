@@ -1,5 +1,7 @@
 package at.tugraz.igi.util;
 
+import at.tugraz.igi.main.Controller;
+
 import java.awt.Polygon;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -240,9 +242,9 @@ public class Util {
 		return null;
 	}
 
-	public static Point clonePoint(Point p, int vertex_counter) {
+	public static Point clonePoint(Controller.Context context, Point p, int vertex_counter) {
         Point copy = new Point(vertex_counter, p.getOriginalX(), p.getOriginalY());
-        EventCalculation.vertex_counter++;
+        EventCalculation.incVertexCounter(context);
 		return copy;
 	}
 

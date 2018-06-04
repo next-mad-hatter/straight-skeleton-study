@@ -137,7 +137,7 @@ public class GraphicPanel extends JPanel {
 		// g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
 		// RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		// g2.setStroke(basic);
-		if (controller.getPolygons() != null) {
+		if (controller.getContext().getPolygons(true) != null) {
 			g2.setStroke(new BasicStroke(1));
 			g2.setColor(Color.GREEN);
 
@@ -162,7 +162,7 @@ public class GraphicPanel extends JPanel {
 		g2.setColor(Color.BLACK);
 		g2.setFont(new Font(this.getFont().getName(), Font.ITALIC, 14));
 
-		if (controller.getPolyLines().size() == 0 && point1 != null) {
+		if (controller.getContext().getPolyLines(true).size() == 0 && point1 != null) {
 			g2.setStroke(new BasicStroke(1));
 			drawPoint(g2, point1, Color.BLACK);
 		}
@@ -207,7 +207,7 @@ public class GraphicPanel extends JPanel {
 		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		g2.setStroke(basic);
 
-		if (controller.getPolygons() != null) {
+		if (controller.getContext().getPolygons(true) != null) {
 			g2.setStroke(new BasicStroke(1));
 			g2.setColor(Color.GREEN);
 
@@ -232,7 +232,7 @@ public class GraphicPanel extends JPanel {
 		g2.setColor(Color.BLACK);
 		g2.setFont(new Font(this.getFont().getName(), Font.ITALIC, 14));
 
-		if (controller.getPolyLines().size() == 0 && point1 != null) {
+		if (controller.getContext().getPolyLines(true).size() == 0 && point1 != null) {
 			g2.setStroke(new BasicStroke(1));
 			drawPoint(g2, point1, Color.BLACK);
 		}
@@ -253,15 +253,15 @@ public class GraphicPanel extends JPanel {
 		for (val c: getComponents())
 			if (c instanceof CustomTextField)
 				((CustomTextField) c).updatePosition(
-						controller.isClosed() ? Util.isCounterClockwise(new ArrayList<Point>(points)) : false);
+						controller.getContext().closed ? Util.isCounterClockwise(new ArrayList<Point>(points)) : false);
 
 		if (zoomOut != null) g2.transform(zoomOut);
 
 	}
 
 	private void paintMovedPoints(Graphics2D g2) {
-		if (controller.isAnimation() || controller.isBrowsingHistory()) {
-			for (Set<Point> points : controller.getPolygons()) {
+		if (controller.getContext().animation || controller.getContext().isBrowsingHistory()) {
+			for (Set<Point> points : controller.getContext().getPolygons(true)) {
 				for (Point p : new ArrayList<Point>(points)) {
 					Line l = null;
 					for (Line lin : p.adjacentLines) {
@@ -273,7 +273,7 @@ public class GraphicPanel extends JPanel {
 					if (l == null) {
 						return;
 					}
-					StraightSkeleton straightSkeleton = controller.getStraightSkeleton();
+					StraightSkeleton straightSkeleton = controller.getStraightSkeleton(true);
 					if (straightSkeleton != null && !straightSkeleton.contains(l)) {
 						Point p1 = l.getP1();
 						Point p2 = l.getP2();
@@ -307,7 +307,7 @@ public class GraphicPanel extends JPanel {
 	}
 
 	private void paintPolygon(Graphics2D g2) {
-		for (int i = 0; i < controller.getPolyLines().size(); i++) {
+		for (int i = 0; i < controller.getContext().getPolyLines(true).size(); i++) {
 			// if (editMode) {
 			// g2.setStroke(dashed);
 			// g2.setColor(Color.LIGHT_GRAY);
@@ -315,7 +315,7 @@ public class GraphicPanel extends JPanel {
 			g2.setColor(Color.BLACK);
 			// }
 
-			Line line = controller.getPolyLines().get(i);
+			Line line = controller.getContext().getPolyLines(true).get(i);
 			Point p1 = line.getP1();
 			Point p2 = line.getP2();
 
@@ -352,10 +352,10 @@ public class GraphicPanel extends JPanel {
 	}
 
 	private boolean paintStraightSkeletons(Graphics2D g2) {
-		List<StraightSkeleton> skeletons = new ArrayList<StraightSkeleton>(controller.getStraightSkeletons());
-		if (!skeletons.isEmpty() && controller.getStraightSkeleton() != null) {
-			skeletons.remove(controller.getStraightSkeleton());
-			skeletons.add(controller.getStraightSkeleton());
+		List<StraightSkeleton> skeletons = new ArrayList<StraightSkeleton>(controller.getStraightSkeletons(true));
+		if (!skeletons.isEmpty() && controller.getStraightSkeleton(true) != null) {
+			skeletons.remove(controller.getStraightSkeleton(true));
+			skeletons.add(controller.getStraightSkeleton(true));
 		}
 		for (StraightSkeleton skeleton : skeletons) {
 			if (!skeleton.isVisible()) {
@@ -394,7 +394,7 @@ public class GraphicPanel extends JPanel {
 //				return false;
 			}
 				g2.setComposite(AlphaComposite.Src);
-				if (!skeleton.equals(controller.getStraightSkeleton()) && !controller.finished) {
+				if (!skeleton.equals(controller.getStraightSkeleton(true)) && !controller.getContext().finished) {
 					g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.2f));
 				}
 				for (Line l : new ArrayList<Line>(skeleton.getLines())) {
@@ -505,7 +505,7 @@ public class GraphicPanel extends JPanel {
 		max_y = null;
 		// coors_scale = 1.0;
 
-		EventCalculation.vertex_counter = 1;
+		EventCalculation.vertex_counter.clear();
 		screenTriangles = new ArrayList<Triangle>();
 		finished = false;
 		currentEvent = null;
@@ -733,12 +733,8 @@ public class GraphicPanel extends JPanel {
 	//
 	// }
 
-	public void setCurrentData(List<StraightSkeleton> straightSkeletons, StraightSkeleton straightSkeleton,
-			List<Triangle> screenTriangles) {
-		// this.straightSkeletons = straightSkeletons;
-		// this.straightSkeleton = straightSkeleton;
+	public void setTriangles(List<Triangle> screenTriangles) {
 		this.screenTriangles = screenTriangles;
-
 	}
 
 	// public void setPolygons(List<Set<Point>> polygons) {

@@ -1,5 +1,6 @@
 package at.tugraz.igi.algorithm;
 
+import lombok.*;
 import org.apache.commons.lang3.tuple.*;
 
 import java.awt.Color;
@@ -24,7 +25,7 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 	private Color[] colors = { Color.BLUE, new Color(135, 206, 255), new Color(50, 205, 50), new Color(0, 100, 0),
 			new Color(255, 0, 0), new Color(255, 127, 80), new Color(205, 51, 51) };
 	private PriorityQueue<Event> events = new PriorityQueue<Event>(1, new EventComparator());
-	private List<Triangle> triangles = new ArrayList<Triangle>();
+	@Getter private List<Triangle> triangles = new ArrayList<Triangle>();
 	private StraightSkeleton straightSkeleton;
 
 	private Event event;
@@ -41,27 +42,28 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 	private boolean animation;
 //	private Map<Integer, List<Line>> pointToLine;
 
-	public SimpleAlgorithm(List<Point> pts, List<Line> l, boolean animation, Controller c)
+	private Controller.Context context;
+
+	public SimpleAlgorithm(List<Point> pts, List<Line> l, boolean animation, Controller c, Controller.Context context)
 			throws CloneNotSupportedException {
 		lines = new ArrayList<List<Line>>();
 		lines.add(l);
 		points = pts;
 		controller = c;
+		this.context = context;
 //		pointToLine = new HashMap<Integer, List<Line>>();
 		
 		this.animation = animation;
-		if (controller.getStraightSkeletons().size() == 0 || EventCalculation.skeleton_counter >= colors.length) {
+		if (controller.getStraightSkeletons(false).size() == 0 || EventCalculation.skeleton_counter >= colors.length) {
 			EventCalculation.skeleton_counter = 0;
 		}
-		straightSkeleton = controller.getStraightSkeleton();
-		if (straightSkeleton == null) {
-			straightSkeleton = new StraightSkeleton();
-			controller.addStraightSkeleton(straightSkeleton);
+		straightSkeleton = controller.getStraightSkeleton(context, false);
+		if (straightSkeleton.getColor() == null) {
 			straightSkeleton.setColor(colors[EventCalculation.skeleton_counter]);
 			EventCalculation.skeleton_counter++;
 		}
 
-		straightSkeleton.setPolyLines(c.createPolyLines());
+		straightSkeleton.setPolyLines(c.createPolyLines(context));
 
 	}
 
@@ -70,9 +72,9 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 		Map<Line, Event> simultaneousEvents = new HashMap<Line, Event>();
         // FIXME: Is this what we want?!
         // EventCalculation.vertex_counter = points.get(points.size() - 1).getNumber() + 1;
-        EventCalculation.vertex_counter = points.size() + 1;
+        EventCalculation.vertex_counter.put(context, new Integer(points.size() + 1));
 		boolean convex = true;
-		controller.addPolygon(new HashSet<Point>(points));
+		controller.addPolygon(context, new HashSet<Point>(points));
 		for (Point p : points) {
 			p.resetToOriginalPosition();
 			p.calculateMovementInfo();
@@ -101,12 +103,10 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 			publish(new ImmutablePair<>("Triangulated", true));
 		// FIXME: Can we not block the calculations here or
 		//        at least have a callback from the controller?
-		while (!controller.wantsUpdates() && !isCancelled()) {
+		while (!controller.wantsUpdates(context) && !isCancelled()) {
 			Thread.sleep(100);
 		}
-		if (controller.isStep()) {
-			controller.setNextStep(false);
-		}
+        context.step = false;
 
 		while (eventExists && !isCancelled()) {
 			if (events.size() == 0) {
@@ -163,22 +163,19 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 				if (!isCancelled()) publish(new ImmutablePair<>(event.getName(), true));
 				// FIXME: Can we not block the calculations here or
 				//        at least have a callback from the controller?
-				while (!controller.wantsUpdates() && !isCancelled()) {
+				while (!controller.wantsUpdates(context) && !isCancelled()) {
 					Thread.sleep(100);
 				}
-				if (controller.isStep()) {
-					controller.setNextStep(false);
-				}
+                context.step = false;
 			}
 
-			for (Set<Point> points : controller.getPolygons()) {
+			for (Set<Point> points : context.getPolygons(false)) {
 				if (points.size() == 2) {
 					Point point = points.iterator().next();
 					Line last = point.adjacentLines.get(0);
 					Line sline1 = new Line(last.getP1().clone(), last.getP2().clone(), last.getWeight());
 					straightSkeleton.add(sline1);
-					controller.removePolygon(points);
-					
+					controller.removePolygon(context, points);
 					break;
 				}
 			}
@@ -198,7 +195,7 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 		try {
 			Boolean status = get();
 			triangles = null;
-			controller.finished();
+			controller.finished(context);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
@@ -211,7 +208,7 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 	@Override
 	protected void process(final List<Pair<String, Boolean>> chunks) {
 		if (!isCancelled()) {
-			controller.publish(chunks, i, triangles);
+			controller.publish(context, chunks, i, triangles);
 		}
 	}
 
@@ -221,10 +218,10 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 		float roundedTime = (float) Math.floor(time);
 		for (int i = 1; i <= roundedTime; i++) {
 			if (animation) {
-				Thread.sleep((long) (25 * controller.getAverage_weight()));
+				Thread.sleep((long) (25 * controller.getAverage_weight(context)));
 			}
 
-			for (Set<Point> points : controller.getPolygons()) {
+			for (Set<Point> points : context.getPolygons(false)) {
 				for (Point p : points) {
 					p.move(1);
 				}
@@ -238,7 +235,7 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 		}
 
 		float remainingTime = (float) (time - roundedTime);
-		for (Set<Point> points : controller.getPolygons()) {
+		for (Set<Point> points : context.getPolygons(false)) {
 			for (Point p : points) {
 				p.move(remainingTime);
 			}
@@ -246,7 +243,7 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 
 		if (animation) {
 			publish();
-			Thread.sleep((long) (25 * controller.getAverage_weight()));
+			Thread.sleep((long) (25 * controller.getAverage_weight(context)));
 		}
 
 	}
@@ -375,8 +372,8 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 				double y_2 = p_2.current_y + v_2.getY() * t;
 				
 				if (Math.abs(x_1 - x_2) <= epsilon && Math.abs(y_1 - y_2) <= epsilon) {
-					events.add(new EdgeEvent(t, triangle, new Point(EventCalculation.vertex_counter, x_1, y_1), line));
-					EventCalculation.vertex_counter++;
+					events.add(new EdgeEvent(t, triangle, new Point(EventCalculation.getVertexCounter(context), x_1, y_1), line));
+					EventCalculation.incVertexCounter(context);
 					break;
 				}
 
@@ -388,9 +385,9 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 
 	private Point validEvent(Point reflex, double t, double epsilon, Line line) {
 
-		Point i = new Point(EventCalculation.vertex_counter, reflex.current_x + t * reflex.getMovementVector().getX(),
+		Point i = new Point(EventCalculation.getVertexCounter(context), reflex.current_x + t * reflex.getMovementVector().getX(),
 				reflex.current_y + t * reflex.getMovementVector().getY());
-		EventCalculation.vertex_counter++;
+		EventCalculation.incVertexCounter(context);
 		Point i2 = new Point(0, line.getP1().current_x + t * line.getP1().getMovementVector().getX(),
 				line.getP1().current_y + t * line.getP1().getMovementVector().getY());
 		Point i3 = new Point(0, line.getP2().current_x + t * line.getP2().getMovementVector().getX(),
@@ -521,9 +518,10 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 	private void splitEdge() throws Exception {
 		SplitEvent ev = (SplitEvent) event;
 		reflexP = ev.getReflexVertex();
-		Point copyi = Util.clonePoint(i, EventCalculation.vertex_counter++);
+		Point copyi = Util.clonePoint(context, i, EventCalculation.getVertexCounter(context));
+		EventCalculation.incVertexCounter(context);
 
-		Map<Point, Set<Point>> splitLines = ev.splitPolygons(controller.getPolygons(), event, copyi);
+		Map<Point, Set<Point>> splitLines = ev.splitPolygons(context.getPolygons(false), event, copyi);
 
 		copyi.calculateMovementInfo();
 		// Util.getOtherPointOfLine(copyi,
@@ -550,7 +548,7 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 
 	private void updatePoints(boolean add) {
 
-		for (Set<Point> points : controller.getPolygons()) {
+		for (Set<Point> points : context.getPolygons(false)) {
 			if (points.remove(p1)) {
 				points.remove(p2);
 				if (add)

@@ -125,7 +125,8 @@ class TableModel extends DefaultTableModel {
 		super.setValueAt(obj, row, column);
 		if (column == 0) {
 			Boolean value = ((Boolean) obj).booleanValue();
-			controller.switchToSkeleton(row, value);
+			controller.switchContext(row);
+			controller.getContext().editMode = value;
 			if (value) {
 				for (int i = 0; i < getRowCount(); i++) {
 					if (i != row) {
@@ -148,7 +149,7 @@ class JLabelRenderer implements TableCellRenderer {
 
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
 			int row, int column) {
-		label.setForeground(controller.getStraightSkeletons().get(row).getColor());
+		label.setForeground(controller.getContext(row).getSkeleton(false).getColor());
 		label.setText(value.toString());
 		return label;
 	}
@@ -179,12 +180,9 @@ class JButtonEditor extends AbstractCellEditor implements TableCellEditor {
 		button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (action == "delete") {
-					controller.removeStraightSkeleton(row);
+					controller.removeContext(row);
 				} else if (action == "copy") {
-					controller.switchToSkeleton(row, false);
-					controller.saveSnapshot(null, false);
-				    val mirror = controller.buildSnapshot(null);
-				    controller.initFromSnapshot(mirror);
+					controller.cloneContext(row);
 				} else if (action == "color") {
 					controller.showColorChooser(row);
 				} else if (action == "visible") {

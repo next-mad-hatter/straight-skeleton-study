@@ -43,7 +43,9 @@ public class SimpleAlgorithmNoSwingWorker {
 	private int numberOfSplit;
 	private double maxFlips;
 
-	public SimpleAlgorithmNoSwingWorker(List<Point> pts, List<Line> l, Controller c) throws CloneNotSupportedException {
+	private Controller.Context context;
+
+	public SimpleAlgorithmNoSwingWorker(List<Point> pts, List<Line> l, Controller c, Controller.Context context) throws CloneNotSupportedException {
 		numberOfFlip = 0;
 		numberOfEdge = 0;
 		numberOfSplit= 0;
@@ -52,18 +54,17 @@ public class SimpleAlgorithmNoSwingWorker {
 		points = pts;
 		maxFlips = Math.pow(points.size(), 3);
 		controller = c;
-		if (controller.getStraightSkeletons().size() == 0 || EventCalculation.skeleton_counter >= colors.length) {
+		this.context = context;
+		if (controller.getStraightSkeletons(false).size() == 0 || EventCalculation.skeleton_counter >= colors.length) {
 			EventCalculation.skeleton_counter = 0;
 		}
-		straightSkeleton = controller.getStraightSkeleton();
-		if (straightSkeleton == null) {
-			straightSkeleton = new StraightSkeleton();
-			controller.addStraightSkeleton(straightSkeleton);
+		straightSkeleton = controller.getStraightSkeleton(context, false);
+        if (straightSkeleton.getColor() == null) {
 			straightSkeleton.setColor(colors[EventCalculation.skeleton_counter]);
 			EventCalculation.skeleton_counter++;
 		}
 
-		straightSkeleton.setPolyLines(c.createPolyLines());
+		straightSkeleton.setPolyLines(c.createPolyLines(context));
 
 	}
 
@@ -74,9 +75,9 @@ public class SimpleAlgorithmNoSwingWorker {
 		Map<Line, Event> simultaneousEvents = new HashMap<Line, Event>();
         // FIXME: Is this what we want?!
 		// EventCalculation.vertex_counter = points.get(points.size() - 1).getNumber() + 1;
-		EventCalculation.vertex_counter = points.size() + 1;
+		EventCalculation.vertex_counter.put(context, new Integer(points.size() + 1));
 		boolean convex = true;
-		controller.addPolygon(new HashSet<Point>(points));
+		controller.addPolygon(context, new HashSet<Point>(points));
 		for (Point p : points) {
 			p.resetToOriginalPosition();
 			p.calculateMovementInfo();
@@ -159,12 +160,12 @@ public class SimpleAlgorithmNoSwingWorker {
 
 			calculateEvents();
 
-			for (Set<Point> points : controller.getPolygons()) {
+            for (Set<Point> points : context.getPolygons(false)) {
 				if (points.size() == 2) {
 					Point point = points.iterator().next();
 					Line last = point.adjacentLines.get(0);
 					straightSkeleton.add(new Line(last.getP1().clone(), last.getP2().clone(), last.getWeight()));
-					controller.removePolygon(points);
+					controller.removePolygon(context, points);
 					break;
 				}
 			}
@@ -175,7 +176,7 @@ public class SimpleAlgorithmNoSwingWorker {
 			event = null;
 		}
 
-		controller.finished = true;
+		controller.getContext().finished = true;
 		controller.polyMeasureData = Util.calculatePolygArea(points, straightSkeleton);
 		controller.polyMeasureData.addNumberOfEvents(numberOfFlip, numberOfEdge, numberOfSplit);
 
@@ -190,7 +191,7 @@ public class SimpleAlgorithmNoSwingWorker {
 	private void movePoints(Event event) throws InterruptedException {
 
 		double time = event.getCollapsingTime();
-		for (Set<Point> points : controller.getPolygons()) {
+        for (Set<Point> points : context.getPolygons(false)) {
 			for (Point p : points) {
 				p.move(time);
 			}
@@ -340,9 +341,9 @@ public class SimpleAlgorithmNoSwingWorker {
 					double y_2 = p_2.current_y + v_2.getY() * t;
 
 					if (Math.abs(x_1 - x_2) <= epsilon && Math.abs(y_1 - y_2) <= epsilon) {
-						events.add(new EdgeEvent(t, triangle, new Point(EventCalculation.vertex_counter, x_1, y_1),
+						events.add(new EdgeEvent(t, triangle, new Point(EventCalculation.getVertexCounter(context), x_1, y_1),
 								line));
-						EventCalculation.vertex_counter++;
+						EventCalculation.incVertexCounter(context);
 						break;
 					}
 
@@ -356,9 +357,9 @@ public class SimpleAlgorithmNoSwingWorker {
 
 	private Point validEvent(Point reflex, double t, double epsilon, Line line) {
 
-		Point i = new Point(EventCalculation.vertex_counter, reflex.current_x + t * reflex.getMovementVector().getX(),
+		Point i = new Point(EventCalculation.getVertexCounter(context), reflex.current_x + t * reflex.getMovementVector().getX(),
 				reflex.current_y + t * reflex.getMovementVector().getY());
-		EventCalculation.vertex_counter++;
+		EventCalculation.incVertexCounter(context);
 		Point i2 = new Point(0, line.getP1().current_x + t * line.getP1().getMovementVector().getX(),
 				line.getP1().current_y + t * line.getP1().getMovementVector().getY());
 		Point i3 = new Point(0, line.getP2().current_x + t * line.getP2().getMovementVector().getX(),
@@ -489,9 +490,10 @@ public class SimpleAlgorithmNoSwingWorker {
 		
 		SplitEvent ev = (SplitEvent) event;
 		reflexP = ev.getReflexVertex();
-		Point copyi = Util.clonePoint(i, EventCalculation.vertex_counter++);
+		Point copyi = Util.clonePoint(context, i, EventCalculation.getVertexCounter(context));
+		EventCalculation.incVertexCounter(context);
 
-		Map<Point, Set<Point>> splitLines = ev.splitPolygons(controller.getPolygons(), event, copyi);
+		Map<Point, Set<Point>> splitLines = ev.splitPolygons(context.getPolygons(false), event, copyi);
 
 		copyi.calculateMovementInfo();
 		// Util.getOtherPointOfLine(copyi,
@@ -517,7 +519,7 @@ public class SimpleAlgorithmNoSwingWorker {
 
 	private void updatePoints(boolean add) {
 
-		for (Set<Point> points : controller.getPolygons()) {
+        for (Set<Point> points : context.getPolygons(false)) {
 			if (points.remove(p1)) {
 				points.remove(p2);
 				if (add)
