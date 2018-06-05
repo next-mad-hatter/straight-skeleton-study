@@ -25,8 +25,7 @@ import javax.imageio.*;
 import javax.swing.*;
 import javax.swing.SwingWorker.StateValue;
 
-import at.tugraz.igi.algorithm.SimpleAlgorithm;
-import at.tugraz.igi.algorithm.SimpleAlgorithmNoSwingWorker;
+import at.tugraz.igi.algorithm.*;
 import at.tugraz.igi.ui.ConfigurationTable;
 import at.tugraz.igi.ui.CustomTextField;
 import at.tugraz.igi.ui.GraphicPanel;
@@ -321,7 +320,7 @@ public class Controller {
 		public boolean move = false;
 		public boolean stepMode = false;
 		public boolean paused = false;
-		public boolean animation = false;
+		public boolean animation = true;
 		public boolean enabled = true;
 		public boolean closed = false;
 		public boolean editMode = false;
@@ -419,8 +418,10 @@ public class Controller {
 		val context = getContext();
 		view.init(context.getLines(true), context.getPoints(true));
 		view.setTriangles(context.getTriangles(true));
-		if (context.isBrowsingHistory() || !context.finished && context.paused)
+		if (context.isBrowsingHistory() || !context.finished && context.paused) {
+			// System.err.println("EVENT");
 			view.setCurrentEvent(context.getCurrentEvent(true));
+		}
         else
         	view.setCurrentEvent(null);
 		view.repaint();
@@ -466,6 +467,8 @@ public class Controller {
 
 	@Synchronized("contextLock")
 	public void removeContext(int ptr) {
+		val algo = contexts.get(ptr).getAlgorithm();
+		if (algo != null) algo.cancel(true);
 		table.removeRow(ptr);
 		contexts.remove(ptr);
 		if (contexts.isEmpty()) reset();
@@ -490,6 +493,7 @@ public class Controller {
                 } catch (CloneNotSupportedException e) {
                     e.printStackTrace();
                 }
+            context.getAlgorithm().setAnimation(context.animation);
 			context.getAlgorithm().execute();
 		}
 	}
@@ -508,23 +512,24 @@ public class Controller {
 		}
 	}
 
-	public void publish(Context context, final List<Pair<String, Boolean>> chunks, Point i, List<Triangle> triangles) {
-		JLabel label;
+	public void publish(Context context, final List<AlgoChunk> chunks) {
 		if (chunks.isEmpty()) {
 			refreshContext();
 			return;
 		}
+		JLabel label;
 		for (val ch: chunks) {
-			if (ch.getLeft() != "Triangulated") {
+		    System.err.println("EVENT " + ch.eventName);
+			if (ch.eventName != null && ch.eventName != "Triangulated") {
 				Graphics2D g2 = (Graphics2D) view.getGraphics();
-				int width = g2.getFontMetrics().stringWidth(chunks.get(0).getLeft());
-				label = new JLabel(ch.getLeft());
-				label.setLocation((int) (i.current_x - width / 2), (int) (i.current_y + 20));
+				int width = g2.getFontMetrics().stringWidth(ch.eventName);
+				label = new JLabel(ch.eventName);
+				label.setLocation((int) (ch.loc_x - width / 2), (int) (ch.loc_y + 20));
 				context.setCurrentEvent(label);
 			}
-			if (ch.getLeft() == "Triangulated") context.setCurrentEvent(null);
-			// view.setTriangles(context.getTriangles(true));
-			if (ch.getRight()) {
+			if (ch.eventName == "Triangulated") context.setCurrentEvent(null);
+			// do we need the triangles from algo here?
+			if (ch.isEvent) {
 				context.saveSnapshot();
 			}
 			refreshContext();
@@ -535,12 +540,16 @@ public class Controller {
 		return !context.makingSnapshot && !context.paused && !context.isBrowsingHistory(); // && !context.finished;
 	}
 
-	public void showReweighted() {
-		val context = getContext();
+	/**
+	 * Used to compute adjusted skeleton after weights / geometry change.
+	 */
+	public void quickRerun(Context context) {
+	    if (context.getAlgorithm() == null) return;
 		context.restart = true;
 		context.animation = false;
         restart(context, null);
 		runAlgorithm(context);
+		context.animation = true;
 	}
 
 	public void reset() {
@@ -570,7 +579,7 @@ public class Controller {
 		context.finished = true;
 		context.restart = true;
 		context.isRunning = false;
-		context.animation = false;
+		context.animation = true;
 		context.paused = false;
 		context.saveSnapshot();
 		context.history.setToLast();
@@ -644,7 +653,6 @@ public class Controller {
 		}
 		refreshContext();
 		if (!context.isRunning && !context.isBrowsingHistory()) {
-			context.animation = true;
 			view.setEnabled(false);
 			runAlgorithm(context);
 		}
@@ -1093,9 +1101,7 @@ public class Controller {
 		@Override
 		public void mouseReleased(MouseEvent e) {
 		    if (!init_drag) return;
-			if (getContext().finished) {
-				runAlgorithm(getContext());
-			}
+            quickRerun(getContext());
 			init_drag = false;
 		}
 

@@ -1,7 +1,6 @@
 package at.tugraz.igi.algorithm;
 
 import lombok.*;
-import org.apache.commons.lang3.tuple.*;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -21,7 +20,8 @@ import at.tugraz.igi.events.*;
 import at.tugraz.igi.main.Controller;
 import at.tugraz.igi.util.*;
 
-public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>> {
+public class SimpleAlgorithm extends SwingWorker<Boolean, AlgoChunk> {
+
 	private Color[] colors = { Color.BLUE, new Color(135, 206, 255), new Color(50, 205, 50), new Color(0, 100, 0),
 			new Color(255, 0, 0), new Color(255, 127, 80), new Color(205, 51, 51) };
 	private PriorityQueue<Event> events = new PriorityQueue<Event>(1, new EventComparator());
@@ -39,7 +39,7 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 	private List<List<Line>> lines;
 	private List<Point> points;
 	private Controller controller;
-	private boolean animation;
+	@Getter @Setter private boolean animation;
 //	private Map<Integer, List<Line>> pointToLine;
 
 	private Controller.Context context;
@@ -95,17 +95,18 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 			triangles = Util.triangulate(pts, lines);
 		}
 
+		if (!isCancelled()) publish(new AlgoChunk("Triangulated", true, 0.0, 0.0));
+
 		calculateEvents();
 
-		boolean eventExists = true;
-
-		if (!isCancelled()) publish(new ImmutablePair<>("Triangulated", true));
+		if (context.stepMode) context.paused = true;
 		// FIXME: Can we not block the calculations here or
 		//        at least have a callback from the controller?
 		while (!controller.wantsUpdates(context) && !isCancelled()) {
 			Thread.sleep(100);
 		}
-		if (context.stepMode) context.paused = true;
+
+		boolean eventExists = true;
 
 		while (eventExists && !isCancelled()) {
 			if (events.size() == 0) {
@@ -159,14 +160,15 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 			calculateEvents();
 
 			if (events.size() > 0) {
-				if (!isCancelled())
-					publish(new ImmutablePair<>(event.getName(), true));
+				if (!isCancelled()) {
+					publish(new AlgoChunk(event.getName(), true, i.current_x, i.current_y));
+				}
+				if (context.stepMode) context.paused = true;
 				// FIXME: Can we not block the calculations here or
 				//        at least have a callback from the controller?
 				while (!controller.wantsUpdates(context) && !isCancelled()) {
 					Thread.sleep(100);
 				}
-				if (context.stepMode) context.paused = true;
 			}
 
 			for (Set<Point> points : context.getPolygons(false)) {
@@ -206,9 +208,9 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 	}
 
 	@Override
-	protected void process(final List<Pair<String, Boolean>> chunks) {
+	protected void process(final List<AlgoChunk> chunks) {
 		if (!isCancelled()) {
-			controller.publish(context, chunks, i, triangles);
+			controller.publish(context, chunks);
 		}
 	}
 

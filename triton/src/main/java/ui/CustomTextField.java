@@ -130,7 +130,7 @@ public class CustomTextField extends JTextField implements DocumentListener, Mou
 		line.setWeight(weight);
 		screenLine.setWeight(weight);
 		if (controller.getContext().finished) {
-			controller.showReweighted();
+			controller.quickRerun(controller.getContext());
 		}
 		// this.getInputVerifier().shouldYieldFocus(this);
 		// graphicPanel.setFinished(false);
