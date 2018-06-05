@@ -4,8 +4,6 @@
   - it seems visibility & editmode toggles don't work as they were meant to be
   - toggle visibility of polylines (and triangulations?) along with skeletons
   - how do we want to handle changing geometry / weights at intermediate steps?
-  - adapt kotton caller
-  - test nonswing/kotton correctness
 
 * Kotton:
 
@@ -13,6 +11,8 @@
   - can we always get stack trace from a cause?
   - triton: make more responsive to timeout
   - svg output: scale using only polygon vertices?
+
+* It seems random weights generation never worked
 
 * Compare test results with Salzburg, debug failing salzburg tests (currently over 60%).
 
@@ -55,8 +55,6 @@
 * Debug + test + cleanup zoom & history
 
 * History: test back steps, better controls (usability/stability)
-
-* It seems random weights generation never worked
 
 * Zoom: autozoom & autopan at load / manually triggered apart from that?
 

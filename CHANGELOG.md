@@ -1,9 +1,10 @@
+* Added context switching to triton controller (multiple editable & switchable skeletons with browsable history each)
 * Added kotton trace export from triton & campskeleton
 * Added kotton wrapper with campskeleton integration
 * Added timeout to runner call
 * Added loaded file name to window title
 * Added optional input scaling for coordinate list inputs & compressed svg output
-* Added autozoom functionality (not yet fully complete/tested)
+* Added autozoom functionality
 * Implemented basic browsing back through events history
 * Applet: show triangulation as first step
 * Singe/batch runners count events, remove superfluous edges (source unknown as of now) & check tree structure of the results
