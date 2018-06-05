@@ -14,9 +14,9 @@ public class Point implements Cloneable {
 	public double current_y;
 	public List<Line> adjacentLines;
 
-	private Vector movement_vector = null;
+	@Setter private Vector movement_vector = null;
 
-	private Boolean convex = null;
+	@Getter private Boolean convex = null;
 
 	public Point(int number, double x, double y) {
 		this.adjacentLines = new ArrayList<Line>();
@@ -98,6 +98,7 @@ public class Point implements Cloneable {
 		else {
 		    // Note: apparently, this is normal in some states.
 		    // throw new TritonException("Cannot calculate movement vector at (" + String.valueOf(current_x) + "; " + String.valueOf(current_y) + ")");
+			// System.err.println("WARNING: cannot calculate movement vector at point " + this + " (" + String.valueOf(current_x) + "; " + String.valueOf(current_y) + ")");
 		}
 
 	}

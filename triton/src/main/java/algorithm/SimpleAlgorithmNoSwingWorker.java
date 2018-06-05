@@ -64,7 +64,7 @@ public class SimpleAlgorithmNoSwingWorker {
 			EventCalculation.skeleton_counter++;
 		}
 
-		straightSkeleton.setPolyLines(c.createPolyLines(context));
+		straightSkeleton.setPolyLines(c.createPolyLines(context.getLines(false)));
 
 	}
 

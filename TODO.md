@@ -1,14 +1,15 @@
 * Triton: context switching history & multiple skeletons
 
-  - history: events fail to get rendered in view after first run (and in other situations too?)
-  - finalize context switching
-  - toggle visibility of polylines (and triangulations?) along with skeletons
+  - history: clear last event rendering
   - it seems visibility & editmode toggles don't work as they were meant to be
-  - how do we want to handle changing geometry / weights at intermediate steps and what do we do with resulting skeletons?
+  - toggle visibility of polylines (and triangulations?) along with skeletons
+  - how do we want to handle changing geometry / weights at intermediate steps?
+  - adapt kotton caller
+  - test nonswing/kotton correctness
 
 * Kotton:
 
-  - triton: get stats to kotton
+  - get triton stats (event counts) to kotton
   - can we always get stack trace from a cause?
   - triton: make more responsive to timeout
   - svg output: scale using only polygon vertices?

@@ -63,8 +63,7 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, AlgoChunk> {
 			EventCalculation.skeleton_counter++;
 		}
 
-		straightSkeleton.setPolyLines(c.createPolyLines(context));
-
+        straightSkeleton.setPolyLines(c.createPolyLines(context.getLines(false)));
 	}
 
 	@Override
@@ -75,6 +74,15 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, AlgoChunk> {
 		EventCalculation.vertex_counter.put(context, new Integer(points.size() + 1));
 		boolean convex = true;
 		controller.addPolygon(context, new HashSet<Point>(points));
+
+
+		/*
+		for (Point p : points) {
+			System.err.println("For point " + p + " : " + p.getOriginalX() + " " + p.getOriginalY());
+			System.err.println("AL " + " : " + p.adjacentLines.size());
+		}
+		*/
+
 		for (Point p : points) {
 			p.resetToOriginalPosition();
 			p.calculateMovementInfo();

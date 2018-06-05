@@ -45,7 +45,7 @@
 2018.06.02     2:30    triton -> kotton trace export, licenses & docs
 2018.06.03    10:00    triton polyhistory
 2018.06.04    10:20    context switching polyhistory
-2018.06.05     2:00    context switching polyhistory, algo sync fixes
+2018.06.05     7:00    context switching polyhistory, algo sync fixes
 
 ?              ?       org+admin work, communications, meetings, presentation
 

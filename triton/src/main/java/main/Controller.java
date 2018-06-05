@@ -1,8 +1,9 @@
 package at.tugraz.igi.main;
 
 import lombok.*;
-
+import org.apache.commons.collections4.*;
 import org.apache.commons.lang3.tuple.*;
+
 import java.util.function.*;
 import java.util.stream.*;
 import java.util.*;
@@ -30,6 +31,7 @@ import at.tugraz.igi.ui.ConfigurationTable;
 import at.tugraz.igi.ui.CustomTextField;
 import at.tugraz.igi.ui.GraphicPanel;
 import at.tugraz.igi.util.*;
+import at.tugraz.igi.util.Vector;
 import at.tugraz.igi.events.*;
 import data.Graph;
 
@@ -138,8 +140,13 @@ public class Controller {
 			val np = new Point(pt.getNumber(), pt.getOriginalX(), pt.getOriginalY());
 			np.current_x = pt.current_x;
 			np.current_y = pt.current_y;
+            val v = pt.getMovementVector();
+			if (v != null ) {
+			    np.setMovement_vector(new Vector(v.getY(), v.getX()));
+            }
+            val c = pt.getConvex();
+            if (c != null ) np.setConvex(c);
 			np.adjacentLines = pt.adjacentLines;
-			// np.setStrictComparison(true);
 			clonedPointsMap.put(pt, np);
 			return np;
 		};
@@ -211,7 +218,7 @@ public class Controller {
                 snapTriangles.add(nt);
             }
 
-		// What lines did we forget here?
+		// What lines did we forget here, if any?
 		boolean rescan = false;
 		do {
 			for (val pt : clonedPointsMap.values()) {
@@ -236,6 +243,23 @@ public class Controller {
 				System.err.println("History forgot a line");
 		}
 
+		// If we clone a context before adjacent lines has been set, we have to also do this here,
+        // and then call createPolyLines on the output afterward.
+        // This seems to almost work (not sure right now how exactly), but we
+        // still have to call restart() in cloneContext below.
+		for (val pl: polyLines) {
+			val l = clonedLinesMap.get(pl);
+			l.polyLine = true;
+			if (!l.getP1().adjacentLines.contains(l)) l.getP1().adjacentLines.add(l);
+			if (!l.getP2().adjacentLines.contains(l)) l.getP2().adjacentLines.add(l);
+		}
+		for (val pl: lines) {
+			val l = clonedLinesMap.get(pl);
+			l.polyLine = true;
+			if (!l.getP1().adjacentLines.contains(l)) l.getP1().adjacentLines.add(l);
+			if (!l.getP2().adjacentLines.contains(l)) l.getP2().adjacentLines.add(l);
+		}
+
 		HISTORY_MODE = false;
 
 		return new Snapshot(snapSkeleton, snapPoints, snapPolygons, snapPolyLines, snapLines, snapTriangles, currentEvent);
@@ -257,11 +281,11 @@ public class Controller {
 
 	/**
 	 * We want to keep the history for each skeleton.
-	 * Below, historyPtr should be either zero or 1-based index of currently
-	 * shown (for given skeleton) history event.
 	 */
 	@RequiredArgsConstructor
 	private class History {
+	    // historyPtr should be either zero or 1-based index of currently
+	    // shown history event.
 		@Getter private final List<Snapshot> snapshots = new ArrayList<>();
 		@Getter private int historyPtr = 0;
 
@@ -309,8 +333,8 @@ public class Controller {
 	/**
 	 * We want to keep a number of polygons (with differing geometry and/or
 	 * edge weighting) for comparison purposes.  For this, we'll try and stick
-	 * things which are dependent on the polygon into a list of contexts
-	 * and switch between those.
+	 * things which are dependent on the polygons into a list of corresponding
+     * contexts and switch between those.
 	 */
 	@RequiredArgsConstructor
 	public class Context {
@@ -446,11 +470,24 @@ public class Controller {
 
 	public void addContext(Snapshot snapshot) {
 		val context = new Context();
+		val lines = createPolyLines(snapshot.getPolyLines());
+
+		for (val l: lines) {
+		    for (val pt: Arrays.asList(l.getP1(), l.getP2())) {
+		        try {
+                    pt.calculateMovementInfo();
+                } catch (TritonException e) {
+		            e.printStackTrace();
+                }
+            }
+        }
+
+        context.setPolyLines(lines);
+        context.setLines(new ArrayList<>(lines));
+        snapshot.getSkeleton().setPolyLines(lines);
 		context.setSkeleton(snapshot.getSkeleton());
 		context.setPoints(snapshot.getPoints());
 		context.setPolygons(snapshot.getPolygons());
-		context.setPolyLines(snapshot.getPolyLines());
-		context.setLines(snapshot.getLines());
 		context.setCurrentEvent(snapshot.getCurrentEvent());
 		contexts.add(context);
 		table.addRow();
@@ -462,6 +499,14 @@ public class Controller {
 		val snapshot = buildSnapshot(contexts.get(ptr));
 		addContext(snapshot);
 		switchContext(contexts.size()-1);
+		// NOTE: if we don't restart here, some points still fail to compute
+        //       their movement vectors correctly for some reason.
+        //       Since we don't clone the algo for now, we have to start
+        //       from scratch anyway,
+		restart(getContext());
+		EventCalculation.setVertexCounter(
+				getContext(),
+				EventCalculation.getVertexCounter(contexts.get(ptr)));
 	}
 
 	@Synchronized("contextLock")
@@ -550,7 +595,7 @@ public class Controller {
 		context.restart = true;
 		context.animation = false;
 		context.stepMode = false;
-        restart(context, null);
+        restart(context);
 		runAlgorithm(context);
 		context.animation = true;
 	}
@@ -587,22 +632,38 @@ public class Controller {
 		context.saveSnapshot();
 		context.history.setToLast();
 		table.setValueAt(new Boolean(true), contextPtr, 0);
+		/*
+		System.err.println("DATA STATS");
+		System.err.println(context.getPoints(false).size());
+		System.err.println(context.getLines(false).size());
+		System.err.println(context.getPolyLines(false).size());
+		System.err.println(context.getPolygons(false).size());
+		System.err.println(context.getSkeleton(false).getLines().size());
+		System.err.println(context.getSkeleton(false).getPolyLines().size());
+		System.err.println(CollectionUtils.isEqualCollection(
+				context.getPolyLines(false), context.getLines(false)
+		));
+        System.err.println(CollectionUtils.isEqualCollection(
+                context.getSkeleton(false).getLines(), context.getSkeleton(false).getPolyLines()
+        ));
+        System.err.println(CollectionUtils.isEqualCollection(
+                context.getPolyLines(false), context.getSkeleton(false).getPolyLines()
+        ));
+        System.err.println(CollectionUtils.isEqualCollection(
+                context.getLines(false), context.getSkeleton(false).getLines()
+        ));
+        */
 	}
 
-	public void restart(Context context, List<Line> polyLines) {
+	public void restart(Context context) {
 	    context.finished = false;
 		context.history = new History();
 		val points = context.getPoints(false);
 		val lines = context.getLines(false);
 		points.clear();
-		if (!lines.equals(polyLines)) lines.clear();
+		lines.clear();
 
-		if (polyLines == null) {
-			polyLines = context.getPolyLines(false);
-		} else if (!polyLines.equals(context.getPolyLines(false))) {
-			context.getPolyLines(false).clear();
-			context.getPolyLines(false).addAll(polyLines);
-		}
+        val polyLines = context.getPolyLines(false);
 
 		Point p1;
 		Point p2;
@@ -650,7 +711,7 @@ public class Controller {
 	@Synchronized("contextLock")
 	private void roll(Context context, boolean restart) {
 		if (restart) {
-			this.restart(context, null);
+			this.restart(context);
 			EventCalculation.setVertexCounter(context, context.getPoints(false).size());
 			context.restart = false;
 			context.getSkeleton(false).polygon = null;
@@ -749,17 +810,19 @@ public class Controller {
         return null;
     }
 
-	public List<Line> createPolyLines(Context context) {
+    /**
+     * This seems to set adjacent lines for polygon points, keeping right orientation.
+     */
+	public List<Line> createPolyLines(List<Line> lines) {
 		Point p1;
 		Point p2;
 		List<Line> polyLines = new ArrayList<Line>();
-
-		val lines = context.getLines(false);
 
 		Line l1 = lines.get(0);
 		Point first = l1.getP1();
 		p1 = new Point(l1.getP1().getNumber(), l1.getP1().getOriginalX(), l1.getP1().getOriginalY());
 		for (Line li : lines) {
+
 			if (li.getP2().getNumber() != first.getNumber()) {
 				p2 = new Point(li.getP2().getNumber(), li.getP2().getOriginalX(), li.getP2().getOriginalY());
 			} else {
@@ -940,7 +1003,7 @@ public class Controller {
 				getContext().move = false;
 				getContext().restart = true;
 			}
-			restart(getContext(), null);
+			restart(getContext());
 		}
 
 		@Override
