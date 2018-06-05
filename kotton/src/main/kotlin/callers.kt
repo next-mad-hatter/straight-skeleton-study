@@ -282,8 +282,8 @@ class Triton(
     ): SkeletonResult {
         var controller = Controller()
         var panel = GraphicPanel(controller)
+        controller.initContexts(ConfigurationTable(controller))
         controller.setView(panel)
-        controller.setTable(ConfigurationTable(controller))
 
         FileHandler.loadPoints(
                 (1..input.indices.count()).map {
@@ -318,7 +318,7 @@ class Triton(
                 } }.toHashSet()
 
                 // we won't remove duplicate edges or loops for now
-                val skelEdges = controller.straightSkeleton.lines.map {
+                val skelEdges = controller.getStraightSkeleton(false).lines.map {
                     TraceEdge(
                             id = listOf(it.p1.number, it.p2.number),
                             type = EdgeType.SKELETON,
@@ -326,7 +326,7 @@ class Triton(
                             end = Point2d(it.p2.originalX, it.p2.originalY))
                 }.toHashSet()
 
-                val polyEdges = controller.straightSkeleton.polyLines.map {
+                val polyEdges = controller.getStraightSkeleton(false).polyLines.map {
                     val (p, q) = if (it.p1.number <= it.p2.number) Pair(it.p1, it.p2) else Pair(it.p2, it.p1)
                     TraceEdge(
                             id = listOf(p.number, q.number),
@@ -336,7 +336,7 @@ class Triton(
                 }.toHashSet()
 
                 // wavefront and not yet complete skeleton arcs -- see GraphicPanel::paintMovedPoints() in triton
-                val auxEdges = controller.polygons.flatMap {
+                val auxEdges = controller.context.getPolygons(false).flatMap {
                     it.flatMap {
                         val pt = it
                         // is this equivalent to finding a line where p1.number == p2.number?
@@ -373,12 +373,12 @@ class Triton(
 
         val error = try {
             if (timeout == null)
-                controller.runAlgorithmNoSwingWorker()
+                controller.runAlgorithmNoSwingWorker(controller.context)
             else
                 TimeoutComputation(Callable({
-                    controller.runAlgorithmNoSwingWorker()
+                    controller.runAlgorithmNoSwingWorker(controller.context)
                 })).run(timeout)
-            if (!controller.finished) throw Exception("Algorithm failed to finish")
+            if (!controller.context.finished) throw Exception("Algorithm failed to finish")
             null
         } catch (e: Exception) { AlgorithmException("Algorithm Error", e.cause ?: e) }
 
@@ -401,7 +401,7 @@ class Triton(
 
         // Triton sometimes yields duplicate edges and loops.
         var skelEdges: MutableSet<Pair<Point2d, Point2d>> = HashSet()
-        for (line in controller.straightSkeleton.lines) {
+        for (line in controller.getStraightSkeleton(false).lines) {
             val p = Point2d(line.p1.originalX, line.p1.originalY)
             val q = Point2d(line.p2.originalX, line.p2.originalY)
             if (p != q) skelEdges.add(
