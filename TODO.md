@@ -1,12 +1,10 @@
 * Triton: context switching history & multiple skeletons
 
-  - Published events have their coordinate points off by one event when run via play() and not step()
-  - Finalize context switching
+  - history: events fail to get rendered in view after first run (and in other situations too?)
+  - finalize context switching
   - toggle visibility of polylines (and triangulations?) along with skeletons
   - it seems visibility & editmode toggles don't work as they were meant to be
-  -> How do we want to handle changing geometry / weights at intermediate steps and what do we do with resulting skeletons?
-
-* Bug: sometimes weight fields' values cannot be deleted, only concatenated upon
+  - how do we want to handle changing geometry / weights at intermediate steps and what do we do with resulting skeletons?
 
 * Kotton:
 
@@ -18,6 +16,8 @@
 * Compare test results with Salzburg, debug failing salzburg tests (currently over 60%).
 
 * Sim. events: do we have to prioritize flips (e.g. flip edge = edge to be split)?
+
+* Bug: sometimes weight fields' values cannot be deleted, only concatenated upon
 
 * At edge events resulting in parallel edges:
 

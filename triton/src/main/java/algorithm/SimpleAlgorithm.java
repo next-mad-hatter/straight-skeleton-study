@@ -96,15 +96,14 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, AlgoChunk> {
 		}
 
 		if (!isCancelled()) publish(new AlgoChunk("Triangulated", true, 0.0, 0.0));
-
-		calculateEvents();
-
 		if (context.stepMode) context.paused = true;
 		// FIXME: Can we not block the calculations here or
 		//        at least have a callback from the controller?
 		while (!controller.wantsUpdates(context) && !isCancelled()) {
 			Thread.sleep(100);
 		}
+
+		calculateEvents();
 
 		boolean eventExists = true;
 
@@ -162,10 +161,8 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, AlgoChunk> {
 			if (events.size() > 0) {
 				if (!isCancelled()) {
 					publish(new AlgoChunk(event.getName(), true, i.current_x, i.current_y));
+					if (context.stepMode) context.paused = true;
 				}
-				if (context.stepMode) context.paused = true;
-				// FIXME: Can we not block the calculations here or
-				//        at least have a callback from the controller?
 				while (!controller.wantsUpdates(context) && !isCancelled()) {
 					Thread.sleep(100);
 				}
@@ -185,6 +182,9 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, AlgoChunk> {
 			event = null;
 		}
 		if (animation) {
+			while (!controller.wantsUpdates(context) && !isCancelled()) {
+				Thread.sleep(100);
+			}
 			publish();
 		}
 
@@ -229,10 +229,16 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, AlgoChunk> {
 				}
 			}
 			if (animation) {
+				while (!controller.wantsUpdates(context) && !isCancelled()) {
+					Thread.sleep(100);
+				}
 				publish();
 			}
 		}
 		if (animation) {
+			while (!controller.wantsUpdates(context) && !isCancelled()) {
+				Thread.sleep(100);
+			}
 			publish();
 		}
 
@@ -244,6 +250,9 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, AlgoChunk> {
 		}
 
 		if (animation) {
+			while (!controller.wantsUpdates(context) && !isCancelled()) {
+				Thread.sleep(100);
+			}
 			publish();
 			Thread.sleep((long) (25 * controller.getAverage_weight(context)));
 		}

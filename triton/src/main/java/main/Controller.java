@@ -419,7 +419,6 @@ public class Controller {
 		view.init(context.getLines(true), context.getPoints(true));
 		view.setTriangles(context.getTriangles(true));
 		if (context.isBrowsingHistory() || !context.finished && context.paused) {
-			// System.err.println("EVENT");
 			view.setCurrentEvent(context.getCurrentEvent(true));
 		}
         else
@@ -485,14 +484,18 @@ public class Controller {
 			isCounterClockwise = Util.isCounterClockwise(points);
 			context.getSkeleton(false).clear();
 			context.move = false;
-			if (context.getAlgorithm() == null || context.finished)
-                try {
-                    val algo = new SimpleAlgorithm(points, context.getLines(false), context.animation, this, context);
-                    context.setAlgorithm(algo);
-                    context.setPolygons(new ArrayList<>());
-                } catch (CloneNotSupportedException e) {
-                    e.printStackTrace();
-                }
+			if (context.getAlgorithm() != null) {
+			    context.getAlgorithm().cancel(true);
+			}
+			// if (context.getAlgorithm() == null || context.finished) {
+				try {
+					val algo = new SimpleAlgorithm(points, context.getLines(false), context.animation, this, context);
+					context.setAlgorithm(algo);
+					context.setPolygons(new ArrayList<>());
+				} catch (CloneNotSupportedException e) {
+					e.printStackTrace();
+				}
+			// }
             context.getAlgorithm().setAnimation(context.animation);
 			context.getAlgorithm().execute();
 		}
@@ -519,7 +522,6 @@ public class Controller {
 		}
 		JLabel label;
 		for (val ch: chunks) {
-		    System.err.println("EVENT " + ch.eventName);
 			if (ch.eventName != null && ch.eventName != "Triangulated") {
 				Graphics2D g2 = (Graphics2D) view.getGraphics();
 				int width = g2.getFontMetrics().stringWidth(ch.eventName);
@@ -547,6 +549,7 @@ public class Controller {
 	    if (context.getAlgorithm() == null) return;
 		context.restart = true;
 		context.animation = false;
+		context.stepMode = false;
         restart(context, null);
 		runAlgorithm(context);
 		context.animation = true;
@@ -587,6 +590,7 @@ public class Controller {
 	}
 
 	public void restart(Context context, List<Line> polyLines) {
+	    context.finished = false;
 		context.history = new History();
 		val points = context.getPoints(false);
 		val lines = context.getLines(false);
@@ -681,6 +685,7 @@ public class Controller {
 				history.forward();
 			}
 		} else context.paused = false;
+		refreshContext();
 		roll(context, context.restart && !context.isBrowsingHistory());
 	}
 
