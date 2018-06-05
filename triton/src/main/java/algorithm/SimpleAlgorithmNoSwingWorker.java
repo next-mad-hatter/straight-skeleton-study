@@ -135,7 +135,7 @@ public class SimpleAlgorithmNoSwingWorker {
 			p1 = line.getP1();
 			p2 = line.getP2();
 
-			controller.setCurrentEvent(null);
+			controller.setCurrentEvent(context, null);
 			movePoints(event);
 
 			if (!(event instanceof FlipEvent)) {

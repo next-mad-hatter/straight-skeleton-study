@@ -99,12 +99,13 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 
 		boolean eventExists = true;
 
-		// if (!isCancelled()) publish(new ImmutablePair<>("Triangulated", true));
+		if (!isCancelled()) publish(new ImmutablePair<>("Triangulated", true));
 		// FIXME: Can we not block the calculations here or
 		//        at least have a callback from the controller?
 		while (!controller.wantsUpdates(context) && !isCancelled()) {
 			Thread.sleep(100);
 		}
+		if (context.stepMode) context.paused = true;
 
 		while (eventExists && !isCancelled()) {
 			if (events.size() == 0) {
@@ -136,7 +137,7 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 			p1 = line.getP1();
 			p2 = line.getP2();
 
-			controller.setCurrentEvent(null);
+			controller.setCurrentEvent(context, null);
 			movePoints(event);
 
 			if (!(event instanceof FlipEvent)) {
@@ -165,6 +166,7 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, Pair<String, Boolean>>
 				while (!controller.wantsUpdates(context) && !isCancelled()) {
 					Thread.sleep(100);
 				}
+				if (context.stepMode) context.paused = true;
 			}
 
 			for (Set<Point> points : context.getPolygons(false)) {

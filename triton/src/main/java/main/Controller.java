@@ -319,7 +319,8 @@ public class Controller {
 		public boolean isRunning = false;
 		public boolean restart = false;
 		public boolean move = false;
-		public boolean nextStep = true;
+		public boolean stepMode = false;
+		public boolean paused = false;
 		public boolean animation = false;
 		public boolean enabled = true;
 		public boolean closed = false;
@@ -418,7 +419,7 @@ public class Controller {
 		val context = getContext();
 		view.init(context.getLines(true), context.getPoints(true));
 		view.setTriangles(context.getTriangles(true));
-		if (context.isBrowsingHistory() || !context.finished && !context.nextStep)
+		if (context.isBrowsingHistory() || !context.finished && context.paused)
 			view.setCurrentEvent(context.getCurrentEvent(true));
         else
         	view.setCurrentEvent(null);
@@ -523,13 +524,15 @@ public class Controller {
 			}
 			if (ch.getLeft() == "Triangulated") context.setCurrentEvent(null);
 			// view.setTriangles(context.getTriangles(true));
-			if (ch.getRight()) context.saveSnapshot();
+			if (ch.getRight()) {
+				context.saveSnapshot();
+			}
+			refreshContext();
 		}
-		refreshContext();
 	}
 
 	public boolean wantsUpdates(Context context) {
-		return !context.makingSnapshot && context.nextStep && !context.isBrowsingHistory(); // && !context.finished;
+		return !context.makingSnapshot && !context.paused && !context.isBrowsingHistory(); // && !context.finished;
 	}
 
 	public void showReweighted() {
@@ -568,7 +571,7 @@ public class Controller {
 		context.restart = true;
 		context.isRunning = false;
 		context.animation = false;
-		context.nextStep = true;
+		context.paused = false;
 		context.saveSnapshot();
 		context.history.setToLast();
 		table.setValueAt(new Boolean(true), contextPtr, 0);
@@ -637,7 +640,6 @@ public class Controller {
 			this.restart(context, null);
 			EventCalculation.setVertexCounter(context, context.getPoints(false).size());
 			context.restart = false;
-			context.nextStep = true;
 			context.getSkeleton(false).polygon = null;
 		}
 		refreshContext();
@@ -653,7 +655,8 @@ public class Controller {
 		val context = getContext();
 		val history = context.getHistory();
 		history.unbrowse();
-        context.nextStep = true;
+		context.stepMode = false;
+        context.paused = false;
         roll(context, context.restart);
 	}
 
@@ -661,14 +664,15 @@ public class Controller {
 	private void step() {
 		val context = getContext();
 		val history = context.getHistory();
+		context.stepMode = true;
 		if (history.isBrowsing()) {
 			if (history.atLast()) {
 				history.unbrowse();
-				context.nextStep = !context.nextStep;
+				context.paused = false;
 			} else {
 				history.forward();
 			}
-		}
+		} else context.paused = false;
 		roll(context, context.restart && !context.isBrowsingHistory());
 	}
 
@@ -685,8 +689,8 @@ public class Controller {
 		refreshContext();
 	}
 
-	public void setCurrentEvent(JLabel l) {
-		view.setCurrentEvent(l);
+	public void setCurrentEvent(Context context, JLabel l) {
+		context.setCurrentEvent(l);
 	}
 
 	public CommonListener createActionListener(TYPES type) {

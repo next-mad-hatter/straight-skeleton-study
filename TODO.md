@@ -1,7 +1,6 @@
 * Triton: context switching history & multiple skeletons
 
-  - Step forward does not yet work here
-  - Published events have their coordinate points off by one event
+  - Published events have their coordinate points off by one event when run via play() and not step()
   - Finalize context switching
   - toggle visibility of polylines (and triangulations?) along with skeletons
   - it seems visibility & editmode toggles don't work as they were meant to be
