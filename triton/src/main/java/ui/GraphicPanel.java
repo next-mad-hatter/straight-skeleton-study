@@ -358,7 +358,7 @@ public class GraphicPanel extends JPanel {
 			skeletons.add(controller.getStraightSkeleton(true));
 		}
 		for (StraightSkeleton skeleton : skeletons) {
-			if (!controller.findContext(skeleton).isVisible()) {
+			if (!controller.isVisible(controller.findContextIndex(skeleton))) {
 				continue;
 			}
 			

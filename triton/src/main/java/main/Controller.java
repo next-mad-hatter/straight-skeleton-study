@@ -347,13 +347,11 @@ public class Controller {
 		public boolean stepMode = false;
 		public boolean paused = false;
 		public boolean animation = true;
-		public boolean enabled = true;
 		public boolean closed = false;
-		public boolean editMode = false;
 		public boolean finished = false;
-		public boolean initialize = false;
 		public boolean makingSnapshot = false;
-		@Getter @Setter private boolean visible = true;
+		public boolean initialize = false;
+		public boolean enabled = true;
 
 		@Setter private StraightSkeleton skeleton = new StraightSkeleton();
 		@Setter private List<Line> lines = new ArrayList<>();
@@ -436,7 +434,7 @@ public class Controller {
 	@Synchronized("contextLock")
 	public void switchContext(int contextPtr) {
 		if (contextPtr == this.contextPtr) return;
-	    System.err.println("Switching to " + contextPtr + " of " + contexts.size());
+	    System.err.println("Switching to " + contextPtr + " of [0, " + (contexts.size()-1) + "]");
 		this.contextPtr = contextPtr;
 		refreshContext();
 	}
@@ -451,9 +449,10 @@ public class Controller {
 		}
 		else
 			view.setCurrentEvent(null);
-		setVisible(contextPtr, true);
 		view.repaint();
-		table.setRowSelectionInterval(contextPtr, contextPtr);
+
+		if (table.getSelectionModel().getMinSelectionIndex() != contextPtr)
+			table.setRowSelectionInterval(contextPtr, contextPtr);
 	}
 
 	public void setView(GraphicPanel view) {
@@ -500,7 +499,6 @@ public class Controller {
 		addContext(snapshot);
 		contexts.get(contexts.size()-1).closed = contexts.get(ptr).closed;
 		switchContext(contexts.size()-1);
-		if (ptr != contextPtr) setVisible(ptr, false);
 		// NOTE: if we don't restart here, some points still fail to compute
         //       their movement vectors correctly for some reason.
         //       Since we don't clone the algo for now, we have to start
@@ -635,7 +633,7 @@ public class Controller {
 		context.paused = false;
 		context.saveSnapshot();
 		context.history.setToLast();
-		table.setValueAt(new Boolean(true), contextPtr, 0);
+		// table.setValueAt(new Boolean(true), contextPtr, 0);
 		/*
 		System.err.println("DATA STATS");
 		System.err.println(context.getPoints(false).size());
@@ -881,47 +879,47 @@ public class Controller {
 		}
 	}
 
+	public boolean isVisible(int index) {
+		return ((Boolean) table.getValueAt(index, 1));
+	}
+
 	// We could keep pointers to contexts in the skeletons,
 	// but for small numbers of them this is easier.
-	public Context findContext(StraightSkeleton skeleton) {
-	    for (val c: contexts) {
-			if (c.getSkeleton(false) == skeleton) return c;
+	public int findContextIndex(StraightSkeleton skeleton) {
+	    for (int ind = 0; ind < contexts.size(); ind++) {
+	    	val c = contexts.get(ind);
+			if (c.getSkeleton(false) == skeleton) return ind;
 			// for now, we don't need to find skeletons from not currently shown snapshots
-			if (c.getSkeleton(true) == skeleton) return c;
+			if (c.getSkeleton(true) == skeleton) return ind;
         }
-        return null;
-	}
-
-	public boolean isVisible(int index) {
-		return contexts.get(index).isVisible();
-	}
-
-	public void setVisible(int index, boolean visible) {
-		System.err.print("SETTING " + index + " TO " + visible + " -> ");
-		Context context = contexts.get(index);
-		if (visible == context.isVisible()) {
-			System.err.println("pass");
-			return;
-		}
-
-		context.setVisible(visible);
-
-		for (val s: contexts) System.err.print(s.isVisible() ? "+" : "-");
-		System.err.println();
-		val b1 = ((JButtonEditor) table.getCellEditor(index, 1)).getButton();
-        b1.setIcon(visible ? visible_icon : not_visible_icon);
-		val b2 = ((JButtonRenderer) table.getCellRenderer(index, 1)).getButton();
-		b2.setIcon(visible ? visible_icon : not_visible_icon);
-		// ((AbstractTableModel) table.getModel()).fireTableDataChanged();
-		table.repaint();
-
-		view.repaint();
+        return -1;
 	}
 
 	/*
-	// disabled until safe
-	public StraightSkeleton getStraightSkeleton() {
-	    return getContext().getSkeleton(true);
+	public void setVisible(int index, boolean visible) {
+		if (true) return;
+
+	    System.err.println("Setting visibility of " + index + " to " + visible);
+		Context context = contexts.get(index);
+		if (visible == context.isVisible()) {
+			System.err.println("pass");
+		}
+
+		// Reminder: these are global for each column -- hence we have to
+		// make sure all other cells in this column leave edit mode.
+		// val b1 = ((JButtonEditor) table.getCellEditor(index, 1)).getButton();
+        // b1.setIcon(visible ? visible_icon : not_visible_icon);
+		// ((JButtonEditor) table.getCellEditor(index, 1)).stopCellEditing();
+		// if (table.isEditing()) table.getCellEditor().stopCellEditing();
+		// if (table.isEditing()) table.getCellEditor().cancelCellEditing();
+
+        // These should only live while component is rendered
+		// val b2 = ((JButtonRenderer) table.getCellRenderer(index, 1)).getButton();
+		// b2.setIcon(visible ? visible_icon : not_visible_icon);
+
+		// ((AbstractTableModel) table.getModel()).fireTableDataChanged();
+		// table.repaint();
+		view.repaint();
 	}
 	*/
 
@@ -932,13 +930,6 @@ public class Controller {
 	public StraightSkeleton getStraightSkeleton(Context context, boolean fromHistory) {
 		return context.getSkeleton(fromHistory);
 	}
-
-	/*
-	// disabled until safe
-	public List<StraightSkeleton> getStraightSkeletons() {
-		return contexts.stream().map(c -> c.getSkeleton(true)).collect(Collectors.toList());
-	}
-	*/
 
 	public List<StraightSkeleton> getStraightSkeletons(boolean fromHistory) {
 		return contexts.stream().map(c -> c.getSkeleton(fromHistory)).collect(Collectors.toList());

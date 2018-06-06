@@ -13,12 +13,6 @@ public class JButtonRenderer implements TableCellRenderer {
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
                                                    int row, int column) {
 
-	    if (value.toString() == "visible") {
-			val V = ((ConfigurationTable) table).getController().isVisible(row);
-			System.err.println("Renderer querying visibility of " + row + " : " + V);
-		}
-
-        return ConfigurationTable.getButton(button, value.toString(), table, isSelected,
-                ((ConfigurationTable) table).getController().isVisible(row));
+        return ConfigurationTable.adjustButton(button, value, table, row);
     }
 }

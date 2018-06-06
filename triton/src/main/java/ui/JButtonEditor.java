@@ -3,9 +3,11 @@ package at.tugraz.igi.ui;
 import lombok.*;
 
 import at.tugraz.igi.main.Controller;
+import at.tugraz.igi.ui.*;
 
 import javax.swing.*;
 import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -16,34 +18,48 @@ public class JButtonEditor extends AbstractCellEditor implements TableCellEditor
     @Getter private JButton button;
     String action;
     int row;
+    ConfigurationTable table;
 
-    public JButtonEditor(final Controller controller) {
+    public JButtonEditor(ConfigurationTable table, final Controller controller) {
         super();
-
+        this.table = table;
         button = new JButton();
         button.setOpaque(true);
+
         button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (action == "delete") {
                     controller.removeContext(row);
                 } else if (action == "copy") {
+                    val cnt = table.getRowCount();
                     controller.cloneContext(row);
+                    if (table.getRowCount() == cnt) return;
+                    System.err.println("Setting visibility of " + row + " to false");
+                    table.setValueAt(new Boolean(false), row, 1);
+                    controller.refreshContext();
+                    // table.getTableModel().fireTableCellUpdated(row, 1);
                 } else if (action == "color") {
                     controller.showColorChooser(row);
-                } else if (action == "visible") {
-                    controller.setVisible(row, !controller.isVisible(row));
-                    /*
-                    button.setIcon(controller.isVisible(row) ?
-                            Controller.visible_icon :
-                            Controller.not_visible_icon);
-                    */
+                } else if (action == "toggle") {
+                    val v = (Boolean) table.getValueAt(row, 1);
+                    System.err.println("Setting visibility of " + row + " to " + !v);
+                    table.setValueAt(!v, row, 1);
+                    // table.getTableModel().fireTableCellUpdated(row, 1);
+                    if (!v.booleanValue())
+                        button.setIcon(Controller.visible_icon);
+                    else
+                        button.setIcon(Controller.not_visible_icon);
+                    // stopCellEditing();
+                    // table.getCellEditor().stopCellEditing();
+                    table.editingStopped(new ChangeEvent(table));
+                    controller.refreshContext();
                 }
             }
         });
     }
 
     public Object getCellEditorValue() {
-        return null;
+        return table.getValueAt(row, 1);
     }
 
     public boolean isCellEditable(EventObject anEvent) {
@@ -68,15 +84,9 @@ public class JButtonEditor extends AbstractCellEditor implements TableCellEditor
     }
 
     public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-        action = (value == null) ? "" : value.toString();
+        action = (value instanceof Boolean) ? "toggle" : value.toString();
         this.row = row;
 
-        if (value.toString() == "visible") {
-            val V = ((ConfigurationTable) table).getController().isVisible(row);
-            System.err.println("Editor querying visibility of " + row + " : " + V);
-        }
-
-        return ConfigurationTable.getButton(button, value.toString(), table, isSelected,
-            ((ConfigurationTable) table).getController().isVisible(row));
+        return ConfigurationTable.adjustButton(button, value, table, row);
     }
 }
