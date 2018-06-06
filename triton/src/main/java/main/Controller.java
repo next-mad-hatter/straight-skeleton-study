@@ -498,6 +498,7 @@ public class Controller {
 		if (contexts.get(ptr).getPolyLines(false).isEmpty()) return;
 		val snapshot = buildSnapshot(contexts.get(ptr));
 		addContext(snapshot);
+		contexts.get(contexts.size()-1).closed = contexts.get(ptr).closed;
 		switchContext(contexts.size()-1);
 		if (ptr != contextPtr) setVisible(ptr, false);
 		// NOTE: if we don't restart here, some points still fail to compute

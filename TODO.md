@@ -1,9 +1,10 @@
 * Triton: context switching history & multiple skeletons
 
+  - remove checkboxes from skeletons list and make row selection clearly visible
   - history: clear last event rendering
-  - it seems visibility & editmode toggles don't work as they were meant to be
-  - toggle visibility of polylines (and triangulations?) along with skeletons
-  - how do we want to handle changing geometry / weights at intermediate steps?
+  - first skeleton doesn't get rendered under others until computation kicks off for it
+  - how do we want to handle changing geometry / weights at intermediate steps --> disable editing at certain states?
+  - when loading files: leave other skeletons
 
 * Kotton:
 
