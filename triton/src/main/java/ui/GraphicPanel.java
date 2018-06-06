@@ -406,13 +406,13 @@ public class GraphicPanel extends JPanel {
 
 				g2.setComposite(AlphaComposite.Src);
 				for (Line l : skeleton.getPolyLines()) {
-					if (l.polyLine) {
+					// if (l.polyLine) {
 						g2.setStroke(dashed);
 						g2.setColor(Color.LIGHT_GRAY);
-					} else {
-						g2.setColor(Color.BLACK);
-						g2.setStroke(basic);
-					}
+					// } else {
+					// 	g2.setColor(Color.BLACK);
+					// 	g2.setStroke(basic);
+					// }
 					drawLine(g2, l);
 				}
 				g2.setStroke(new BasicStroke(1));

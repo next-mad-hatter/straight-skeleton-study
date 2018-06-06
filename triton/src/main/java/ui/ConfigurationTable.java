@@ -2,8 +2,7 @@ package at.tugraz.igi.ui;
 
 import lombok.*;
 
-import java.awt.Color;
-import java.awt.Component;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.EventObject;
@@ -82,10 +81,7 @@ public class ConfigurationTable extends JTable {
 				ListSelectionModel lsm = (ListSelectionModel)e.getSource();
 				if (!lsm.isSelectionEmpty()) {
 					int row = lsm.getMinSelectionIndex();
-					System.err.println("Setting visibility of " + row + " to true");
 					me.setValueAt(new Boolean(true), row, 1);
-					// tableModel.fireTableCellUpdated(row, 1);
-					System.err.println("Switching to " + row);
 					controller.switchContext(row);
 				}
 			}
@@ -111,7 +107,6 @@ public class ConfigurationTable extends JTable {
 	public static JButton adjustButton(JButton button, Object value, JTable table, int row) {
 	    val name = value.toString();
 		if (value instanceof Boolean) {
-			// System.err.println("Checking visibility of " + row);
 			button.setIcon(((Boolean) table.getValueAt(row, 1)) ?
 					Controller.visible_icon :
 					Controller.not_visible_icon);
@@ -129,18 +124,6 @@ public class ConfigurationTable extends JTable {
 		button.setBorder(BorderFactory.createEmptyBorder());
 		button.setFocusable(false);
 		button.setOpaque(true);
-
-		// This won't work since the buttons are created before when
-		// the row is being populated -- before it's selected iianm.
-		/*
-		System.err.println("Row " + row + " , selected " + table.getSelectionModel().getMinSelectionIndex());
-		if (table.getSelectionModel().getMinSelectionIndex() == row) {
-			button.setBackground(table.getSelectionBackground());
-		} else {
-			button.setBackground(table.getBackground());
-		}
-		// button.setBackground(new Color(Color.TRANSLUCENT));
-     	*/
 
 		return button;
 	}
@@ -184,7 +167,6 @@ class TableModel extends DefaultTableModel {
 
 	public boolean isCellEditable(int row, int column) {
 		return (column > 0);
-		// return true;
 	}
 
 	public void setValueAt(Object obj, int row, int column) {
@@ -205,13 +187,32 @@ class JLabelRenderer implements TableCellRenderer {
 		this.controller = controller;
 	}
 
+	/*
+	class IconComponent extends JComponent {
+		public IconAdapter(Icon icon) {
+			this.icon = icon;
+		}
+		public void paintComponent(Graphics g) {
+			icon.paintIcon(this, g, 0, 0);
+		}
+		public Dimension getPreferredSize() {
+			return new Dimension(icon.getIconWidth(), icon.getIconHeight());
+		}
+		private Icon icon;
+	}
+	*/
+
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
 			int row, int column) {
+		/*
+		val icon = controller.getImage("media-playback-start");
+		return new IconAdapter(icon);
+		*/
+
 		label.setForeground(controller.getContext(row).getSkeleton(false).getColor());
 		label.setBackground(controller.getContext(row).getSkeleton(false).getColor());
 		label.setText(value.toString());
 		label.setBorder(BorderFactory.createCompoundBorder(label.getBorder(), padding));
-
 		return label;
 	}
 }

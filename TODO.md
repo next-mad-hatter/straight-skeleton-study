@@ -1,12 +1,9 @@
-* Triton: context switching history & multiple skeletons
+* Polyhistory & context switching:
 
-  - skeletons table needs a rewrite for correct visibility rendering (do I hate swing, the app's design or both?)
-  - remove checkboxes from skeletons list and make row selection clearly visible
-  - history: clear last event rendering
-  - first skeleton doesn't get rendered under others until computation kicks off for it
+  - selection per mouse doesn't work in skeletons table until visibility button is clicked
+  - history: get rid of last event sticking around rendered
   - how do we want to handle changing geometry / weights at intermediate steps --> disable editing at certain states?
   - when loading files: leave other skeletons
-  - how does skeleton color selection work?
 
 * Kotton:
 

@@ -495,6 +495,13 @@ public class Controller {
 	@Synchronized("contextLock")
 	public void cloneContext(int ptr) {
 		if (contexts.get(ptr).getPolyLines(false).isEmpty()) return;
+
+		// This is so that our very first skeleton gets rendered before its algorithm is called
+		val oldContext = contexts.get(ptr);
+		val lines = createPolyLines(oldContext.getPolyLines(false));
+		oldContext.getSkeleton(false).setPolyLines(lines);
+		oldContext.setLines(lines);
+
 		val snapshot = buildSnapshot(contexts.get(ptr));
 		addContext(snapshot);
 		contexts.get(contexts.size()-1).closed = contexts.get(ptr).closed;
@@ -796,7 +803,7 @@ public class Controller {
 		};
 	}
 
-	private ImageIcon getImage(String name) {
+	public ImageIcon getImage(String name) {
 		InputStream imgStream = getClass().getClassLoader().getResourceAsStream(name + ".png");
         if (imgStream == null)
             imgStream = getClass().getClassLoader().getResourceAsStream("tango/" + name + ".png");
