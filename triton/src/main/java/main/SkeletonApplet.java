@@ -138,8 +138,8 @@ public class SkeletonApplet extends JFrame {
 		Dimension minimumSize = new Dimension(250, 50);
 		confPanel.setMinimumSize(minimumSize);
 
-		controller.initContexts(table);
 		controller.setView(screenPanel);
+		controller.initTable(table);
 
 		JButton playButton = new JButton("Play");
 

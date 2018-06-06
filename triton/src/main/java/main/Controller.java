@@ -25,11 +25,10 @@ import java.io.InputStream;
 import javax.imageio.*;
 import javax.swing.*;
 import javax.swing.SwingWorker.StateValue;
+import javax.swing.table.AbstractTableModel;
 
 import at.tugraz.igi.algorithm.*;
-import at.tugraz.igi.ui.ConfigurationTable;
-import at.tugraz.igi.ui.CustomTextField;
-import at.tugraz.igi.ui.GraphicPanel;
+import at.tugraz.igi.ui.*;
 import at.tugraz.igi.util.*;
 import at.tugraz.igi.util.Vector;
 import at.tugraz.igi.events.*;
@@ -80,6 +79,10 @@ public class Controller {
 		edit_icon = getImage("edit");
 		visible_icon = getImage("eye");
 		not_visible_icon = getImage("eye_blocked");
+
+		this.contexts = new ArrayList<Context>();
+		this.contexts.add(new Context());
+		this.contextPtr = 0;
 	}
 
 	/**
@@ -177,7 +180,6 @@ public class Controller {
 		else {
 			snapSkeleton = new StraightSkeleton();
 			snapSkeleton.setColor(straightSkeleton.getColor());
-			snapSkeleton.setVisible(straightSkeleton.isVisible());
 			snapSkeleton.setLines(cloneLineList.apply(straightSkeleton.getLines()));
 			snapSkeleton.setPolyLines(cloneLineList.apply(straightSkeleton.getPolyLines()));
 			if (straightSkeleton.polygon != null) {
@@ -351,6 +353,7 @@ public class Controller {
 		public boolean finished = false;
 		public boolean initialize = false;
 		public boolean makingSnapshot = false;
+		@Getter @Setter private boolean visible = true;
 
 		@Setter private StraightSkeleton skeleton = new StraightSkeleton();
 		@Setter private List<Line> lines = new ArrayList<>();
@@ -415,17 +418,11 @@ public class Controller {
 	// TODO: synchronize view methods where necessary
 	@Getter private final Object contextLock = new Object();
 
-	/**
-	 * We cannot do this inside our constructor since we need table here,
-	 * and table constructor needs controller.
-	 */
-	public void initContexts(ConfigurationTable table) {
-		this.contexts = new ArrayList<Context>();
-		this.contexts.add(new Context());
-		this.contextPtr = 0;
+	public void initTable(ConfigurationTable table) {
 		this.table = table;
-		table.addRow();
-		table.setRowSelectionInterval(table.getRowCount()-1, table.getRowCount()-1);
+		table.removeAllRows();
+		for (val i: contexts) table.addRow();
+		refreshContext();
 	}
 
 	public Context getContext(int ptr) {
@@ -438,26 +435,29 @@ public class Controller {
 
 	@Synchronized("contextLock")
 	public void switchContext(int contextPtr) {
+		if (contextPtr == this.contextPtr) return;
+	    System.err.println("Switching to " + contextPtr + " of " + contexts.size());
 		this.contextPtr = contextPtr;
+		refreshContext();
+	}
+
+	@Synchronized("contextLock")
+	public void refreshContext() {
 		val context = getContext();
 		view.init(context.getLines(true), context.getPoints(true));
 		view.setTriangles(context.getTriangles(true));
 		if (context.isBrowsingHistory() || !context.finished && context.paused) {
 			view.setCurrentEvent(context.getCurrentEvent(true));
 		}
-        else
-        	view.setCurrentEvent(null);
+		else
+			view.setCurrentEvent(null);
+		setVisible(contextPtr, true);
 		view.repaint();
-	}
-
-	@Synchronized("contextLock")
-	public void refreshContext() {
-		switchContext(contextPtr);
+		table.setRowSelectionInterval(contextPtr, contextPtr);
 	}
 
 	public void setView(GraphicPanel view) {
 		this.view = view;
-		refreshContext();
 	}
 
 	@Synchronized("contextLock")
@@ -491,14 +491,15 @@ public class Controller {
 		context.setCurrentEvent(snapshot.getCurrentEvent());
 		contexts.add(context);
 		table.addRow();
-		table.setRowSelectionInterval(table.getRowCount()-1, table.getRowCount()-1);
 	}
 
 	@Synchronized("contextLock")
 	public void cloneContext(int ptr) {
+		if (contexts.get(ptr).getPolyLines(false).isEmpty()) return;
 		val snapshot = buildSnapshot(contexts.get(ptr));
 		addContext(snapshot);
 		switchContext(contexts.size()-1);
+		if (ptr != contextPtr) setVisible(ptr, false);
 		// NOTE: if we don't restart here, some points still fail to compute
         //       their movement vectors correctly for some reason.
         //       Since we don't clone the algo for now, we have to start
@@ -610,8 +611,10 @@ public class Controller {
 			}
 		}
 
-		table.removeAllRows();
-		initContexts(table);
+		this.contexts = new ArrayList<Context>();
+		this.contexts.add(new Context());
+		this.contextPtr = 0;
+		initTable(this.table);
 		view.reset();
 		refreshContext();
 
@@ -818,6 +821,8 @@ public class Controller {
 		Point p2;
 		List<Line> polyLines = new ArrayList<Line>();
 
+		if (lines.isEmpty()) return polyLines;
+
 		Line l1 = lines.get(0);
 		Point first = l1.getP1();
 		p1 = new Point(l1.getP1().getNumber(), l1.getP1().getOriginalX(), l1.getP1().getOriginalY());
@@ -875,9 +880,40 @@ public class Controller {
 		}
 	}
 
-	public void toggleVisibility(int index, boolean visible) {
-		StraightSkeleton skeleton = contexts.get(index).getSkeleton(false);
-		skeleton.setVisible(visible);
+	// We could keep pointers to contexts in the skeletons,
+	// but for small numbers of them this is easier.
+	public Context findContext(StraightSkeleton skeleton) {
+	    for (val c: contexts) {
+			if (c.getSkeleton(false) == skeleton) return c;
+			// for now, we don't need to find skeletons from not currently shown snapshots
+			if (c.getSkeleton(true) == skeleton) return c;
+        }
+        return null;
+	}
+
+	public boolean isVisible(int index) {
+		return contexts.get(index).isVisible();
+	}
+
+	public void setVisible(int index, boolean visible) {
+		System.err.print("SETTING " + index + " TO " + visible + " -> ");
+		Context context = contexts.get(index);
+		if (visible == context.isVisible()) {
+			System.err.println("pass");
+			return;
+		}
+
+		context.setVisible(visible);
+
+		for (val s: contexts) System.err.print(s.isVisible() ? "+" : "-");
+		System.err.println();
+		val b1 = ((JButtonEditor) table.getCellEditor(index, 1)).getButton();
+        b1.setIcon(visible ? visible_icon : not_visible_icon);
+		val b2 = ((JButtonRenderer) table.getCellRenderer(index, 1)).getButton();
+		b2.setIcon(visible ? visible_icon : not_visible_icon);
+		// ((AbstractTableModel) table.getModel()).fireTableDataChanged();
+		table.repaint();
+
 		view.repaint();
 	}
 

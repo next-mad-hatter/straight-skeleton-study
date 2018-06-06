@@ -8,12 +8,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.EventObject;
 
-import javax.swing.AbstractCellEditor;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JTable;
-import javax.swing.JToggleButton;
+import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -25,10 +21,32 @@ import javax.swing.table.TableColumn;
 import at.tugraz.igi.main.Controller;
 
 public class ConfigurationTable extends JTable {
+
 	private static final long serialVersionUID = 1L;
 
+	@Getter Controller controller;
+
 	public ConfigurationTable(Controller controller) {
+
+		class ForcedListSelectionModel extends DefaultListSelectionModel {
+
+			public ForcedListSelectionModel () {
+				setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+			}
+
+			@Override
+			public void clearSelection() {
+			}
+
+			@Override
+			public void removeSelectionInterval(int index0, int index1) {
+			}
+
+		}
+
 		TableModel tableModel = new TableModel(controller);
+
+		this.controller = controller;
 
 		this.setModel(tableModel);
 
@@ -48,10 +66,28 @@ public class ConfigurationTable extends JTable {
 			column.setPreferredWidth(28);
 		}
 
-		this.setRowHeight(28);
+		this.setRowHeight(32);
+
+		this.setRowSelectionAllowed(true);
+		this.setColumnSelectionAllowed(false);
+		this.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		this.setSelectionModel(new ForcedListSelectionModel());
+
+		ListSelectionModel rowSM = this.getSelectionModel();
+		rowSM.addListSelectionListener(new ListSelectionListener() {
+			public void valueChanged(ListSelectionEvent e) {
+				if (e.getValueIsAdjusting()) return;
+				ListSelectionModel lsm = (ListSelectionModel)e.getSource();
+				if (!lsm.isSelectionEmpty()) {
+					int row = lsm.getMinSelectionIndex();
+					controller.switchContext(row);
+				}
+			}
+		});
+
 	}
 
-	public static JButton getButton(JButton button, String name, JTable table) {
+	public static JButton getButton(JButton button, String name, JTable table, boolean selected, boolean cVisible) {
 		if (name == "delete") {
 			button.setIcon(Controller.delete_icon);
 			button.setToolTipText("Delete Straight Skeleton");
@@ -62,19 +98,28 @@ public class ConfigurationTable extends JTable {
 			button.setIcon(Controller.color_icon);
 			button.setToolTipText("Change color");
 		} else if (name == "visible") {
-			button.setIcon(Controller.visible_icon);
+			// button.setIcon(Controller.visible_icon);
+			button.setIcon(cVisible ?
+					Controller.visible_icon :
+					Controller.not_visible_icon);
 			button.setToolTipText("Change visibility");
 		}
-		button.setBackground(Color.WHITE);
 		button.setBorder(BorderFactory.createEmptyBorder());
 		button.setFocusable(false);
+		if (selected) {
+			// button.setBackground(table.getSelectionBackground());
+			button.setBackground(Color.RED);
+		} else {
+			button.setBackground(table.getBackground());
+		}
+
 		return button;
 	}
 
 	public static JToggleButton getEditButton(JToggleButton button, JTable table) {
 		button.setToolTipText("Edit in drawing area");
 		button.setIcon(Controller.edit_icon);
-		button.setBackground(Color.WHITE);
+		// button.setBackground(Color.WHITE);
 		button.setBorder(BorderFactory.createEmptyBorder());
 		button.setFocusable(false);
 		return button;
@@ -82,7 +127,7 @@ public class ConfigurationTable extends JTable {
 
 	public void addRow() {
 		TableModel model = (TableModel) this.getModel();
-		model.addRow(new Object[] { new Boolean(false), "visible", "delete", "copy", "color",});
+		model.addRow(new Object[] { new Boolean(false), "visible", "color", "copy", "delete",});
 	}
 
 	public void removeRow(int rowIndex) {
@@ -123,6 +168,7 @@ class TableModel extends DefaultTableModel {
 
 	public void setValueAt(Object obj, int row, int column) {
 		super.setValueAt(obj, row, column);
+		/*
 		if (column == 0) {
 			Boolean value = ((Boolean) obj).booleanValue();
 			controller.switchContext(row);
@@ -130,11 +176,12 @@ class TableModel extends DefaultTableModel {
 			if (value) {
 				for (int i = 0; i < getRowCount(); i++) {
 					if (i != row) {
-						super.setValueAt(new Boolean(false), i, column);
+						// super.setValueAt(new Boolean(false), i, column);
 					}
 				}
 			}
 		}
+		*/
 	}
 }
 
@@ -142,6 +189,7 @@ class JLabelRenderer implements TableCellRenderer {
 
 	JLabel label = new JLabel();
 	Controller controller;
+	Border padding = BorderFactory.createEmptyBorder(0, 10, 0, 10);
 
 	public JLabelRenderer(Controller controller) {
 		this.controller = controller;
@@ -151,81 +199,14 @@ class JLabelRenderer implements TableCellRenderer {
 			int row, int column) {
 		label.setForeground(controller.getContext(row).getSkeleton(false).getColor());
 		label.setText(value.toString());
+		label.setBorder(BorderFactory.createCompoundBorder(label.getBorder(), padding));
+
+		if (isSelected) {
+			label.setBackground(Color.RED); // table.getSelectionBackground());
+		} else {
+			label.setBackground(table.getBackground());
+		}
+
 		return label;
-	}
-}
-
-class JButtonRenderer implements TableCellRenderer {
-
-	JButton button = new JButton();
-
-	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
-			int row, int column) {
-
-		return ConfigurationTable.getButton(button, value.toString(), table);
-	}
-}
-
-class JButtonEditor extends AbstractCellEditor implements TableCellEditor {
-	private static final long serialVersionUID = 1L;
-	JButton button;
-	String action;
-	int row;
-
-	public JButtonEditor(final Controller controller) {
-		super();
-
-		button = new JButton();
-		button.setOpaque(true);
-		button.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (action == "delete") {
-					controller.removeContext(row);
-				} else if (action == "copy") {
-					controller.cloneContext(row);
-				} else if (action == "color") {
-					controller.showColorChooser(row);
-				} else if (action == "visible") {
-					JButton button = (JButton) e.getSource();
-					if (button.getIcon().equals(Controller.visible_icon)) {
-						button.setIcon(Controller.not_visible_icon);
-					} else {
-						button.setIcon(Controller.visible_icon);
-					}
-					controller.toggleVisibility(row, button.getIcon().equals(Controller.visible_icon));
-				}
-			}
-		});
-	}
-
-	public Object getCellEditorValue() {
-		return null;
-	}
-
-	public boolean isCellEditable(EventObject anEvent) {
-		return true;
-	}
-
-	public boolean shouldSelectCell(EventObject anEvent) {
-		return false;
-	}
-
-	public boolean stopCellEditing() {
-		return super.stopCellEditing();
-	}
-
-	public void cancelCellEditing() {
-	}
-
-	public void addCellEditorListener(CellEditorListener l) {
-	}
-
-	public void removeCellEditorListener(CellEditorListener l) {
-	}
-
-	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-		action = (value == null) ? "" : value.toString();
-		this.row = row;
-		return ConfigurationTable.getButton(button, value.toString(), table);
 	}
 }

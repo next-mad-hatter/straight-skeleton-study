@@ -31,7 +31,7 @@ public class Run {
         Controller controller = new Controller();
         GraphicPanel panel = new GraphicPanel(controller);
         controller.setView(panel);
-        controller.initContexts(new ConfigurationTable(controller));
+        controller.initTable(new ConfigurationTable(controller));
 
         val scalingData = FileHandler.open(panel, controller, new File(in_file), scaleInput);
         // FIXME: add autozoom

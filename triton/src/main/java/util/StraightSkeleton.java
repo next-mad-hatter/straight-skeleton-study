@@ -13,12 +13,10 @@ public class StraightSkeleton {
 	@Getter @Setter private List<Line>lines;
 	@Getter @Setter private List<Line> polyLines;
 	@Getter @Setter private Color color;
-	@Getter @Setter private boolean visible;
-	
+
 	public StraightSkeleton(){
 		lines = new ArrayList<Line>();
 		polyLines = new ArrayList<Line>();
-		visible = true;
 	}
 	public void add(Line l){
 		lines.add(l);
