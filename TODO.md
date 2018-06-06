@@ -1,5 +1,7 @@
 * Polyhistory & context switching:
 
+  - when switching between contexts: update weight labels
+  - resizing cloned context with skeleton: run algo
   - selection per mouse doesn't work in skeletons table until visibility button is clicked
   - history: get rid of last event sticking around rendered
   - how do we want to handle changing geometry / weights at intermediate steps --> disable editing at certain states?
