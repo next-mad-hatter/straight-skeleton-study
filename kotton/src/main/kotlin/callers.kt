@@ -282,8 +282,8 @@ class Triton(
     ): SkeletonResult {
         var controller = Controller()
         var panel = GraphicPanel(controller)
-        controller.initContexts(ConfigurationTable(controller))
         controller.setView(panel)
+        controller.initTable(ConfigurationTable(controller))
 
         FileHandler.loadPoints(
                 (1..input.indices.count()).map {
