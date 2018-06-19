@@ -34,7 +34,6 @@ public class JButtonEditor extends AbstractCellEditor implements TableCellEditor
                     val cnt = table.getRowCount();
                     controller.cloneContext(row);
                     if (table.getRowCount() == cnt) return;
-                    System.err.println("Setting visibility of " + row + " to false");
                     table.setValueAt(new Boolean(false), row, 1);
                     controller.refreshContext();
                     // table.getTableModel().fireTableCellUpdated(row, 1);
@@ -42,7 +41,6 @@ public class JButtonEditor extends AbstractCellEditor implements TableCellEditor
                     controller.showColorChooser(row);
                 } else if (action == "toggle") {
                     val v = (Boolean) table.getValueAt(row, 1);
-                    System.err.println("Setting visibility of " + row + " to " + !v);
                     table.setValueAt(!v, row, 1);
                     // table.getTableModel().fireTableCellUpdated(row, 1);
                     if (!v.booleanValue())

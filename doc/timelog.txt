@@ -47,6 +47,7 @@
 2018.06.04    10:20    context switching polyhistory
 2018.06.05     7:10    context switching polyhistory, algo sync fixes
 2018.06.06     9:15    skeletons visibility & table rendering fixes, context switching, visibility display and multiple skeletons overlay rendering
+2018.06.19     2:00    context switching: weight fields, color and resizing enabled algo fixes
 
 ?              ?       org+admin work, communications, meetings, presentation
 

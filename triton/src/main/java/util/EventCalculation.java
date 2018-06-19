@@ -7,6 +7,10 @@ import java.util.HashMap;
 
 public class EventCalculation {
 
+	// FIXME: the original logic keeps skeletons count modulo number of colors in
+	//        this global variable, while new colors get defined and assigned during
+	//        algorithm start.  It would seem proper to factor out color management
+	//        from both here and algorithm implementation.
 	public static int skeleton_counter = 0;
 
 	public static Map<Controller.Context, Integer> vertex_counter = new HashMap<>();

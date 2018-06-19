@@ -330,6 +330,11 @@ public class Controller {
 			historyPtr = 0;
 		}
 
+		public void clear() {
+		    snapshots.clear();
+		    historyPtr = 0;
+		}
+
 	}
 
 	/**
@@ -352,6 +357,7 @@ public class Controller {
 		public boolean makingSnapshot = false;
 		public boolean initialize = false;
 		public boolean enabled = true;
+		public boolean doingRerun = false;
 
 		@Setter private StraightSkeleton skeleton = new StraightSkeleton();
 		@Setter private List<Line> lines = new ArrayList<>();
@@ -434,8 +440,18 @@ public class Controller {
 	@Synchronized("contextLock")
 	public void switchContext(int contextPtr) {
 		if (contextPtr == this.contextPtr) return;
-	    System.err.println("Switching to " + contextPtr + " of [0, " + (contexts.size()-1) + "]");
 		this.contextPtr = contextPtr;
+
+		val context = getContext();
+		for (int i = 0; i < context.getPolyLines(false).size(); i++) {
+			Line line = context.getLines(false).get(i);
+			Line l = context.getPolyLines(false).get(i);
+			CustomTextField field = (CustomTextField) view.getComponents()[i];
+			field.getDocument().removeDocumentListener(field);
+			field.setLines(line, l);
+			field.getDocument().addDocumentListener(field);
+		}
+
 		refreshContext();
 	}
 
@@ -503,8 +519,15 @@ public class Controller {
 		oldContext.setLines(lines);
 
 		val snapshot = buildSnapshot(contexts.get(ptr));
+		if (snapshot.getSkeleton() != null) {
+			if (EventCalculation.skeleton_counter >= SimpleAlgorithm.colors.length) EventCalculation.skeleton_counter = 0;
+			snapshot.getSkeleton().setColor(SimpleAlgorithm.colors[EventCalculation.skeleton_counter]);
+			EventCalculation.skeleton_counter++;
+		}
 		addContext(snapshot);
+
 		contexts.get(contexts.size()-1).closed = contexts.get(ptr).closed;
+		contexts.get(contexts.size()-1).finished = contexts.get(ptr).finished;
 		switchContext(contexts.size()-1);
 		// NOTE: if we don't restart here, some points still fail to compute
         //       their movement vectors correctly for some reason.
@@ -514,6 +537,8 @@ public class Controller {
 		EventCalculation.setVertexCounter(
 				getContext(),
 				EventCalculation.getVertexCounter(contexts.get(ptr)));
+
+		if (oldContext.getAlgorithm() != null) quickRerun(getContext(), false);
 	}
 
 	@Synchronized("contextLock")
@@ -534,11 +559,12 @@ public class Controller {
 			Util.closePolygon(points, context.getLines(false));
 			context.closed = true;
 			isCounterClockwise = Util.isCounterClockwise(points);
-			context.getSkeleton(false).clear();
 			context.move = false;
 			if (context.getAlgorithm() != null) {
 			    context.getAlgorithm().cancel(true);
 			}
+			context.getSkeleton(false).clear();
+			context.getHistory().clear();
 			// if (context.getAlgorithm() == null || context.finished) {
 				try {
 					val algo = new SimpleAlgorithm(points, context.getLines(false), context.animation, this, context);
@@ -591,19 +617,21 @@ public class Controller {
 	}
 
 	public boolean wantsUpdates(Context context) {
-		return !context.makingSnapshot && !context.paused && !context.isBrowsingHistory(); // && !context.finished;
+		return !context.makingSnapshot && (context.doingRerun || !context.paused && !context.isBrowsingHistory()); // && !context.finished;
 	}
 
 	/**
 	 * Used to compute adjusted skeleton after weights / geometry change.
 	 */
-	public void quickRerun(Context context) {
-	    if (context.getAlgorithm() == null) return;
+	public void quickRerun(Context context, boolean noNewStart) {
+	    if (noNewStart && context.getAlgorithm() == null) return;
 		context.restart = true;
 		context.animation = false;
+		context.doingRerun = true;
 		context.stepMode = false;
         restart(context);
 		runAlgorithm(context);
+		context.doingRerun = false;
 		context.animation = true;
 	}
 
@@ -666,7 +694,7 @@ public class Controller {
 
 	public void restart(Context context) {
 	    context.finished = false;
-		context.history = new History();
+	    context.history.clear();
 		val points = context.getPoints(false);
 		val lines = context.getLines(false);
 		points.clear();
@@ -700,6 +728,7 @@ public class Controller {
 			CustomTextField field = (CustomTextField) view.getComponents()[i];
 			field.getDocument().removeDocumentListener(field);
 			field.setLines(line, l);
+			field.getDocument().addDocumentListener(field);
 			i++;
 			p1 = p2;
 
@@ -1127,8 +1156,7 @@ public class Controller {
 				points.add(point2);
 				lines.add(line);
 
-				CustomTextField field = new CustomTextField(line, screenLine, controller);
-
+				CustomTextField field = new CustomTextField(line, screenLine, controller, context);
 				view.add(field);
 				view.repaint();
 				view.revalidate();
@@ -1204,7 +1232,7 @@ public class Controller {
 		@Override
 		public void mouseReleased(MouseEvent e) {
 		    if (!init_drag) return;
-            quickRerun(getContext());
+            quickRerun(getContext(), true);
 			init_drag = false;
 		}
 

@@ -224,7 +224,7 @@ public class FileHandler {
                 p2.adjacentLines.add(l);
                 lines.add(l);
 
-                CustomTextField field = new CustomTextField(l, screenLine, controller);
+                CustomTextField field = new CustomTextField(l, screenLine, controller, controller.getContext());
                 panel.add(field);
                 panel.repaint();
                 panel.revalidate();
@@ -356,7 +356,7 @@ public class FileHandler {
 			p2.adjacentLines.add(l);
 
 			if (panel != null) {
-				CustomTextField field = new CustomTextField(l, screenLine, controller);
+				CustomTextField field = new CustomTextField(l, screenLine, controller, controller.getContext());
 				panel.add(field);
 				panel.repaint();
 				panel.revalidate();
@@ -442,7 +442,7 @@ public class FileHandler {
                 p1.adjacentLines.add(l);
                 p2.adjacentLines.add(l);
 
-                CustomTextField field = new CustomTextField(l, screenLine, controller);
+                CustomTextField field = new CustomTextField(l, screenLine, controller, controller.getContext());
                 panel.add(field);
                 panel.repaint();
                 panel.revalidate();
@@ -644,7 +644,7 @@ public class FileHandler {
                 screenLines.add(screenLine);
                 lines.add(l);
 
-                CustomTextField field = new CustomTextField(l, screenLine, controller);
+                CustomTextField field = new CustomTextField(l, screenLine, controller, controller.getContext());
                 panel.add(field);
                 panel.repaint();
                 panel.revalidate();

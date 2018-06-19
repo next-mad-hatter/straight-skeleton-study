@@ -22,7 +22,7 @@ import at.tugraz.igi.util.*;
 
 public class SimpleAlgorithm extends SwingWorker<Boolean, AlgoChunk> {
 
-	private Color[] colors = { Color.BLUE, new Color(135, 206, 255), new Color(50, 205, 50), new Color(0, 100, 0),
+	public static Color[] colors = { Color.BLUE, new Color(135, 206, 255), new Color(50, 205, 50), new Color(0, 100, 0),
 			new Color(255, 0, 0), new Color(255, 127, 80), new Color(205, 51, 51) };
 	private PriorityQueue<Event> events = new PriorityQueue<Event>(1, new EventComparator());
 	@Getter private List<Triangle> triangles = new ArrayList<Triangle>();
@@ -189,12 +189,12 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, AlgoChunk> {
 			eventExists = true;
 			event = null;
 		}
-		if (animation) {
+		// if (animation) {
 			while (!controller.wantsUpdates(context) && !isCancelled()) {
 				Thread.sleep(100);
 			}
 			publish();
-		}
+		// }
 
 //		Util.calculatePolygArea(points, straightSkeleton);
 		return true;
@@ -236,19 +236,19 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, AlgoChunk> {
 					p.move(1);
 				}
 			}
-			if (animation) {
+			// if (animation) {
 				while (!controller.wantsUpdates(context) && !isCancelled()) {
 					Thread.sleep(100);
 				}
 				publish();
-			}
+			// }
 		}
-		if (animation) {
+		// if (animation) {
 			while (!controller.wantsUpdates(context) && !isCancelled()) {
 				Thread.sleep(100);
 			}
 			publish();
-		}
+		// }
 
 		float remainingTime = (float) (time - roundedTime);
 		for (Set<Point> points : context.getPolygons(false)) {
@@ -257,11 +257,12 @@ public class SimpleAlgorithm extends SwingWorker<Boolean, AlgoChunk> {
 			}
 		}
 
-		if (animation) {
+		// if (animation) {
 			while (!controller.wantsUpdates(context) && !isCancelled()) {
 				Thread.sleep(100);
 			}
 			publish();
+		if (animation) {
 			Thread.sleep((long) (25 * controller.getAverage_weight(context)));
 		}
 

@@ -25,9 +25,10 @@ public class CustomTextField extends JTextField implements DocumentListener, Mou
 	private at.tugraz.igi.util.Vector vector;
 	private int weight;
 	private Controller controller;
+	@Getter private Controller.Context context;
 	private static final long serialVersionUID = 1L;
 
-	public CustomTextField(Line line, Line screenLine, Controller controller) {
+	public CustomTextField(Line line, Line screenLine, Controller controller, Controller.Context context) {
 		this.setEditable(false);
 		this.getCaret().setSelectionVisible(false);
 		this.getCaret().setVisible(false);
@@ -130,7 +131,7 @@ public class CustomTextField extends JTextField implements DocumentListener, Mou
 		line.setWeight(weight);
 		screenLine.setWeight(weight);
 		if (controller.getContext().finished) {
-			controller.quickRerun(controller.getContext());
+			controller.quickRerun(controller.getContext(), true);
 		}
 		// this.getInputVerifier().shouldYieldFocus(this);
 		// graphicPanel.setFinished(false);
