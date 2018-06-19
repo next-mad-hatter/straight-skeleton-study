@@ -908,11 +908,16 @@ public class Controller {
 	}
 
 	public void showColorChooser(int index) {
-		StraightSkeleton skeleton = contexts.get(index).getSkeleton(false);
+		val context = contexts.get(index);
+		val skeleton = context.getSkeleton(false);
 		Color newColor = JColorChooser.showDialog(view, "Choose Background Color", skeleton.getColor());
 		if (newColor != null) {
 			skeleton.setColor(newColor);
+			for (val snap: context.history.snapshots) {
+                snap.getSkeleton().setColor(newColor);
+			}
 		}
+		view.repaint();
 	}
 
 	public boolean isVisible(int index) {
