@@ -1,13 +1,22 @@
 data/polygons*
+data/salzburg
+out
 tmp
 
-straight_skeleton/build
-straight_skeleton/gradle
-straight_skeleton/.gradle
-straight_skeleton/.gradletasknamecache
+campskeleton
+jutils
+tools/**
+*batch-part.*
 
-straight_skeleton/lib/*.jar
-straight_skeleton/tmp
+*.xz
+
+**/build
+**/gradle
+**/.gradle
+**/.gradletasknamecache
+
+**/lib/*.jar
+**/tmp
 
 doc/*.pdf
 test-201*/
@@ -24,6 +33,7 @@ GPATH
 .dir-locals.el
 .idea
 
+*.iml
 *~
 *.swp
 .\#*

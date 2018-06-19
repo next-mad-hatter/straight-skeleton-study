@@ -1,0 +1,105 @@
+buildscript {
+  repositories {
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
+  }
+  dependencies {
+    classpath "com.github.jengelman.gradle.plugins:shadow:2.0.+"
+  }
+}
+
+plugins {
+    id 'java'
+    id 'application'
+    id 'net.ltgt.apt' version '0.10'
+    id 'maven-publish'
+}
+
+apply plugin: "com.github.johnrengelman.shadow"
+
+repositories {
+    jcenter()
+    mavenCentral()
+    mavenLocal()
+    flatDir { dirs 'lib' }
+}
+
+dependencies {
+    compile fileTree(dir: 'lib', include: '*.jar')
+    runtime fileTree(dir: 'lib', include: '*.jar')
+    compileOnly 'org.projectlombok:lombok:1.+'
+    apt "org.projectlombok:lombok:1.+"
+    compile group: 'com.codepoetics', name: 'protonpack', version: '1.+'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.+'
+    compile group: 'org.apache.commons', name: 'commons-math3', version: '3.+'
+    compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.+'
+    // compile group: 'org.jooq', name: 'jool', version: '0.9.+'
+    // compile group: 'io.github.amaembo', name: 'streamex', version: '0.0.7'
+    // compile group: 'io.vavr', name: 'vavr', version: '0.9.0'
+    compile group: 'org.tallison', name: 'jmatio', version: '1.2'
+    compile group: 'org.jfree', name: 'jfreesvg', version: '3.2'
+    compile group: 'org.tukaani', name: 'xz', version: '1.+'
+    compile group: 'me.tongfei', name: 'progressbar', version: '0.4.+'
+    compile group: 'org.jgrapht', name: 'jgrapht-core', version: '1.1.+'
+    // testCompile 'junit:junit:4.+'
+}
+
+compileJava {
+  options.compilerArgs << "-Xlint" // << "-Werror" // "-Xlint:unchecked" << "-Xlint:deprecation"
+}
+
+jar {
+  manifest {
+    if (!configurations.compile.isEmpty()) {
+      attributes(
+          'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+          'Main-Class': 'at.tugraz.igi.main.Main'
+          )
+    }
+  }
+
+  // In case we wanted to include extra libs in non-fat jar
+  /*
+  jar {
+    into('lib') {
+      from 'lib'
+    }
+  }
+  */
+  // or so:
+  // from('lib') { include '*.jar' }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId 'at.tugraz.igi'
+            artifactId 'triton'
+            version '0.0.1'
+            from components.java
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}
+
+task(runDebug, dependsOn: 'classes', type: JavaExec) {
+    main = 'at.tugraz.igi.main.Main'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ["-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"]
+}
+
+mainClassName = 'at.tugraz.igi.main.Main'
+// mainClassName = 'at.tugraz.igi.main.SingleRun'
+// mainClassName = 'at.tugraz.igi.main.BatchRun'
+
+// Append app args like this: gradle run -PappArgs="['in.txt', 'out.txt', 'out.png']"
+// (for SingleRun/BatchRun to be called via gradle)
+run {
+    if (project.hasProperty("appArgs")) {
+        args Eval.me(appArgs)
+    }
+}
+

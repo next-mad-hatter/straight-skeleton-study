@@ -1,0 +1,2 @@
+misc/hangup.01.xz /dev/null /dev/null
+misc/hangup.02.xz /dev/null /dev/null

@@ -1,14 +1,69 @@
-* Use issue tracker?
+* Polyhistory & context switching:
+
+  - selection per mouse doesn't work in skeletons table until visibility button is clicked
+  - get history to work upon quick rerun (after weights/geometry change): currently only enabling animation helps here
+  - history: get rid of last event sticking around rendered
+  - when loading files: leave other skeletons
+  - how do we want to handle changing geometry / weights at intermediate steps --> disable editing at certain states?
+
+* Kotton:
+
+  - get triton stats (event counts) to kotton
+  - can we always get stack trace from a cause?
+  - triton: make more responsive to timeout
+  - svg output: scale using only polygon vertices?
+
+* It seems random weights generation never worked
+
+* Compare test results with Salzburg, debug failing salzburg tests (currently over 60%).
+
+* Sim. events: do we have to prioritize flips (e.g. flip edge = edge to be split)?
+
+* Bug: sometimes weight fields' values cannot be deleted, only concatenated upon
+
+* At edge events resulting in parallel edges:
+
+  - keep dead vertices for attached triangulation edges
+  - check if there are more adjacent parallel edges to avoid adding superfluous partial arcs to skeleton
+
+* Split out triton as a submodule for access / licensing control,
+  split & update docs
+
+* Find a robust (non-weighted) skeleton implementation to add to kotton
+  e.g. CGAL: https://github.com/CGAL/cgal-swig-bindings/wiki/Installation
+
+* Make campskeleton more robust?
+
+* Spread currentthread interruped checks through campskeleton & triton
+
+* Investigate jre sigbus in libzip crashes (/tmp space related?)
+
+* Converge two triton "algorithm" implementations
+
+* Keeps using CPU after computation complete (again)
+
+* Check large polygons set results
+
+* Ad input scaling: implement
+
+    - scaling for formats other than simple coordinates list
+    - scaling range setting
+    - input scaling setting for applet
+    - per entry setting in batch run
+
+* Small salzburg examples fail to render in app
+
+* Debug + test + cleanup zoom & history
 
 * History: test back steps, better controls (usability/stability)
 
-* History animation?
+* Zoom: autozoom & autopan at load / manually triggered apart from that?
 
-* Zoom; autozoom & autopan at load
-
-* Separate points coordinates and drawn points' coordinates, automatically compute good mappings
+* Zoom in on area
 
 * Straight jump to result
+
+* History animation?
 
 * Enable saving skeleton to a file from applet
 
@@ -59,8 +114,6 @@
 
 * Batch runner: read multiple batch files & add output prefix option -> shell batch runner
 
-* Add loaded file name to window title
-
 * Get rid of bad/hardcoded resource paths ('/images/')
 
 * Get rid of dependencies remaining local (randomPolygon & poly2tri)
@@ -79,10 +132,11 @@
   research: can we use e.g. apache commons math library to implement exact
   computations (if this is algebraically feasible at all)?
 
-
 * Investigate rendering artefacts
 
 * Extend the set of correctness tests
 
 * Set up consistant indenting & os-appropriate line breaks (wtf spacemacs?!)
+
+* Apply license in filehandler to prior code only
 

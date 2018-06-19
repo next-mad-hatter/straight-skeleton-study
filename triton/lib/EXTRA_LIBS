@@ -1,0 +1,16 @@
+The source code found herein uses two libraries not present in common java
+repositories:
+
+  * poly2tri : available at http://sites-final.uclouvain.be/mema/Poly2Tri/
+
+    It appears this is an ancient port of http://code.google.com/p/poly2tri/
+    (which today redirects to a github repo containing C++ code), contemporary
+    versions of which seem to have significantly different API.
+
+  * randomPoly : written by R. Purgstaller, it is currently only available to
+    us in binary form and terms of redistribution are not quite clear.  It
+    either will be made available under appropriate license when this repo goes
+    public or the functionality in question purged.
+
+Added both to bitbucket downloads section for now.
+

@@ -2,6 +2,8 @@
 2017.08        3:00    bringing sources into buildable configuration
 2017.08        2:30    cpu hog bug hunt & fix
 
+[7:30]
+
 2018.02.07     3:00    source studies
 2018.02.08     5:50    source & theory studies, more bugs/todos, libs search, multievents questions
 2018.02.10     3:10    source studies, first bug enquiries
@@ -14,3 +16,38 @@
 2018.02.19     4:40    events & animations destructuring/debugging
 2018.02.21     8:40    more debugging, writing events counts from single/batch runner, show initial triangulation when stepping, history hacking
 2018.02.22     9:00    history & points comparators experiments, history steps & controls experiments
+2018.02.26     4:30    researching/debugging zoom/transforms for graphics & components
+2018.02.27     4:10    zoom/transforms hacking
+
+[+73:20 => 80:20]
+
+2018.03.09     8:30    input scaling, compressed svg output, large batch experiments
+2018.03.09     2:00    more debugging attempts
+
+[+10:30 => 90:50]
+
+2018.04.15     2:00    kotton experiments started
+2018.04.18     5:00    kotton experiments
+2018.04.19     1:30    more Biedl et al papers reading, campskeleton experiments
+2018.04.20     8:30    special cases reading, more corner test cases, ui updates, campskeleton experiments
+2018.04.21     3:00    kotton: campskeleton vs straight_skeleton comparison & common processing
+2018.04.22     5:00    batch timeout added, better treecheck, oom initial tests, batch runner & awt event queue cleaning attempts
+2018.04.23     8:30    batch runner: oom fixes, xz writing, jre crash fix, parts runner, large batch run
+2018.04.29     3:40    campskeleton trace (edges at events) collection digging
+2018.04.30    12:00    campskeleton/triton/kotton integration
+
+[+ 49:10 => 140:00 ]
+
+2018.05.01     6:00    kotton toplevel: arguments parser, progress bar, json output, dir crawling, better error logging, campskeleton testing
+2018.05.31     1:00    salzburg data cleaning, salzburg test runs
+
+2018.06.01     5:00    triton -> kotton trace export, triton structures digging
+2018.06.02     2:30    triton -> kotton trace export, licenses & docs
+2018.06.03    10:00    triton polyhistory
+2018.06.04    10:20    context switching polyhistory
+2018.06.05     7:10    context switching polyhistory, algo sync fixes
+2018.06.06     9:15    skeletons visibility & table rendering fixes, context switching, visibility display and multiple skeletons overlay rendering
+2018.06.19     2:00    context switching: weight fields, color and resizing enabled algo fixes
+
+?              ?       org+admin work, communications, meetings, presentation
+
