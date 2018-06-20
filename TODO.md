@@ -1,10 +1,11 @@
+* Cut out randomPoly
+
 * Polyhistory & context switching:
 
   - selection per mouse doesn't work in skeletons table until visibility button is clicked
   - get history to work upon quick rerun (after weights/geometry change): currently only enabling animation helps here
-  - history: get rid of last event sticking around rendered
-  - when loading files: leave other skeletons
-  - how do we want to handle changing geometry / weights at intermediate steps --> disable editing at certain states?
+  - when loading files: leave other skeletons?
+  - how do we want to handle changing geometry / weights at intermediate steps -- disable editing at certain states?
 
 * Kotton:
 
