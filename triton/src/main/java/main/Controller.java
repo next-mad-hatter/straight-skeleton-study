@@ -666,6 +666,7 @@ public class Controller {
 		context.isRunning = false;
 		context.animation = true;
 		context.paused = false;
+		context.setCurrentEvent(null);
 		context.saveSnapshot();
 		context.history.setToLast();
 		// table.setValueAt(new Boolean(true), contextPtr, 0);
