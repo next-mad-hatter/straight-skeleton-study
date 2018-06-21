@@ -1,0 +1,251 @@
+\documentclass[
+  size=9pt,
+%  style=klope,
+  style=jefka,
+  paper=screen,
+%  mode=present,
+  mode=print,
+%  mode=handout,
+%  display=slidesnotes,
+  display=slides,
+  nohandoutpagebreaks,
+  pauseslide,
+  hlsections,
+  fleqn,
+  dvips,
+  clock
+]{powerdot}
+
+%% paintings palettes: Syndics (the default), Skater , GoldenGate , Lamentation , HolyWood , Europa , Moitessier , MayThird , PearlEarring and Charon
+%% klope palettes: Spring , PastelFlower , BlueWater and BlackWhite
+%% jefka palettes: brown (the default), seagreen , blue and white
+%\pdsetup{palette=BlackWhite}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+\usepackage{microtype}
+\usepackage{multicol}
+
+%\usepackage{fix-cm}
+%\usepackage{lmodern}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+\usepackage{commath}
+\usepackage{mathtools}
+
+\usepackage{physics}
+
+\usepackage{graphicx, wrapfig}
+\usepackage{caption}
+
+\usepackage{xcolor}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{colortbl,longtable,tabu}
+\usepackage{multirow}
+
+\pdsetup{%
+  itemize={labelsep=0.2cm},
+  lf=weighted straight skeletons,
+%%  rf=why not,
+  trans=Wipe,
+  theslide=slide~\arabic{slide},
+  list={itemsep=6pt},
+}
+
+%\sisetup{%
+%%  locale = DE, % comma as decimal separator
+%  tight-spacing = true,
+%  round-mode = places
+%}
+%\newcolumntype Z{X[m]{S[tight-spacing = true,round-mode=places, round-precision=2]}}
+
+\def\todo{\color{red}}
+% FIXME: automate?
+\def\eqitspace{\vspace{-5mm}}
+
+\title{%
+%  \vspace{-48pt}
+%  \hfill
+%  \begin{minipage}[t]{.14\linewidth}
+%    \raisebox{-0.96ex}{
+%      \includegraphics[width=\linewidth]{./images/tug-logo-CMYK.eps.gz}
+%    }
+%  \end{minipage}\hfill
+%  \begin{minipage}[t]{.79\linewidth}
+%    \normalsize{Algorithms Project}
+%  \end{minipage}\\
+  \vspace{21pt}
+  Weighted Straight Skeletons
+  \\[12pt]
+  {\normalsize Triangulation-based Algorithm --- Iterative Implementation Improvements}
+}
+\newcommand{\mailto}[1]{\href{mailto:#1}{\nolinkurl{#1}}}
+\author{%
+  Maksym~Deineko \\ {\small \mailto{deineko@student.tugraz.at} }
+}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\pdsetup{%
+  logopos={},
+}
+
+\section[template=wideslide]{Introduction}
+
+\begin{slide}{Weighted Straight Skeletons}
+  \begin{itemize}
+    \item Straight skeleton:
+    \begin{itemize}
+      \item wavefront propagation model
+      \item topology changes: edge \& split events
+      \item add edge weights $\rightarrow$ weighted straight skeleton
+      \item also: roof ridges/valleys
+    \end{itemize}
+    \item A triangulation-based algorithm:
+    \begin{itemize}
+      \item event = collapsing triangle
+      \item flip events
+    \end{itemize}
+  \end{itemize}
+%\twocolumn{%
+%  A
+%}{%
+%  \begin{flushright}
+%    B
+%  \end{flushright}
+%}
+\end{slide}
+\begin{note}{}
+  \begin{itemize}
+    \item skeletons defined for planar straight line graphs
+    \item wavefront: parallel shrinking / trace of vertices along bisectors
+    \item changes to skeleton don't stay local
+  \end{itemize}
+\end{note}
+
+\section[template=wideslide]{Extending an Implementation}
+
+\begin{slide}{Implementation}
+  \begin{itemize}
+    \item Given:
+    \begin{itemize}
+      \item an implementation (swing applet)
+    \end{itemize}
+    \item Goals:
+    \begin{itemize}
+      \item functionality/usability improvements
+      \item run on larger data sets
+      \item $\rightarrow$ locate issues / investigate fixes
+    \end{itemize}
+    \item Initial insights:
+    \begin{itemize}
+      \item code undocumented
+      \item visualization = calculation
+      \item highly stateful computations
+    \end{itemize}
+  \end{itemize}
+\end{slide}
+\begin{note}{}
+  \begin{itemize}
+    \item code grew organically
+    \item insights $\rightarrow$ promising to be a challenge
+    \item show app
+  \end{itemize}
+\end{note}
+
+\begin{slide}{Implementation Extensions}
+  \begin{itemize}
+
+    \item Initial adjustments:
+    \begin{itemize}
+      \item make buildable
+      \item number of small fixes
+      \item by now: contacted author $\rightarrow$ code released under Apache license
+    \end{itemize}
+
+    \item Usability additions:
+    \begin{itemize}
+      \item automatic viewport scaling
+      \item browse events history
+      \item render multiple skeletons
+    \end{itemize}
+
+  \end{itemize}
+\end{slide}
+\begin{note}{}
+  \begin{itemize}
+    \item build: sort out libraries, bag of code
+    \item fixes: triangle
+    \item fixes: swing rendering loops
+    \item fixes: crashes min example
+    \item history \& multi: a lot of state $\rightarrow$ a lot of snapshots / context switching
+  \end{itemize}
+\end{note}
+
+\begin{slide}{Implementation Extensions}
+  \begin{itemize}
+    \item Technical additions:
+    \begin{itemize}
+      \item parse more input formats
+      \item input/output scaling (lossless, to try and mitigate numerical issues)
+      \item standalone/batch runner
+      \begin{itemize}
+        \item pluggable implementation (e.g.\ campskeleton)
+        \item json trace export
+      \end{itemize}
+    \end{itemize}
+
+    \item Correctness improvements:
+    \begin{itemize}
+      \item remove duplicate arcs \& loops
+      \item check tree structure of skeleton
+    \end{itemize}
+
+    \item Ran on one large data set: 68564/77989 ($88\%$) instances pass
+  \end{itemize}
+\end{slide}
+\begin{note}{}
+  \begin{itemize}
+    \item lossless scaling: only at this point, changes floating numerics naturally
+    \item tree check: algebraic, input: simple polygons
+    \item note: animated results not same as standalone
+    \item trace export \& pluggable algorithm: should be possible to change one part at a time
+    \item allthewhile trying out small test cases and noting where problems arise
+  \end{itemize}
+\end{note}
+
+\begin{slide}{Areas for Further Improvements}
+  \begin{itemize}
+    \item Issues encountered:
+    \begin{itemize}
+      \item numerics $\rightarrow$ lossless calculations feasible?
+      \item general position assumptions limiting
+      \begin{itemize}
+        \item simultaneous events not independent
+        \item adjacent parallel edges (after edge events)
+        \item multiple split vertices $\rightarrow$ planarity has to be relaxed
+        \item flip event loops
+      \end{itemize}
+    \end{itemize}
+
+    \item "Hard" test set (Salzburg) acquired: 297/770 ($<40\%$) instances pass
+  \end{itemize}
+\end{slide}
+\begin{note}{}
+  \begin{itemize}
+    \item number of tests documented
+    \item issues encountered: not fixed
+    \item ui issues not interesting, e.g. $\rightarrow$ viewport would need manual scaling
+  \end{itemize}
+\end{note}
+
+\section[template=wideslide]{Your Questions}
+
+\end{document}
