@@ -1,8 +1,6 @@
-* Cut out randomPoly
-
 * Polyhistory & context switching:
 
-  - selection per mouse doesn't work in skeletons table until visibility button is clicked
+  - sometimes selection per mouse doesn't work in skeletons table until visibility button is clicked
   - get history to work upon quick rerun (after weights/geometry change): currently only enabling animation helps here
   - when loading files: leave other skeletons?
   - how do we want to handle changing geometry / weights at intermediate steps -- disable editing at certain states?
@@ -11,12 +9,9 @@
 
   - get triton stats (event counts) to kotton
   - can we always get stack trace from a cause?
-  - triton: make more responsive to timeout
   - svg output: scale using only polygon vertices?
 
 * It seems random weights generation never worked
-
-* Compare test results with Salzburg, debug failing salzburg tests (currently over 60%).
 
 * Sim. events: do we have to prioritize flips (e.g. flip edge = edge to be split)?
 
@@ -36,12 +31,13 @@
 * Make campskeleton more robust?
 
 * Spread currentthread interruped checks through campskeleton & triton
+  (make both algorithm implementations more responsive to timeout)
 
 * Investigate jre sigbus in libzip crashes (/tmp space related?)
 
 * Converge two triton "algorithm" implementations
 
-* Keeps using CPU after computation complete (again)
+* Add possibility to stop algorithm from applet (for cases where the implementation doesn't terminate)
 
 * Check large polygons set results
 
