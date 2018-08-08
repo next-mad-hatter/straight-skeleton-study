@@ -36,8 +36,6 @@ import at.tugraz.igi.main.Controller.TYPES;
 import at.tugraz.igi.ui.ConfigurationTable;
 import at.tugraz.igi.ui.GraphicPanel;
 import at.tugraz.igi.ui.MainPane;
-import data.Graph;
-import frontend.MainFrame;
 
 public class SkeletonApplet extends JFrame {
 
@@ -64,8 +62,6 @@ public class SkeletonApplet extends JFrame {
 		JMenuItem saveAs = new JMenuItem("Save as");
 		JMenuItem saveSVG = new JMenuItem("Save as .svg");
 
-		JMenu menu2 = new JMenu("Random Polygon");
-		JMenuItem createPoly = new JMenuItem("Generate Polygon");
 		// JMenuItem openPoly = new JMenuItem("Open generated Polygon");
 
 		open.setAccelerator(KeyStroke.getKeyStroke('O', Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
@@ -77,9 +73,6 @@ public class SkeletonApplet extends JFrame {
 		menu.add(saveAs);
 		menu.add(saveSVG);
 
-		menu2.add(createPoly);
-		// menu2.add(openPoly);
-
 		open.addActionListener(controller.createActionListener(TYPES.OPEN));
 
 		save.addActionListener(controller.createActionListener(TYPES.SAVE));
@@ -88,34 +81,9 @@ public class SkeletonApplet extends JFrame {
 		
 		saveSVG.addActionListener(controller.createActionListener(TYPES.SVG));
 		
-		createPoly.addActionListener(new ActionListener() {
-			MainFrame gui = new MainFrame();
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// Run a java app in a separate system process
-				for (WindowListener listener : gui.getWindowListeners()) {
-					gui.removeWindowListener(listener);
-				}
-				gui.addWindowListener(new WindowAdapter() {
-
-					public void windowClosing(WindowEvent e) {
-						MainFrame frame = (MainFrame) e.getSource();
-						Graph graph = frame.getGraph();
-						controller.createPolygon(graph);
-						gui.setVisible(false);
-					}
-
-				});
-				gui.setVisible(true);
-
-			}
-		});
-
 		// openPoly.addActionListener(controller.createActionListener(TYPES.OPEN_POLY));
 
 		menubar.add(menu);
-		menubar.add(menu2);
 
 		setJMenuBar(menubar);
 

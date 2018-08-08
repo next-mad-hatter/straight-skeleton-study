@@ -59,7 +59,6 @@ import at.tugraz.igi.main.*;
 import at.tugraz.igi.ui.*;
 import at.tugraz.igi.ui.*;
 import at.tugraz.igi.util.Point;
-import data.*;
 
 public class FileHandler {
 
@@ -302,87 +301,6 @@ public class FileHandler {
             return null;
         }
     }
-
-  public static void createPoly(GraphicPanel panel, Controller controller, Graph graph) {
-	  Double max_x = null;
-	  Double max_y = null;
-	  Double min_x = null;
-	  Double min_y = null;
-		List<Point> loadedVertices = new ArrayList<Point>();
-		List<Point> screenVertices = new ArrayList<Point>();
-		ArrayList<Line> loadedEdges = new ArrayList<>();
-		ArrayList<Line> screenEdges = new ArrayList<>();
-
-		if (graph.isEmpty()) {
-			return;
-		}
-		if (panel != null) {
-			controller.reset();
-			panel.revalidate();
-		}
-
-		for (int i = 0; i < graph.getVertices().size(); i++) {
-			Vertex v = graph.getVertices().get(i);
-			if (max_x == null || v.getX() > max_x) max_x = new Double(v.getX());
-			if (min_x == null || v.getX() < min_x) min_x = new Double(v.getX());
-			if (max_y == null || v.getY() > max_y) max_y = new Double(v.getY());
-			if (min_y == null || v.getY() < min_y) min_y = new Double(v.getY());
-			loadedVertices.add(new Point(i + 1, v.getX(), v.getY()));
-			screenVertices.add(new Point(i + 1, v.getX(), v.getY()));
-		}
-		for (int i = 0; i < graph.getEdges().size(); i++) {
-			Edge edge = graph.getEdges().get(i);
-			int indexV1 = edge.getV1().getIndex();
-			int indexV2 = edge.getV2().getIndex();
-
-			Point p1 = loadedVertices.get(indexV1 - 1);
-			Point p2 = loadedVertices.get(indexV2 - 1);
-
-			Line l;
-			Line screenLine;
-			if (p1.adjacentLines.size() == 0 || p1.adjacentLines.get(0).getP1().equals(p1)) {
-				l = new Line(p2, p1, controller.randomWeights?controller.generateWeight():1);
-				screenLine = new Line(screenVertices.get(indexV2 - 1), screenVertices.get(indexV1 - 1),
-						l.getWeight());
-			} else {
-				l = new Line(p1, p2, 1);
-				screenLine = new Line(screenVertices.get(indexV1 - 1), screenVertices.get(indexV2 - 1),
-						l.getWeight());
-			}
-
-			loadedEdges.add(l);
-			screenEdges.add(screenLine);
-			p1.adjacentLines.add(l);
-			p2.adjacentLines.add(l);
-
-			if (panel != null) {
-				CustomTextField field = new CustomTextField(l, screenLine, controller, controller.getContext());
-				panel.add(field);
-				panel.repaint();
-				panel.revalidate();
-			}
-		}
-		loadedEdges = reorder(loadedEdges);
-		Set<Point> points = new LinkedHashSet<Point>();
-		for (Line l : loadedEdges) {
-            points.add(l.getP1());
-            // FIXME: we'll try and keep points' numbers in order for now --
-            //        there seems to be at least some implicit reliance on the
-            //        structure of those numbers (grep for use of
-            //        vertex_counter, clonePoint & closePolygon for examples)
-            l.getP1().setNumber(points.size());
-        }
-
-		if (panel != null) {
-			controller.setLoadedData(loadedEdges, reorder(screenEdges), points);
-			// panel.setPreferredSize(new Dimension((int) Math.ceil(max_x) + 20, (int) Math.ceil(max_y) + 20));
-			panel.setCoordinatesBounds(min_x, min_y, max_x, max_y);
-			panel.repaint();
-			if (Util.isCounterClockwise(new ArrayList<Point>(loadedVertices))) {
-				panel.repositionTextfields();
-			}
-		}
-	}
 
 	public static void openPoly(File file, GraphicPanel panel, Controller controller) throws Exception {
 		Double max_x = null;

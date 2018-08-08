@@ -32,7 +32,6 @@ import at.tugraz.igi.ui.*;
 import at.tugraz.igi.util.*;
 import at.tugraz.igi.util.Vector;
 import at.tugraz.igi.events.*;
-import data.Graph;
 
 public class Controller {
 
@@ -879,10 +878,6 @@ public class Controller {
 			polyLines.add(line);
 		}
 		return polyLines;
-	}
-
-	public void createPolygon(Graph graph) {
-		FileHandler.createPoly(view, this, graph);
 	}
 
 	public int generateWeight() {
