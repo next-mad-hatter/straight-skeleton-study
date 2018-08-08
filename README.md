@@ -2,7 +2,7 @@
 
 Here you'll find source code for kotton -- a wrapper to run algorithms computing
 weighted straight skeletons.  Currently it can call two particular implementations --
-campskeleton and triton (currently also contained in this repository).
+campskeleton and triton (latter is currently also contained in this repository).
 
 ## Building
 
