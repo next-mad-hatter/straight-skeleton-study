@@ -1,4 +1,4 @@
-The source code found herein uses two libraries not present in common java
+The source code found herein uses one library not present in common java
 repositories:
 
   * poly2tri : available at http://sites-final.uclouvain.be/mema/Poly2Tri/

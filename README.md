@@ -25,7 +25,7 @@ and
 ### Triton (a triangulation keeping algorithm)
 
 The code found under `triton` should be buildable with gradle.
-It requires manual download of two libraries -- see `triton/lib/EXTRA_LIBS`.
+It requires manual download of one library -- see `triton/lib/EXTRA_LIBS`.
 Run `gradle publishToMavenLocal` to install it.
 
 
