@@ -113,8 +113,7 @@
 
 * Get rid of bad/hardcoded resource paths ('/images/')
 
-* Get rid of dependencies remaining local (randomPolygon & poly2tri)
-  or replace libs in question by something more robust
+* Replace poly2tri by something more robust / non-abandoned
 
 * Simplicity test (e.g. https://www.webcitation.org/6ahkPQIsN) or
   alt. triangulation (see e.g.
